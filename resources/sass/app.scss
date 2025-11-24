@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+    display: none;
+}
+//@import 'bootstrap/scss/bootstrap';
+@import 'select2/dist/css/select2.css';
+@import 'flowbite/dist/flowbite.min.css';

@@ -1,0 +1,336 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Abono;
+use App\Models\AnticipoApartado;
+use App\Models\AnticipoApartadoDetalle;
+use App\Models\Cliente;
+use App\Models\DetalleAbono;
+use App\Models\Inventario;
+use App\Models\Kardex;
+use App\Models\TipoPago;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use PDF;
+
+class ApartadoController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+        //$this->middleware(['can:Gestión de roles']);
+    }
+
+    public function index()
+    {
+        return view('apartado.index');
+    }
+
+    public function create()
+    {
+        $apartado = new AnticipoApartado();
+        $apartado->cliente_id = 1; // CLIENTE PÚBLICO por defecto
+        $metodo = 'create';
+        $detalle = collect();
+
+        $tipoValues = ['CLIENTE PÚBLICO', 'CLIENTE MEDIO MAYOREO', 'CLIENTE MAYOREO'];
+        $ejecutivoValues = User::where('tipo_usuario', 'punto_de_venta')
+            ->where('activo', 1)
+            ->select('id', 'full_name')
+            ->get();
+
+
+        $formasPago = [
+            ['metodo' => '', 'monto' => '', 'referencia' => '']
+        ];
+
+        return view('apartado.create', compact(
+            'metodo',
+            'apartado',
+            'detalle',
+            'tipoValues',
+            'ejecutivoValues',
+            'formasPago'
+        ));
+    }
+
+    public function store(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $anioActual = Carbon::now()->year;
+
+            // Buscar el último folio del año actual
+            $ultimo = AnticipoApartado::whereYear('fecha', $anioActual)
+                ->where('tipo', 'APARTADO')
+                ->lockForUpdate()
+                ->orderByDesc('id')
+                ->value('folio');
+
+            $ultimoNumero = 0;
+            if ($ultimo && preg_match('/APARTADO-(\d+)-' . $anioActual . '/', $ultimo, $match)) {
+                $ultimoNumero = intval($match[1]);
+            }
+
+            $nuevoNumero = $ultimoNumero + 1;
+            $folio = sprintf("APARTADO-%05d-%d", $nuevoNumero, $anioActual);
+
+            // ==============================
+            // 1. Crear anticipo_apartado
+            // ==============================
+            $anticipoApartado = AnticipoApartado::create([
+                'fecha'      => now(),
+                'cliente_id' => $request->cliente_id,
+                'tipo'       => 'APARTADO',
+                'folio'      => $folio,
+                'total'      => $request->total_venta,
+                'debia'      => $request->total_venta,
+                'abona'      => 0,
+                'debe'       => $request->total_venta,
+                'estatus'    => 'ACTIVO',
+                'wci'        => auth()->id(),
+            ]);
+
+            // 2. Recorrer productos de la tabla dinámica
+            foreach ($request->detalles as $detalle) {
+                $productoId = $detalle['producto_id'] ?? null;
+                $cantidad   = $detalle['cantidad'] ?? 0;
+                $precio     = $detalle['precio'] ?? 0;
+                $total      = $detalle['total'] ?? 0;
+
+                // Crear detalle del apartado
+                $detalleApartado = AnticipoApartadoDetalle::create([
+                    'anticipo_apartado_id' => $anticipoApartado->id,
+                    'producto_id'           => $productoId,
+                    'cantidad'              => $cantidad,
+                    'precio'                => $precio,
+                    'total'                 => $total,
+                    'wci'                   => auth()->id(),
+                ]);
+
+                if ($productoId) {
+                    // Bloquear inventario del producto
+                    $inventario = Inventario::where('producto_id', $productoId)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($inventario) {
+                        // 3. Actualizar inventario: apartar piezas
+                        $inventario->producto_apartado = ($inventario->producto_apartado ?? 0) + $cantidad;
+                        $inventario->save();
+
+                        // 4. Registrar movimiento en Kardex
+                        Kardex::create([
+                            'sucursal_id'     => $inventario->sucursal_id,
+                            'producto_id'     => $productoId,
+                            'movimiento_id'   => $anticipoApartado->id,
+                            'tipo_movimiento' => 'SALIDA',
+                            'tipo_detalle'    => 'APARTADO',
+                            'fecha'           => now(),
+                            'folio'           => $anticipoApartado->folio,
+                            'descripcion'     => 'Apartado de producto',
+                            'debe'            => 0,
+                            'haber'           => $cantidad,
+                            'saldo'           => $inventario->cantidad - ($inventario->producto_apartado ?? 0),
+                            'wci'             => auth()->id(),
+                            'activo'          => true,
+                        ]);
+                    }
+                }
+            }
+
+            // ==============================
+            // 3. Registrar formas de pago
+            // ==============================
+            $totalAbono = 0;
+            foreach ($request->formas_pago as $forma) {
+                if (!empty($forma['monto']) && $forma['monto'] > 0) {
+                    TipoPago::create([
+                        'pagable_id'   => $anticipoApartado->id,
+                        'pagable_type' => AnticipoApartado::class,
+                        'metodo'       => $forma['metodo'],
+                        'monto'        => $forma['monto'],
+                        'referencia'   => $forma['referencia'] ?? null,
+                        'wci'          => auth()->id(),
+                        'activo'       => true,
+                    ]);
+                    $totalAbono += $forma['monto'];
+                }
+            }
+
+            // ==============================
+            // 4. Crear abono inicial
+            // ==============================
+            if ($totalAbono > 0) {
+                // Obtener el último folio de abonos de este año
+                $ultimoAbono = Abono::whereYear('created_at', $anioActual)
+                    ->lockForUpdate() // bloquea filas de abonos mientras corre la transacción
+                    ->orderByDesc('id')
+                    ->value('folio');
+
+                $ultimoNumeroAbono = 0;
+                if ($ultimoAbono && preg_match('/ABO-(\d+)-' . $anioActual . '/', $ultimoAbono, $match)) {
+                    $ultimoNumeroAbono = intval($match[1]);
+                }
+
+                $nuevoNumero = $ultimoNumeroAbono + 1;
+                $folioAbono = sprintf("ABO-%05d-%d", $nuevoNumero, $anioActual);
+
+                $abono = Abono::create([
+                    'folio'              => $folioAbono,
+                    'fecha'              => now(),
+                    'abonable_id'        => $anticipoApartado->id,
+                    'abonable_type'      => AnticipoApartado::class,
+                    'cliente_id'         => $request->cliente_id,
+                    'monto'              => $totalAbono,
+                    'saldo_global_antes' => $anticipoApartado->debia,
+                    'saldo_global_despues' => $anticipoApartado->debia - $totalAbono,
+                    'activo'             => true,
+                    'wci'                => auth()->id(),
+                ]);
+
+                // Detalle del abono (específico al anticipo)
+                DetalleAbono::create([
+                    'abono_id'      => $abono->id,
+                    'venta_credito_id' => null, // porque no es venta crédito
+                    'abonado_a_id'  => $anticipoApartado->id,
+                    'abonado_a_type' => AnticipoApartado::class,
+                    'monto_antes'   => $anticipoApartado->debia,
+                    'abonado'       => $totalAbono,
+                    'saldo_despues' => $anticipoApartado->debia - $totalAbono,
+                    'activo'        => true,
+                ]);
+
+                // ==============================
+                // 5. Actualizar anticipo
+                // ==============================
+                $anticipoApartado->update([
+                    'abona' => $totalAbono,
+                    'debe'  => $anticipoApartado->debia - $totalAbono,
+                ]);
+            }
+
+            DB::commit();
+
+            session()->flash('swal', [
+                'icon' => "success",
+                'title' => "Apartado registrado",
+                'text' => "El apartado se registró correctamente con folio {$folio}.",
+                'customClass' => [
+                    'confirmButton' => 'text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
+                ],
+                'buttonsStyling' => false
+            ]);
+
+            return redirect()->route('admin.apartado.index')->with(['id' => $anticipoApartado->id]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()
+                ->withInput()
+                ->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function show($clienteId)
+    {
+        $cliente = Cliente::findOrFail($clienteId);
+
+        $anticipos = AnticipoApartado::with(['detalles', 'cliente'])
+        ->where('tipo','APARTADO')
+        ->where('cliente_id', $clienteId)
+        ->where('debe', '>', 0) // solo los pendientes
+        ->orderByDesc('fecha')
+        ->get();
+
+        // Abonos de este cliente
+        //$abonos = $anticipos->pluck('abonos')->flatten(1);
+
+        $abonos = Abono::with([
+        'detalles.abonado_a', // para obtener cada anticipo al que se aplicó el detalle
+        'abonable',           // relación morphTo para el anticipo
+        'user'
+        ])
+        ->where('cliente_id', $clienteId)
+        ->where('activo', 1)
+        ->where('abonable_type', AnticipoApartado::class) // Solo abonos a anticipos
+        ->orderByDesc('fecha')
+        ->get();
+
+        return view('apartado.show', compact('cliente', 'anticipos', 'abonos'));
+    }
+
+    public function edit(AnticipoApartado $anticipoApartado)
+    {
+        //
+    }
+
+    public function update(Request $request, AnticipoApartado $anticipoApartado)
+    {
+        //
+    }
+
+    public function destroy(AnticipoApartado $anticipoApartado)
+    {
+        //
+    }
+
+    public function apartado_index_ajax(Request $request)
+    {
+        // TODOS LOS APARTADOS PARA INDEX
+        if ($request->origen == 'apartado.index') {
+            $anticipoPorCliente = AnticipoApartado::select(
+                'cliente_id',
+                \DB::raw('SUM(debia) as total_debia'),
+                \DB::raw('SUM(abona) as total_abona'),
+                \DB::raw('SUM(debe) as total_debe')
+            )
+            ->where('tipo','APARTADO')
+            ->with('cliente') // carga el cliente
+            ->groupBy('cliente_id')
+            ->get();
+
+            // Retornar los datos con nombres que coincidan con los columnas DataTables
+            $data = $anticipoPorCliente->map(function($item) {
+                $ultimoAnticipo = AnticipoApartado::where('cliente_id', $item->cliente_id)
+                ->where('tipo','APARTADO')
+                ->orderByDesc('id')
+                ->first();
+                return [
+                    'cliente_id'   => $item->cliente_id,
+                    'cliente'      => $item->cliente?->full_name ?? 'Sin cliente',
+                    'total_credito'=> $item->total_debia,   // total debia como "Monto"
+                    'total_saldo'  => $item->total_debe,    // total debe como "Saldo actual"
+                    'estatus'      => $ultimoAnticipo?->estatus ?? 'N/A',
+                ];
+            });
+
+            return response()->json(['data' => $data]);
+        }
+    }
+
+    public function ticket($id){
+        $anticipo = AnticipoApartado::with([
+            'cliente:id,full_name',
+            'detalles.producto:id,nombre',
+            'abonos',
+            'venta:id,folio'
+        ])->findOrFail($id);
+
+        //  - CREAMOS EL PDF DE LA VENTA ----
+        $user = auth()->user();
+        $userPrinterSize = 80;
+
+        $size = match($userPrinterSize) {
+            58 => [0,0,140,1440],
+            80 => [0,0,212,1440],
+            default => [0,0,0,0],
+        };
+
+        $pdf = PDF::loadView('comprobantes.ticket_apartado', compact('anticipo','userPrinterSize','user'))
+            ->setPaper($size,'portrait');
+        return $pdf->stream();
+    }
+}

@@ -1,0 +1,117 @@
+/* Estilos por defecto para DataTables (modo claro) */
+.dataTables_wrapper {
+    color: #374151; /* Texto principal en modo claro */
+}
+
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_paginate .paginate_button,
+.dataTables_wrapper .dataTables_info {
+    background-color: #edf2f7; /* Fondo en modo claro */
+    color: #374151; /* Texto en controles en modo claro */
+    border: 1px solid #e2e8f0; /* Borde en modo claro */
+}
+
+.dataTables_wrapper .dataTables_filter input::placeholder,
+.dataTables_wrapper .dataTables_length select::placeholder,
+.dataTables_wrapper .dataTables_paginate .paginate_button::placeholder,
+.dataTables_wrapper .dataTables_info::placeholder {
+    color: #a0aec0; /* Placeholder en modo claro */
+}
+
+.dataTables_wrapper .dataTables_filter input:hover,
+.dataTables_wrapper .dataTables_length select:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover,
+.dataTables_wrapper .dataTables_info:hover {
+    background-color: #cbd5e0; /* Fondo hover en modo claro */
+}
+
+.dataTables_wrapper .dataTables_filter input:focus,
+.dataTables_wrapper .dataTables_length select:focus,
+.dataTables_wrapper .dataTables_paginate .paginate_button:focus,
+.dataTables_wrapper .dataTables_info:focus {
+    background-color: #cbd5e0; /* Fondo focus en modo claro */
+    color: #1a202c; /* Texto focus en modo claro */
+}
+
+table.dataTable tbody tr {
+    background-color: #f7fafc; /* Fondo fila en modo claro */
+    color: #1a202c; /* Texto fila en modo claro */
+}
+
+table.dataTable tbody tr:hover {
+    background-color: #edf2f7; /* Fondo hover fila en modo claro */
+}
+
+table.dataTable thead {
+    background-color: #e2e8f0; /* Fondo encabezado en modo claro */
+    color: #4a5568; /* Texto encabezado en modo claro */
+}
+
+table.dataTable thead th {
+    border-bottom: 2px solid #cbd5e0; /* Borde encabezado en modo claro */
+}
+
+table.dataTable tfoot {
+    background-color: #e2e8f0; /* Fondo pie de tabla en modo claro */
+    color: #4a5568; /* Texto pie de tabla en modo claro */
+}
+
+/* Estilos para DataTables en Modo Oscuro */
+.dark .dataTables_wrapper {
+    color: #e5e7eb; /* Texto principal en modo oscuro */
+}
+
+.dark .dataTables_wrapper .dataTables_filter input,
+.dark .dataTables_wrapper .dataTables_length select,
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button,
+.dark .dataTables_wrapper .dataTables_info {
+    background-color: #374151; /* Fondo en modo oscuro */
+    color: #e5e7eb; /* Texto en controles en modo oscuro */
+    border: 1px solid #4b5563; /* Borde en modo oscuro */
+}
+
+.dark .dataTables_wrapper .dataTables_filter input::placeholder,
+.dark .dataTables_wrapper .dataTables_length select::placeholder,
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button::placeholder,
+.dark .dataTables_wrapper .dataTables_info::placeholder {
+    color: #e5e7eb; /* Placeholder en modo oscuro */
+}
+
+.dark .dataTables_wrapper .dataTables_filter input:hover,
+.dark .dataTables_wrapper .dataTables_length select:hover,
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button:hover,
+.dark .dataTables_wrapper .dataTables_info:hover {
+    background-color: #4b5563; /* Fondo hover en modo oscuro */
+}
+
+.dark .dataTables_wrapper .dataTables_filter input:focus,
+.dark .dataTables_wrapper .dataTables_length select:focus,
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button:focus,
+.dark .dataTables_wrapper .dataTables_info:focus {
+    background-color: #4b5563; /* Fondo focus en modo oscuro */
+    color: #f9fafb; /* Texto focus en modo oscuro */
+}
+
+.dark table.dataTable tbody tr {
+    background-color: #1f2937; /* Fondo fila en modo oscuro */
+    color: #e5e7eb; /* Texto fila en modo oscuro */
+}
+
+.dark table.dataTable tbody tr:hover {
+    background-color: #374151; /* Fondo hover fila en modo oscuro */
+}
+
+.dark table.dataTable thead {
+    background-color: #111827; /* Fondo encabezado en modo oscuro */
+    color: #f9fafb; /* Texto encabezado en modo oscuro */
+}
+
+.dark table.dataTable thead th {
+    border-bottom: 2px solid #374151; /* Borde encabezado en modo oscuro */
+}
+
+.dark table.dataTable tfoot {
+    background-color: #111827; /* Fondo pie de tabla en modo oscuro */
+    color: #f9fafb; /* Texto pie de tabla en modo oscuro */
+}

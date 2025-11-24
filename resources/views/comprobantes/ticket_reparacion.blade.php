@@ -1,0 +1,202 @@
+<?php
+if ($userPrinterSize == '58') {
+    $medidaTicket = 170; //180;685 para el de 58mm, 945 para el de 80mm
+} elseif ($userPrinterSize == '80') {
+    $medidaTicket = 270; //180;685 para el de 58mm, 945 para el de 80mm
+}
+?>
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <style>
+        * {
+            font-size: 9px;
+            font-family: 'DejaVu Sans', serif;
+        }
+
+        h1 {
+            font-size: 9px;
+        }
+
+        h2 {
+            font-size: 9px;
+        }
+
+        .ticket {
+            margin: 2px;
+        }
+
+        td,
+        th,
+        tr,
+        table {
+            border-top: 0px solid black;
+            border-collapse: collapse;
+            margin: 0 auto;
+            margin-left: 6px;
+            margin-right: 6px;
+        }
+
+        td.precio {
+            text-align: right;
+            font-size: 9px;
+        }
+
+        td.cantidad {
+            font-size: 9px;
+        }
+
+        td.producto {
+            text-align: left;
+        }
+
+        th {
+            text-align: center;
+        }
+
+
+        .centrado {
+            margin-top: 10px;
+            text-align: center;
+            align-content: center;
+        }
+
+        .textoGrande {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .ticket {
+            width: <?php echo $medidaTicket; ?>px;
+            max-width: <?php echo $medidaTicket; ?>px;
+        }
+
+        img {
+            /*max-width: inherit;
+            width: inherit;*/
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+
+        .ticket {
+            position: relative;
+            /* ← Agregar esto */
+            width: <?php echo $medidaTicket; ?>px;
+            max-width: <?php echo $medidaTicket; ?>px;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            text-align: center;
+        }
+
+        .uppercase {
+            text-transform: uppercase;
+        }
+
+        .cancelada {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 40px;
+            color: rgba(255, 0, 0, 0.2);
+            font-weight: bold;
+            z-index: 9999;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+    <div class="ticket centrado">
+        {{-- <img src="{{ $base64 }}" width="145" height="auto" /> --}}
+        <h1>PC SERVICIOS, TECNOLOGÍAS EN COMPUTACIÓN</h1>
+        <h2>AUHA8412PQ3</h2>
+        <h2>RAYÓN 815, CENTRO, OAXACA DE JUAREZ</h2>
+        <h2>TEL:(951) 589-2000</h2>
+        <h2>TEL:(951) 228-8850</h2>
+        <h1>== REPARACIÓN ==</h1>
+
+        <table border="0" width="100%" cellpadding="2" cellspacing="0">
+            {{-- Datos generales --}}
+            <tr>
+                <td colspan="3"><strong>Cliente:</strong> {{ $reparacion->cliente->full_name ?? 'CLIENTE PÚBLICO' }}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3"><strong>Tel:</strong> {{ $reparacion->tel1 }} {{ $reparacion->tel2 }}</td>
+            </tr>
+            <tr>
+            <td colspan="3"><strong>Fecha ingreso:</strong> {{ $reparacion->fecha_ingreso->format('d/m/Y H:i:s') }}</td>
+            </tr>
+            <tr>
+                <td colspan="3"><strong>Estatus:</strong> {{ strtoupper($reparacion->estatus) }}</td>
+            </tr>
+            <tr>
+                <td colspan="3"><strong>Equipo:</strong> {{ $reparacion->equipo }}</td>
+            </tr>
+
+            {{-- Encabezado productos --}}
+            <tr>
+                <th>CANT</th>
+                <th>PRODUCTO</th>
+                <th>TOTAL</th>
+            </tr>
+
+            {{-- Productos --}}
+            @foreach ($reparacion->productos as $detalle)
+                <tr>
+                    <td>{{ $detalle->cantidad }}</td>
+                    <td>{{ $detalle->producto->nombre ?? ($detalle->producto_comun ?? 'Producto') }}</td>
+                    <td>{{ '$' . number_format($detalle->total, 2) }}</td>
+                </tr>
+            @endforeach
+
+            {{-- Costo servicio externo --}}
+            @if($reparacion->costo_servicio > 0)
+            <tr>
+                <td>1</td>
+                <td>SERVICIO</td>
+                <td>{{ '$' . number_format($reparacion->costo_servicio, 2) }}</td>
+            </tr>
+            @endif
+
+            {{-- Separador --}}
+            <tr>
+                <td colspan="3">----------------------------------------------------------------------------------</td>
+            </tr>
+
+             {{-- Notas --}}
+            @if($reparacion->fallo)
+            <tr>
+                <td colspan="3"><strong>Fallo:</strong> {{ $reparacion->fallo }}</td>
+            </tr>
+            @endif
+            @if($reparacion->solucion)
+            <tr>
+                <td colspan="3"><strong>Solución:</strong> {{ $reparacion->solucion }}</td>
+            </tr>
+            @endif
+            @if($reparacion->recomendaciones)
+            <tr>
+                <td colspan="3"><strong>Recomendaciones:</strong> {{ $reparacion->recomendaciones }}</td>
+            </tr>
+            @endif
+
+        </table>
+    </div>
+</body>
+
+</html>
