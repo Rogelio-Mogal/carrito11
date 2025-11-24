@@ -199,6 +199,9 @@ Route::get('/productos/buscar-para-tabla', [ProductosController::class, 'buscarP
 Route::post('sucursal/index/ajax', [SucursalesController::class, 'sucursal_index_ajax'])
 	->name('sucursal.index.ajax');
 
+Route::post('usuario/index/ajax', [UserController::class, 'usuarios_index_ajax'])
+	->name('usuario.index.ajax');
+
 Route::resource('/clientes', ClientesController::class)->names('admin.clientes')
 ->except('show');
 

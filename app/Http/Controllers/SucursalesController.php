@@ -15,8 +15,7 @@ class SucursalesController extends Controller
 
     public function index()
     {
-        $sucursales = Sucursal::all();
-        return view('sucursales.index', compact('sucursales'));
+        return view('sucursales.index');
     }
 
     public function create()

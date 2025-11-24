@@ -14,11 +14,10 @@ class UserController extends Controller
         $this->middleware('auth:sanctum');
         //$this->middleware(['can:Gestión de roles']);
     }
-    
+
     public function index()
     {
-        $users = User::with('sucursal')->get();
-        return view('users.index', compact('users'));
+        return view('users.index');
     }
 
     public function create()
@@ -114,7 +113,7 @@ class UserController extends Controller
             return view('users.edit', compact('user','metodo','roles','sucursales'));
         }else{
             return redirect()->route('admin.users.index');
-        }   
+        }
     }
 
     public function update(Request $request, User $user)
@@ -148,7 +147,7 @@ class UserController extends Controller
                 $user->email = $request->email;
                 $user->es_reparador = $request->es_reparador;
                 $user->es_externo = $request->es_externo;
-                
+
                 // Solo actualizar la contraseña si se proporciona una nueva
                 if ($request->has('password') && $request->password != '') {
                     $user->password = bcrypt($request->password);
@@ -292,7 +291,7 @@ class UserController extends Controller
                 ],
                 'buttonsStyling' => false  // Deshabilitar el estilo predeterminado de SweetAlert2
             ]);
-    
+
             //return redirect()->route('admin.users.index');
         } catch (\Exception $e) {
             session()->flash('swal', [
@@ -337,4 +336,45 @@ class UserController extends Controller
         return response()->json(['success' => true, 'estado' => $user->es_externo]);
     }
 
+    public function usuarios_index_ajax(Request $request)
+    {
+        if ($request->origen == 'usuario.index') {
+            $usuarios = User::with('sucursal')->get()->map(function ($item) {
+
+                // Checkbox reparador
+                $reparador = '
+                    <input type="checkbox" class="toggle-reparador"
+                        data-id="'.$item->id.'"
+                        '.($item->es_reparador ? 'checked' : '').'>
+                ';
+
+                // Checkbox externo
+                $externo = '
+                    <input type="checkbox" class="toggle-externo"
+                        data-id="'.$item->id.'"
+                        '.($item->es_externo ? 'checked' : '').'
+                        '.(!$item->es_reparador ? 'disabled' : '').'>
+                ';
+
+                // Etiqueta estatus
+                $estatus = $item->activo == 1
+                    ? '<span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Activo</span>'
+                    : '<span class="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">Eliminado</span>';
+
+                return [
+                    'id'        => $item->id,
+                    'name'    => $item->name,
+                    'last_name' => $item->last_name,
+                    'email'  => $item->email,
+                    'sucursal'  => $item->sucursal ? $item->sucursal->nombre : 'Sin asignar',
+                    'reparador' => $reparador,
+                    'externo'   => $externo,
+                    'estatus'   => $estatus,
+                    'acciones' => e(view('users.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json([ 'data' => $usuarios ]);
+        }
+    }
 }
