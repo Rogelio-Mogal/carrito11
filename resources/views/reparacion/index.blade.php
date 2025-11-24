@@ -136,8 +136,6 @@
             });
         }
 
-       
-
         // 🔄 Botón de recargar
         $("#reloadTable").on("click", function() {
             cargarReparaciones();
@@ -164,7 +162,6 @@
                     },
                     buttonsStyling: false
                 });
-                
             });
         });
 
@@ -254,7 +251,7 @@
         // ✅ Productos/Servicios
         $(document).on('click', '.productos-servicios', function () {
             let reparacionId = $(this).data('id');
-            
+
             // Abrir modal para capturar solución, recomendaciones y productos
             $('#modalProductosServicios').data('id', reparacionId).modal('show');
         });
@@ -309,7 +306,7 @@
             checkboxInputs.prop('checked', !alMenosUnoSeleccionado).trigger('change');
         });
 
-        // CONFIRMA ELIMINAR 
+        // CONFIRMA ELIMINAR
         $(document).on("click", ".btn-eliminar", function () {
             let form = $(this).closest("form")[0];
 

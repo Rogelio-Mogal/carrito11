@@ -196,6 +196,9 @@ Route::post('caja-movimeinto/index/ajax', [CajaMovimientoController::class, 'caj
 Route::get('/productos/buscar-para-tabla', [ProductosController::class, 'buscarProductoPorCodigo'])
     ->name('productos.cod.barra');
 
+Route::post('sucursal/index/ajax', [SucursalesController::class, 'sucursal_index_ajax'])
+	->name('sucursal.index.ajax');
+
 Route::resource('/clientes', ClientesController::class)->names('admin.clientes')
 ->except('show');
 

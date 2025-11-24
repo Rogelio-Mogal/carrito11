@@ -96,7 +96,7 @@ class SucursalesController extends Controller
             return view('sucursales.edit', compact('sucursales','metodo'));
         }else{
             return redirect()->route('admin.sucursales.index');
-        } 
+        }
     }
 
     public function update(Request $request, $id)
@@ -241,7 +241,7 @@ class SucursalesController extends Controller
                 ],
                 'buttonsStyling' => false  // Deshabilitar el estilo predeterminado de SweetAlert2
             ]);
-    
+
         } catch (\Exception $e) {
             $query = $e->getMessage();
             session()->flash('swal', [
@@ -256,6 +256,31 @@ class SucursalesController extends Controller
             return redirect()->back()
                 ->with('status', 'Hubo un error al ingresar los datos, por favor intente de nuevo.')
                 ->withErrors(['error' => $e->getMessage()]); // Aquí pasas el mensaje de error
+        }
+    }
+
+    public function sucursal_index_ajax(Request $request)
+    {
+        if ($request->origen == 'sucursal.index') {
+
+            $sucursales = Sucursal::all()->map(function ($item) {
+
+                // --- Etiqueta de Matriz ---
+                $es_matriz = $item->es_matriz == 1
+                    ? '<span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Si</span>'
+                    : '<span class="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">No</span>';
+
+                return [
+                    'id'        => $item->id,
+                    'nombre'    => $item->nombre,
+                    'direccion' => $item->direccion,
+                    'telefono'  => $item->telefono,
+                    'es_matriz' => $es_matriz,
+                    'acciones' => e(view('sucursales.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json([ 'data' => $sucursales ]);
         }
     }
 }

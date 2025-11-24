@@ -322,7 +322,7 @@ class ReparacionController extends Controller
                     $acciones = '';
 
                     $acciones .= '
-                <a href="' . route('ticket.reparacion', $item->id) . '" target="_blank" 
+                <a href="' . route('ticket.reparacion', $item->id) . '" target="_blank"
                     data-popover-target="ticket-tooltip' . $item->id . '" data-popover-placement="bottom"
                     class="mb-1 text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
                         <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -345,7 +345,7 @@ class ReparacionController extends Controller
                                 $acciones .= '
                                 <a href="#"
                                     data-id="' . $item->id . '"
-                                    data-popover-target="tooltip-pagar-' . $item->id . '"  
+                                    data-popover-target="tooltip-pagar-' . $item->id . '"
                                     data-popover-placement="left"
                                     class="pagar-servicio text-white mb-1 bg-purple-600 hover:bg-purple-700 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center dark:bg-purple-500 dark:hover:bg-purple-600 dark:focus:ring-purple-700">
                                     <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -365,7 +365,7 @@ class ReparacionController extends Controller
 
                             // ✅ Productos/Servicios: siempre disponible
                             $acciones .= '
-                            <a href="' . route('admin.reparacion.solucion', $item->id) . '" 
+                            <a href="' . route('admin.reparacion.solucion', $item->id) . '"
                                 data-popover-target="solucion-tooltip' . $item->id . '" data-popover-placement="bottom"
                                 class="mb-1 productos-servicios text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
                                 <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -387,7 +387,7 @@ class ReparacionController extends Controller
                                     <a href="' . route('admin.ventas.create', [
                                     'reparacion_id' => $item->id,
                                     'cliente_id' => $item->cliente_id,
-                                ]) . '" 
+                                ]) . '"
                                     data-popover-target="venta-tooltip' . $item->id . '" data-popover-placement="bottom"
                                     class="mb-1 pasar-venta text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
                                         <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -411,7 +411,7 @@ class ReparacionController extends Controller
                         $acciones .= '
                             <form action="' . route('admin.reparacion.destroy', $item->id) . '" method="POST" class="form-eliminar" style="display:inline;">
                                 ' . csrf_field() . method_field('DELETE') . '
-                                <button type="button" 
+                                <button type="button"
                                     data-id="' . $item->id . '"
                                     class="btn-eliminar mb-1 text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
                                     <svg class="w-5 h-5 text-gray-100 dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -526,7 +526,6 @@ class ReparacionController extends Controller
 
         return redirect()->route('admin.ventas.create');
     }
-
 
     public function pasarAVenta($id)
     {
