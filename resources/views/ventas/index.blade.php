@@ -21,7 +21,33 @@
     <div class="shadow-md rounded-lg p-4 dark:bg-gray-800">
         <div class="grid grid-cols-1 lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-4">
             <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
-                <table id="venta" class="table table-striped" style="width:100%">
+                <div class="mb-4">
+                    <button id="reloadTable"
+                        class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        Recargar Tabla
+                    </button>
+                </div>
+
+                <!-- Mensaje de carga sobre la tabla -->
+                <div id="loadingOverlay" class="absolute inset-0 flex items-center justify-center z-50 hidden">
+                    <div class="relative flex items-center">
+                        <!-- Contenedor para el texto de carga -->
+                        <div class="text-white text-lg font-bold p-4 bg-gray-900 rounded flex items-center">
+                            <svg aria-hidden="true"
+                                class="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                                viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                                    fill="currentColor" />
+                                <path
+                                    d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                                    fill="currentFill" />
+                            </svg>
+                            &nbsp;Procesando
+                        </div>
+                    </div>
+                </div>
+                <table id="TblVenta" class="table table-striped" style="width:100%">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -34,6 +60,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {{--
                         @foreach ($ventas as $item)
                             <tr>
                                 <td>{{ $item->id }}</td>
@@ -42,9 +69,8 @@
                                 <td>{{ $item->cliente ? $item->cliente->full_name : 'SIN CLIENTE' }}</td>
                                 <td>{{ $item->tipo_venta }}</td>
                                 <td>{{ '$' . number_format($item->total, 2, '.', ',') }}</td>
-                                {{--<td>{{ $item['fecha_estimada_entrega'] }}</td>--}}
-                                
-                                {{--
+
+                                <!--
                                 <td> {{ '$' . number_format($item->total, 2, '.', ',') }} </td>
                                 <td>
                                     @if( $item->activo == 0 )
@@ -54,7 +80,7 @@
                                         <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Activo</span>
                                     @endif
                                 </td>
-                                --}}
+                                -->
                                 <td>
                                     <a href="{{ route('ticket.venta', ['id' => $item->id]) }}" target="_blank"
                                     data-popover-target="ticket-venta{{ $item->id }}" data-popover-placement="bottom"
@@ -72,7 +98,7 @@
                                     </div>
 
                                     @if ($item->activo == 1)
-                                     
+
                                         <!-- Botón para pasar a venta (solo para pedidos finalizados) -->
                                         @if($item->tipo == 'pedido' && $item->estatus == 'Finalizado')
                                             <a href="{{ route('admin.ventas.create', ['referencia_cliente' => $item->referencia_cliente]) }}"
@@ -110,8 +136,8 @@
                                             </div>
                                         @endif
 
-                                        {{--
-                                        <a href="{{ route('admin.ventas.create', ['referencia_cliente' => $item->referencia_cliente]) }}" 
+                                        <!--
+                                        <a href="{{ route('admin.ventas.create', ['referencia_cliente' => $item->referencia_cliente]) }}"
                                         class="text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded">Crear venta</a>
 
                                         <a href="{{ route('admin.ventas.edit', $item->id) }}"
@@ -126,9 +152,7 @@
                                             </svg>
                                             <span class="sr-only">Editar</span>
                                         </a>
-                                        --}}
-
-                                        
+                                    -->
 
 
                                         <a href="{{ route('admin.ventas.show', $item->id) }}"
@@ -148,8 +172,6 @@
                                                 <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Cancela venta</h6>
                                             </div>
                                         </div>
-
-                                        
                                     @else
                                         <a href="#"
                                             data-popover-target="eliminado{{ $item->id }}" data-popover-placement="bottom"
@@ -158,7 +180,7 @@
                                             <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                                 <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m6 6 12 12m3-6a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                             </svg>
-                                                                                          
+
                                             <span class="sr-only">Activar</span>
                                         </a>
                                         <div id="eliminado{{ $item->id }}" role="tooltip"
@@ -171,11 +193,11 @@
                                 </td>
                             </tr>
                         @endforeach
+                        --}}
                     </tbody>
                 </table>
             </div>
         </div>
-
     </div>
 
 
@@ -185,21 +207,66 @@
     <script>
 
         $(document).ready(function() {
-            var VentaTable = new DataTable('#venta', {
-                responsive: true,
-                "language": {
-                    "url": "{{ asset('/json/i18n/es_es.json') }}"
-                },
-            });
-            //  Re-inicializa Flowbite cada vez que DataTables repinta
-            VentaTable.on('draw', function () {
-                if (typeof window.initFlowbite === "function") {
-                    window.initFlowbite();
+
+            cargarVentas();
+
+            function cargarVentas() {
+                const postData = {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    origen: "venta.index"
+                };
+
+                if ($.fn.DataTable.isDataTable('#TblVenta')) {
+                    $('#TblVenta').DataTable().clear().destroy();
                 }
+
+                var ventasTable = $('#TblVenta').DataTable({
+                    processing: true,
+                    serverSide: false, // cambiar a true si quieres paginación del lado del servidor
+                    responsive: true,
+                    ajax: {
+                        url: "{{ route('venta.index.ajax') }}",
+                        type: "POST",
+                        data: postData
+                    },
+                    columns: [
+                        { data: 'id', visible: false },
+                        { data: 'fecha' },
+                        { data: 'folio' },
+                        { data: 'cliente' },
+                        { data: 'tipo_venta' },
+                        { data: 'total' },
+                        { data: 'acciones', render: function(data){
+                            return $('<div/>').html(data).text();
+                        }}
+                    ],
+                    language: { url: "{{ asset('/json/i18n/es_es.json') }}" }
+                });
+
+                //  Re-inicializa Flowbite cada vez que DataTables repinta
+                ventasTable.on('draw', function () {
+                    if (typeof window.initFlowbite === "function") {
+                        window.initFlowbite();
+                    }
+                });
+            }
+
+            // 🔄 Botón de recargar
+            $("#reloadTable").on("click", function() {
+                cargarVentas();
             });
 
+
+            //var VentaTable = new DataTable('#TblVenta', {
+            //    responsive: true,
+            //    "language": {
+            //        "url": "{{ asset('/json/i18n/es_es.json') }}"
+            //    },
+            //});
+
+
             // Manejar el clic en la opción "Eliminar"
-            $('#venta').on('click', '.delete-item', function(e) {
+            $('#TblVenta').on('click', '.delete-item', function(e) {
                 e.preventDefault();
                 var id = $(this).data('id');
 
@@ -238,7 +305,7 @@
             });
 
             // Manejar el clic en la opción "Avtivar"
-            $('#venta').on('click', '.activa-item', function(e) {
+            $('#TblVenta').on('click', '.activa-item', function(e) {
                 e.preventDefault();
                 var id = $(this).data('id');
 

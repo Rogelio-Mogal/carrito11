@@ -184,12 +184,12 @@
             @include('ventas.partials._modal_nota_credito')
             @include('ventas.partials._modal_anticipo_apartado')
 
-            
+
 
         </div>
     </div>
 
-    
+
 
     <!-- Panel lateral (formas de pago) -->
     <div class="col-span-12 lg:col-span-3 space-y-2">
@@ -546,8 +546,8 @@
             // Arreglos globales para almacenar los anticipos aplicados
             let anticiposAplicados = [];
             let notasCreditoAplicadas = [];
-            let tipoAplicado = null;      // "ANTICIPO" o "APARTADO" 
-            let clienteAplicado = null;   // cliente de los items seleccionados 
+            let tipoAplicado = null;      // "ANTICIPO" o "APARTADO"
+            let clienteAplicado = null;   // cliente de los items seleccionados
 
             recalcularTotalTabla('item_table_0');
             cargarNotasCredito();
@@ -663,7 +663,7 @@
                             tbody.append(`
                                 <tr>
                                     <td class="text-center">
-                                        <input type="checkbox" 
+                                        <input type="checkbox"
                                             class="nota-checkbox accent-green-600 cursor-pointer"
                                             data-ids="${ids}"
                                             data-cliente="${nota.cliente_nombre}"
@@ -673,8 +673,8 @@
                                     <td>${nota.cliente_nombre}</td>
                                     <td>$${nota.total_monto}</td>
                                     <td>
-                                        <button type="button" 
-                                                class="btn-aplicar-notas bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700" 
+                                        <button type="button"
+                                                class="btn-aplicar-notas bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
                                                 data-ids="${ids}">
                                             Aplicar
                                         </button>
@@ -686,7 +686,7 @@
                             tbody.append(`
                                 <tr>
                                     <td class="text-center">
-                                        <input type="checkbox" 
+                                        <input type="checkbox"
                                             class="nota-checkbox accent-green-600 cursor-pointer"
                                             data-ids="${ids}"
                                             data-cliente="${nota.cliente_nombre}"
@@ -972,14 +972,14 @@
                     // Campo Números de serie
                     if (requiereSerie == 1) {
                         html += `<td class="px-6 py-4">
-                            <textarea name="detalles[${index}][series]" 
-                                    class="serie w-40 border rounded p-1" 
+                            <textarea name="detalles[${index}][series]"
+                                    class="serie w-40 border rounded p-1"
                                     rows="1" required></textarea>
                         </td>`;
                     } else {
                         html += `<td class="px-6 py-4">
-                            <textarea name="detalles[${index}][series]" 
-                                    class="serie w-40 border rounded p-1" 
+                            <textarea name="detalles[${index}][series]"
+                                    class="serie w-40 border rounded p-1"
                                     rows="1"></textarea>
                         </td>`;
                     }
@@ -1123,10 +1123,10 @@
                     $.ajax({
                         url: '/productos/buscar-para-tabla',
                         method: 'GET',
-                        data: { 
-                            codigo, 
+                        data: {
+                            codigo,
                             tipo_busqueda: tipoBusqueda,
-                            _token: $('meta[name="csrf-token"]').attr('content') 
+                            _token: $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function(res) {
                             if (res.data.length > 0) {
@@ -1296,6 +1296,8 @@
                         default: nuevoPrecio = parseFloat(inventario.precio_publico);
                     }
 
+
+
                     // Recalcular importe
                     const cantidad = parseFloat($row.find('.cantVenta').val()) || 0;
                     const nuevoImporte = cantidad * nuevoPrecio;
@@ -1303,7 +1305,17 @@
                     // Actualizar precio unitario
                     $row.find('.pu').attr('data-precio', nuevoPrecio);
                     $row.find('.pu input').val(nuevoPrecio);
-                    $row.find('.pu').text(nuevoPrecio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }));
+
+                    //$row.find('.pu').text(nuevoPrecio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }));
+
+                    $row.find('.pu').contents().filter(function() {
+                        return this.nodeType === 3;
+                    }).first().replaceWith(
+                        nuevoPrecio.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
+                    );
+
+                    // ACTUALIZAR input hidden del precio
+                    $row.find('input[name*="[precio]"]').val(nuevoPrecio);
 
                     $row.find('.importe input.total_pp').val(nuevoImporte.toFixed(2));
                     $row.find('.importe').contents().filter(function() {
@@ -1443,7 +1455,7 @@
                 recalcularTotalTabla('item_table_0');
             });
 
-            // cambio de forma de pago 
+            // cambio de forma de pago
             $(document).on('input', '.forma-pago', function() {
                 recalcularFaltanteCambio();
             });
@@ -2257,7 +2269,7 @@
                 $('#total_mostrado').text(totalFormateado);
                 $('#total_venta').val(total.toFixed(2));
             }
-            
+
             function recalcularTotalTabla_este_no(targetTableId) {
                 let total = 0;
 
@@ -2332,12 +2344,12 @@
                             tbody.append(`
                                 <tr>
                                     <td>
-                                        <input type="checkbox" 
-                                            class="anticipo-apartado-checkbox" 
-                                            data-id="${item.anticipo_apartado_id}" 
-                                            data-cliente="${item.cliente}" 
-                                            data-tipo="${item.tipo}" 
-                                            data-adelanto="${item.total_anticipo_apartado}" 
+                                        <input type="checkbox"
+                                            class="anticipo-apartado-checkbox"
+                                            data-id="${item.anticipo_apartado_id}"
+                                            data-cliente="${item.cliente}"
+                                            data-tipo="${item.tipo}"
+                                            data-adelanto="${item.total_anticipo_apartado}"
                                             data-faltante="${item.total_saldo}">
                                     </td>
                                     <td>${anticipo_apartado.fecha}</td>
@@ -2348,8 +2360,8 @@
                                     <td>$${anticipo_apartado.total_saldo}</td>
                                     <td>${anticipo_apartado.tipo}</td>
                                     <td>
-                                        <button type="button" 
-                                                class="btn-aplicar-anticipo-apartado bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700" 
+                                        <button type="button"
+                                                class="btn-aplicar-anticipo-apartado bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
                                                 data-ids="${anticipo_apartado.anticipo_apartado_id}">
                                             Aplicar
                                         </button>
@@ -2361,12 +2373,12 @@
                             tbody.append(`
                                 <tr>
                                     <td>
-                                        <input type="checkbox" 
-                                            class="anticipo-apartado-checkbox" 
-                                            data-id="${anticipo_apartado.anticipo_apartado_id}" 
-                                            data-cliente="${anticipo_apartado.cliente}" 
-                                            data-tipo="${anticipo_apartado.tipo}" 
-                                            data-adelanto="${anticipo_apartado.total_abono}" 
+                                        <input type="checkbox"
+                                            class="anticipo-apartado-checkbox"
+                                            data-id="${anticipo_apartado.anticipo_apartado_id}"
+                                            data-cliente="${anticipo_apartado.cliente}"
+                                            data-tipo="${anticipo_apartado.tipo}"
+                                            data-adelanto="${anticipo_apartado.total_abono}"
                                             data-faltante="${anticipo_apartado.total_saldo}">
                                     </td>
                                     <td>${anticipo_apartado.fecha}</td>

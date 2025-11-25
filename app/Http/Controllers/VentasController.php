@@ -528,7 +528,7 @@ class VentasController extends Controller
                     }
                 }
 
-                //  Actualizar inventario y kardex 
+                //  Actualizar inventario y kardex
                 if ($detalle['tipo_item'] == 'PRODUCTO') {
                     $inventario = Inventario::where('producto_id', $detalle['producto_id'])
                         ->where('sucursal_id', auth()->user()->sucursal_id)
@@ -1735,7 +1735,7 @@ class VentasController extends Controller
             'pagos', // incluir pagos
             'pagos.pagable', // para identificar si fue nota crédito o anticipo
         ])->findOrFail($id);
-        
+
 
         $montoNotasCredito = $venta->notaCreditos->sum('monto');
         $totalNeto = $venta->total - $montoNotasCredito;
@@ -1763,7 +1763,6 @@ class VentasController extends Controller
 
         return $pdf->stream();
     }
-
 
     public function ticket_uno($id)
     {
@@ -1811,6 +1810,47 @@ class VentasController extends Controller
             ]);
         } else {
             return response()->json(['venta' => null]);
+        }
+    }
+
+    public function ventas_index_ajax(Request $request)
+    {
+        if ($request->origen == 'venta.index') {
+
+            $hoy = Carbon::today();
+            $hace7dias = $hoy->copy()->subDays(7);
+
+            // --- VENTAS --- //
+            //$data = Venta::with('cliente')
+            //    ->whereBetween('fecha', [
+            //        $hace7dias->startOfDay(),
+            //        $hoy->copy()->endOfDay()
+            //    ])
+            //    ->orderBy('fecha', 'asc')
+            //    ->get();
+
+
+            $ventas = Venta::with('cliente')
+                ->whereBetween('fecha', [
+                    $hace7dias->startOfDay(),
+                    $hoy->copy()->endOfDay()
+                ])
+                ->orderBy('fecha', 'asc')
+                ->get()->map(function ($item) {
+
+
+                return [
+                    'id'        => $item->id,
+                    'fecha'    => $item->fecha,
+                    'folio' => $item->folio,
+                    'cliente'  => $item->cliente ? $item->cliente->full_name : 'SIN CLIENTE',
+                    'tipo_venta'  => $item->tipo_venta,
+                    'total'  => '$' . number_format($item->total, 2, '.', ','),
+                    'acciones' => e(view('ventas.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json([ 'data' => $ventas ]);
         }
     }
 }

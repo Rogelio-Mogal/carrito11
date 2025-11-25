@@ -60,6 +60,7 @@ class ProductosController extends Controller
 
     public function store(Request $request)
     {
+
         $rules = [
             'nombre' => 'required|string|min:2|max:255|unique:productos',
             'tipo' => 'required|in:PRODUCTO,SERVICIO',
@@ -72,9 +73,9 @@ class ProductosController extends Controller
             'serie' => 'required|boolean',
             'cantidad' => 'nullable|integer|min:1',
             'precio_costo' => 'nullable|numeric|min:0',
-            'imagen_1' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'imagen_2' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'imagen_3' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'imagen_1' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
+            'imagen_2' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
+            'imagen_3' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
             'descripcion' => 'required|string|min:2|max:1500',
         ];
 
@@ -98,6 +99,7 @@ class ProductosController extends Controller
         // dd('as');
         // PRODUCTO/SERVICIOS SIN INVENTARIO INICIAL
         try {
+
             DB::beginTransaction();
 
             //valida códigos de barra
@@ -106,6 +108,7 @@ class ProductosController extends Controller
                     'codigo_barra' => 'El código de barra principal ya existe en otro producto.'
                 ])->withInput();
             }
+
 
             // 🔹 Validar códigos alternos
             $codigosAlternos = array_filter(array_map('trim', $request->codigos_alternos ?? []));
@@ -117,6 +120,7 @@ class ProductosController extends Controller
                     ])->withInput();
                 }
             }
+
 
             //if ($request->menuVisible == 0) {
             $productoServicio = new Producto();
@@ -146,15 +150,17 @@ class ProductosController extends Controller
             }
 
 
-            if ($request->file('imagen_1')) {
-                /*$slug = Str::slug($request->nombre);
-                        $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                        $file_name = $slug.'-'.substr(str_shuffle($permitted_chars), 0, 3).'.'.$request->file('imagen_1')->getClientOriginalExtension();
+
+            // CÓDIGO PARA EL DOMINIO
+            /*if ($request->file('imagen_1')) {
+                //$slug = Str::slug($request->nombre);
+                //        $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                //        $file_name = $slug.'-'.substr(str_shuffle($permitted_chars), 0, 3).'.'.$request->file('imagen_1')->getClientOriginalExtension();
                         //$imageStorage = Storage::disk('s3')->putFileAs('productos', $request->imagen_1, $file_name);
-                        $imageStorage = Storage::putFileAs('productos', $request->imagen_1 ,$file_name, [
-                            'visibility' => 'public',
-                        ]);
-                        $productoServicio->imagen_1 = $imageStorage;*/
+                //        $imageStorage = Storage::putFileAs('productos', $request->imagen_1 ,$file_name, [
+                //            'visibility' => 'public',
+                //        ]);
+                //        $productoServicio->imagen_1 = $imageStorage;
 
                 $slug = Str::random(10); // Genera una cadena aleatoria de 10 caracteres
                 $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -170,7 +176,7 @@ class ProductosController extends Controller
                 // IMAGEN NORMAL
                 $manager = new ImageManager(new Driver());
                 $img = $manager->read('storage/' . $imageStorage);
-                $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion   
+                $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion
 
                 // IMAGEN THUMB
                 $imgThumb = $manager->read('storage/' . $imageStorageThumb);
@@ -182,6 +188,46 @@ class ProductosController extends Controller
                 $productoServicio->imagen_1 = $imageStorage;
                 $productoServicio->img_thumb = $imageStorageThumb;
             }
+            */
+
+            // CÓDIGO PARA LOCAL
+            if ($request->file('imagen_1')) {
+
+                $slug = Str::random(10);
+                $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                $file_name = $slug . '-' . substr(str_shuffle($permitted_chars), 0, 3)
+                            . '.' . $request->file('imagen_1')->getClientOriginalExtension();
+
+                // Guarda en storage/app/public/productos
+                $imageStorage = Storage::disk('public')->putFileAs('productos', $request->imagen_1, $file_name);
+
+                // Guarda thumb
+                $imageStorageThumb = Storage::disk('public')->putFileAs('productos/thumbs', $request->imagen_1, $file_name);
+
+                // RUTAS REALES DONDE EXISTEN LOS ARCHIVOS
+                $realPath      = storage_path('app/public/' . $imageStorage);
+                $realThumbPath = storage_path('app/public/' . $imageStorageThumb);
+
+                // Manager
+                $manager = new ImageManager(new Driver());
+
+                // IMAGEN NORMAL
+                $img = $manager->read($realPath);
+                $img->save($realPath, 90, 'jpg');
+
+                // IMAGEN THUMB
+                $imgThumb = $manager->read($realThumbPath);
+                $imgThumb->scale(null, 210, function ($constraint) {
+                    $constraint->aspectRatio();
+                });
+                $imgThumb->save($realThumbPath, 90, 'jpg');
+
+                $productoServicio->imagen_1 = $imageStorage;
+                $productoServicio->img_thumb = $imageStorageThumb;
+            }
+
+
+
 
             if ($request->file('imagen_2')) {
                 /*$slug = Str::slug($request->nombre);
@@ -310,6 +356,7 @@ class ProductosController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             $query = $e->getMessage();
+            dd($query);
             session()->flash('swal', [
                 'icon' => "error",
                 'title' => "Operación fallida",
@@ -420,7 +467,7 @@ class ProductosController extends Controller
                     // IMAGEN NORMAL
                     $manager = new ImageManager(new Driver());
                     $img = $manager->read('storage/' . $imageStorage);
-                    $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion   
+                    $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion
 
                     // IMAGEN THUMB
                     $imgThumb = $manager->read('storage/' . $imageStorageThumb);
@@ -589,7 +636,7 @@ class ProductosController extends Controller
                     // IMAGEN NORMAL
                     $manager = new ImageManager(new Driver());
                     $img = $manager->read('storage/' . $imageStorage);
-                    $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion   
+                    $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion
 
                     // IMAGEN THUMB
                     $imgThumb = $manager->read('storage/' . $imageStorageThumb);
@@ -878,9 +925,9 @@ class ProductosController extends Controller
                 'cantidad_minima' => 'required|integer|min:1',
                 'garantia' => 'nullable|string|max:255',
                 'serie' => 'required|boolean',
-                'imagen_1' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-                'imagen_2' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-                'imagen_3' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'imagen_1' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
+                'imagen_2' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
+                'imagen_3' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
                 'descripcion' => 'required|string|min:2|max:1500',
             ];
 
@@ -977,7 +1024,7 @@ class ProductosController extends Controller
                     // IMAGEN NORMAL
                     $manager = new ImageManager(new Driver());
                     $img = $manager->read('storage/' . $imageStorage);
-                    $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion   
+                    $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion
 
                     // IMAGEN THUMB
                     $imgThumb = $manager->read('storage/' . $imageStorageThumb);
@@ -1026,7 +1073,7 @@ class ProductosController extends Controller
                     // IMAGEN NORMAL
                     $manager = new ImageManager(new Driver());
                     $img = $manager->read('storage/' . $imageStorage);
-                    $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion   
+                    $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion
 
                     $productoServicio->imagen_2 = $imageStorage;
                 }
@@ -1067,7 +1114,7 @@ class ProductosController extends Controller
                     // IMAGEN NORMAL
                     $manager = new ImageManager(new Driver());
                     $img = $manager->read('storage/' . $imageStorage);
-                    $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion   
+                    $img->save('storage/' . $imageStorage, 90, 'jpg'); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion
 
                     $productoServicio->imagen_3 = $imageStorage;
                 }
