@@ -205,6 +205,9 @@ Route::post('usuario/index/ajax', [UserController::class, 'usuarios_index_ajax']
 Route::post('venta/index/ajax', [VentasController::class, 'ventas_index_ajax'])
 	->name('venta.index.ajax');
 
+Route::post('forma/pago/index/ajax', [FormaPagoController::class, 'forma_pago_index_ajax'])
+	->name('forma.pago.index.ajax');
+
 Route::resource('/clientes', ClientesController::class)->names('admin.clientes')
 ->except('show');
 

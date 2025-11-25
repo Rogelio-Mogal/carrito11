@@ -220,10 +220,40 @@
                     $('#TblVenta').DataTable().clear().destroy();
                 }
 
+                // Para ordenar las fechas
+                $.extend($.fn.dataTable.ext.type.order, {
+                    "date-eu-pre": function (value) {
+                        if (!value || value.trim() === "") return 0;
+
+                        // value = "25/11/2025 12:54:00"
+                        const [fecha, hora] = value.split(" ");
+                        if (!fecha) return 0;
+
+                        const [dia, mes, año] = fecha.split("/");
+                        const [h, m, s] = hora ? hora.split(":") : ["00", "00", "00"];
+
+                        // Convertir a formato sortable: YYYYMMDDHHMMSS
+                        return (año + mes + dia + h + m + s) * 1;
+                    }
+                });
+
+                // ORDENAR CANTIDADES CON FORMATO "$1,234.56"
+                $.extend($.fn.dataTable.ext.type.order, {
+                    "currency-mx-pre": function (data) {
+                        if (!data) return 0;
+
+                        // Elimina $, comas y espacios
+                        return parseFloat(
+                            data.replace('$', '').replace(/,/g, '').trim()
+                        );
+                    }
+                });
+
                 var ventasTable = $('#TblVenta').DataTable({
                     processing: true,
                     serverSide: false, // cambiar a true si quieres paginación del lado del servidor
                     responsive: true,
+                    order: [], // evita que intente ordenar automático
                     ajax: {
                         url: "{{ route('venta.index.ajax') }}",
                         type: "POST",
@@ -231,11 +261,19 @@
                     },
                     columns: [
                         { data: 'id', visible: false },
-                        { data: 'fecha' },
+                        {
+                            data: 'fecha',
+                            type: "date-eu",
+                            orderable: true
+                        },
                         { data: 'folio' },
                         { data: 'cliente' },
                         { data: 'tipo_venta' },
-                        { data: 'total' },
+                        {
+                            data: 'total',
+                            type: "currency-mx",
+                            orderable: true
+                        },
                         { data: 'acciones', render: function(data){
                             return $('<div/>').html(data).text();
                         }}

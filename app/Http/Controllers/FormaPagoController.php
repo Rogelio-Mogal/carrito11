@@ -17,7 +17,7 @@ class FormaPagoController extends Controller
     public function index()
     {
         $formapago = FormaPago::all();
-        return view('forma_pago.index', compact('formapago'));
+        return view('forma_pago.index'); //, compact('formapago'));
     }
 
     public function create()
@@ -93,10 +93,10 @@ class FormaPagoController extends Controller
             // Asignar el nuevo valor al modelo
             $formapago->forma_pago = $request->forma_pago;
 
-            if ($formapago->isDirty()) { 
+            if ($formapago->isDirty()) {
                 try{
                     $formapago->forma_pago = $request->forma_pago;
-                    $formapago->updated_at = Carbon::now(); 
+                    $formapago->updated_at = Carbon::now();
                     $formapago->save();
 
                     session()->flash('swal', [
@@ -135,7 +135,7 @@ class FormaPagoController extends Controller
                     ],
                     'buttonsStyling' => false
                 ]);
-    
+
                 return redirect()->route('admin.forma.pago.index');
             }
         }
@@ -143,7 +143,7 @@ class FormaPagoController extends Controller
         // ACTIVAMOS EL REGISTRO
         if ($request->activa == 1){
             try {
-                // Remueve los últimos 5 caracteres de 'forma_pago' 
+                // Remueve los últimos 5 caracteres de 'forma_pago'
                 $forma_pago = substr($formapago->forma_pago, 0, -6);
 
 
@@ -225,7 +225,7 @@ class FormaPagoController extends Controller
                 ],
                 'buttonsStyling' => false
             ]);
-    
+
         } catch (\Exception $e) {
             session()->flash('swal', [
                 'icon' => "error",
@@ -239,6 +239,30 @@ class FormaPagoController extends Controller
             return redirect()->back()
                 ->with('status', 'Hubo un error al ingresar los datos, por favor intente de nuevo.')
                 ->withErrors(['error' => $e->getMessage()]); // Aquí pasas el mensaje de error
+        }
+    }
+
+    public function forma_pago_index_ajax(Request $request)
+    {
+        if ($request->origen == 'formaPago.index') {
+
+            $ventas = FormaPago::all()
+                ->map(function ($item) {
+
+                    // --- Etiqueta de Matriz ---
+                $es_activo = $item->activo == 1
+                    ? '<span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Activo</span>'
+                    : '<span class="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">Eliminado</span>';
+
+                return [
+                    'id'        => $item->id,
+                    'forma_pago' => $item->forma_pago,
+                    'es_activo' => $es_activo,
+                    'acciones' => e(view('forma_pago.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json([ 'data' => $ventas ]);
         }
     }
 }

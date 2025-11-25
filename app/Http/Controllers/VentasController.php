@@ -35,20 +35,7 @@ class VentasController extends Controller
 
     public function index()
     {
-        $hoy = Carbon::today();
-        $hace7dias = $hoy->copy()->subDays(7);
-
-        // --- VENTAS --- //
-        $data = Venta::with('cliente')
-            ->whereBetween('fecha', [
-                $hace7dias->startOfDay(),
-                $hoy->copy()->endOfDay()
-            ])
-            ->orderBy('fecha', 'asc')
-            ->get();
-
-        // Pasar a la vista
-        return view('ventas.index', ['ventas' => $data]);
+        return view('ventas.index');
     }
 
     public function create(Request $request)
@@ -1835,13 +1822,13 @@ class VentasController extends Controller
                     $hace7dias->startOfDay(),
                     $hoy->copy()->endOfDay()
                 ])
-                ->orderBy('fecha', 'asc')
+                ->orderBy('fecha', 'desc')
                 ->get()->map(function ($item) {
 
 
                 return [
                     'id'        => $item->id,
-                    'fecha'    => $item->fecha,
+                    'fecha'    => Carbon::parse($item->fecha)->format('d/m/Y H:i:s'),
                     'folio' => $item->folio,
                     'cliente'  => $item->cliente ? $item->cliente->full_name : 'SIN CLIENTE',
                     'tipo_venta'  => $item->tipo_venta,
