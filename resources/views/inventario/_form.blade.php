@@ -3,7 +3,7 @@
 <div class="grid lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-2">
     <div class="sm:col-span-12 lg:col-span-3 md:col-span-3">
         <label for="nombre" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Producto</label>
-        <p 
+        <p
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         >
             {{$inventario->producto->nombre}}
@@ -11,7 +11,7 @@
     </div>
     <div class="sm:col-span-12 lg:col-span-3 md:col-span-3">
         <label for="nombre" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Marca</label>
-        <p 
+        <p
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         >
             {{$inventario->producto->marca_c->nombre}}
@@ -19,7 +19,7 @@
     </div>
     <div class="sm:col-span-12 lg:col-span-3 md:col-span-3">
         <label for="nombre" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Familia</label>
-        <p 
+        <p
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         >
             {{$inventario->producto->familia_c->nombre}}
@@ -27,7 +27,7 @@
     </div>
     <div class="sm:col-span-12 lg:col-span-3 md:col-span-3">
         <label for="nombre" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sub familia</label>
-        <p 
+        <p
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         >
             {{$inventario->producto->subFamilia_c->nombre}}
@@ -82,16 +82,25 @@
         <label for="precio_costo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
             Precio costo
         </label>
-        <input type="number" min="0" step="0.01" id="precio_costo" name="precio_costo" required
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            placeholder="Servicio"
+
+        <input type="text" class="monto-formateado forma-pago w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        data-hidden="#precio_costo"
+                        value="{{ old('precio_costo', $inventario->precio_costo ? number_format($inventario->precio_costo, 2, '.', ',') : '') }}">
+
+        <input type="hidden" min="0" step="0.01" id="precio_costo" name="precio_costo" required
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500
             value="{{ old('precio_costo', $inventario->precio_costo ?? '') }}" />
     </div>
     <div class="sm:col-span-12 lg:col-span-3 md:col-span-3">
         <label for="precio_publico" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
             Precio público
         </label>
-        <input type="number" min="0" step="0.01" id="precio_publico" name="precio_publico" required
+
+        <input type="text" class="monto-formateado forma-pago w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        data-hidden="#precio_publico"
+                        value="{{ old('precio_publico', $inventario->precio_publico ? number_format($inventario->precio_publico, 2, '.', ',') : '') }}">
+
+        <input type="hidden" min="0" step="0.01" id="precio_publico" name="precio_publico" required
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Servicio"
             value="{{ old('precio_publico', $inventario->precio_publico ?? '') }}" />
@@ -100,7 +109,12 @@
         <label for="precio_medio_mayoreo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
             Precio medio mayoreo
         </label>
-        <input type="number" min="0" step="0.01" id="precio_medio_mayoreo" name="precio_medio_mayoreo" required
+
+        <input type="text" class="monto-formateado forma-pago w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        data-hidden="#precio_medio_mayoreo"
+                        value="{{ old('precio_medio_mayoreo', $inventario->precio_medio_mayoreo ? number_format($inventario->precio_medio_mayoreo, 2, '.', ',') : '') }}">
+
+        <input type="hidden" min="0" step="0.01" id="precio_medio_mayoreo" name="precio_medio_mayoreo" required
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Servicio"
             value="{{ old('precio_medio_mayoreo', $inventario->precio_medio_mayoreo ?? '') }}" />
@@ -109,7 +123,12 @@
         <label for="precio_mayoreo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
             Precio mayoreo
         </label>
-        <input type="number" min="0" step="0.01" id="precio_mayoreo" name="precio_mayoreo" required
+
+        <input type="text" class="monto-formateado forma-pago w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        data-hidden="#precio_mayoreo"
+                        value="{{ old('precio_mayoreo', $inventario->precio_mayoreo ? number_format($inventario->precio_mayoreo, 2, '.', ',') : '') }}">
+
+        <input type="hidden" min="0" step="0.01" id="precio_mayoreo" name="precio_mayoreo" required
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Servicio"
             value="{{ old('precio_mayoreo', $inventario->precio_mayoreo ?? '') }}" />
@@ -119,7 +138,7 @@
     <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
         <label for="descripcion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Motivo del ajuste</label>
         <textarea id="descripcion" name="descripcion" rows="2" required
-            class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+            class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Motivo del ajuste">{{ old('descripcion', $inventario->descripcion) }}</textarea>
     </div>
     <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
@@ -137,6 +156,74 @@
 @section('js')
     <script>
         $(document).ready(function() {
+
+            // FORMATEAR MIENTRAS ESCRIBE
+            $(document).on('input', '.monto-formateado', function () {
+                let value = $(this).val();
+
+                // Quitar $ o cualquier carácter raro
+                value = value.replace(/[^\d.]/g, '');
+
+                // Separar decimales
+                let parts = value.split('.');
+                if (parts.length > 2) {
+                    value = parts[0] + '.' + parts[1];
+                    parts = value.split('.');
+                }
+
+                // Formatear miles
+                let entero = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+                // Reconstruir
+                let final = parts.length === 2 ? entero + '.' + parts[1] : entero;
+
+                $(this).val(final);
+
+                // Guardar valor "limpio" en el hidden
+                let hiddenID = $(this).data('hidden');
+                $(hiddenID).val(value.replace(/,/g, ''));
+            });
+
+            // Variable para evitar envíos múltiples
+            var formSubmitting = false;
+
+            // Un solo manejador submit para TODOS los formularios
+            $('form').on('submit', function (e) {
+
+                // 🚫 Evitar doble envío
+                if (formSubmitting) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // 🔹 Limpiar montos formateados antes de enviar
+                $(this).find('.monto-formateado').each(function () {
+
+                    let hiddenSelector = $(this).data('hidden'); // Ej: "#monto_1"
+                    let hiddenInput = $(hiddenSelector);
+
+                    if (hiddenInput.length) {
+                        let limpio = $(this).val()
+                            .replace(/,/g, '')
+                            .replace('$', '');
+                        hiddenInput.val(limpio);
+                    }
+
+                });
+
+                // Marcar como enviado
+                formSubmitting = true;
+            });
+
+            // ANTES DE ENVIAR EL FORMULARIO
+            $('form').on('submit', function () {
+                $('.monto-formateado').each(function () {
+                    let hidden = $(this).data('hidden');
+                    let limpio = $(this).val().replace(/,/g, '');
+                    $(hidden).val(limpio);
+                });
+            });
+
             // Evitar el envío del formulario al presionar Enter
             $(document).on('keypress', function(e) {
                 if (e.which == 13) {
@@ -144,19 +231,9 @@
                 }
             });
 
-            // Variable para evitar envíos múltiples
-            var formSubmitting = false;
 
-            // Manejar el envío del formulario
-            $('form').on('submit', function(e) {
-                if (formSubmitting) {
-                    // Si ya se está enviando, prevenir el envío
-                    e.preventDefault();
-                } else {
-                    // Si no, marcar como enviando
-                    formSubmitting = true;
-                }
-            });
+
+
         });
     </script>
 @stop
