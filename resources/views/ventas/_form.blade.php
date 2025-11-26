@@ -290,7 +290,6 @@
                     <div>
                         <label class="block text-xl font-medium text-gray-900">Adelanto</label>
                         <span id="adelanto_texto" class="text-green-600 font-bold">
-
                         </span>
                         <input type="hidden" id="adelanto" name="adelanto" value="0">
                     </div>
@@ -298,8 +297,6 @@
                         <label class="block text-xl font-medium text-gray-900">Faltante</label>
                         <span id="faltante_texto" class="text-red-600 font-bold">$0.00</span>
                         <input type="hidden" id="total_faltante" name="total_faltante">
-
-
                     </div>
                     <div class="sm:col-span-12 lg:col-span-3">
                         <label class="block text-xl font-medium text-gray-900">Cambio</label>

@@ -16,8 +16,7 @@ class FormaPagoController extends Controller
 
     public function index()
     {
-        $formapago = FormaPago::all();
-        return view('forma_pago.index'); //, compact('formapago'));
+        return view('forma_pago.index');
     }
 
     public function create()

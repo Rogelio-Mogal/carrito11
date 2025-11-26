@@ -14,15 +14,14 @@ class GastosController extends Controller
         $this->middleware('auth:sanctum');
         //$this->middleware(['can:Gestión de roles']);
     }
-    
+
     public function index()
     {
-        $gastos = Gasto::with('tipoGasto')->get();
         $tipogasto = TipoGasto::where('activo', 1)
         ->select('id', 'tipo_gasto')
         ->get();
 
-        return view('gasto.index', compact('gastos','tipogasto'));
+        return view('gasto.index', compact('tipogasto'));
     }
 
     public function create()
@@ -104,11 +103,11 @@ class GastosController extends Controller
             $gasto->gasto = $request->gasto;
             $gasto->tipo_gasto_id = $request->tipo_gasto_id;
 
-            if ($gasto->isDirty()) { 
+            if ($gasto->isDirty()) {
                 try{
                     $gasto->gasto = $request->gasto;
                     $gasto->tipo_gasto_id = $request->tipo_gasto_id;
-                    $gasto->updated_at = Carbon::now(); 
+                    $gasto->updated_at = Carbon::now();
                     $gasto->save();
 
                     session()->flash('swal', [
@@ -147,7 +146,7 @@ class GastosController extends Controller
                     ],
                     'buttonsStyling' => false
                 ]);
-    
+
                 return redirect()->route('admin.gastos.index');
             }
         }
@@ -155,7 +154,7 @@ class GastosController extends Controller
         // ACTIVAMOS EL REGISTRO
         if ($request->activa == 1){
             try {
-                // Remueve los últimos 5 caracteres de 'forma_pago' 
+                // Remueve los últimos 5 caracteres de 'forma_pago'
                 $gastoo = substr($gasto->gasto, 0, -6);
 
 
@@ -240,7 +239,7 @@ class GastosController extends Controller
                 ],
                 'success' => 'El gasto se eliminó correctamente.'
             ], 200);
-    
+
         } catch (\Exception $e) {
             return response()->json([
                 'swal' => [
@@ -254,6 +253,32 @@ class GastosController extends Controller
                 ],
                 'error' => $e->getMessage(),
             ], 400);
+        }
+    }
+
+    public function gasto_index_ajax(Request $request)
+    {
+        if ($request->origen == 'gasto.index') {
+
+            $gasto = Gasto::with('tipoGasto')->get()
+                ->map(function ($item) {
+
+                    // --- Etiqueta de Matriz ---
+                $es_activo = $item->activo == 1
+                    ? '<span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Activo</span>'
+                    : '<span class="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">Eliminado</span>';
+
+                return [
+                    'id'        => $item->id,
+                    'gasto' => '$' . number_format($item->gasto, 2, '.', ','),
+                    'tipo_gasto' => $item->tipoGasto->tipo_gasto,
+                    'tipo_gasto_id' => $item->tipo_gasto_id,
+                    'es_activo' => $es_activo,
+                    'acciones' => e(view('gasto.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json([ 'data' => $gasto ]);
         }
     }
 }

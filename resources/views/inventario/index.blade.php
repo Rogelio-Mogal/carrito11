@@ -80,7 +80,7 @@
                 <select id="sucursal_filter" class="form-select">
                     <option value="">Todas</option>
                     @foreach($sucursales as $sucursal)
-                        <option value="{{ $sucursal->id }}" 
+                        <option value="{{ $sucursal->id }}"
                             {{ isset($sucursalUsuario) && $sucursalUsuario == $sucursal->id ? 'selected' : '' }}>
                             {{ $sucursal->nombre }}
                         </option>
@@ -120,10 +120,219 @@
 
 @section('js')
     <script>
-
         $(document).ready(function() {
             // Inicializar DataTable
-            var table = productos();
+            let table = productos();
+
+            function productos() {
+                const postData = {
+                    //_token: $('input[name=_token]').val(),
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    origen: 'productos.inventario',
+                };
+                var editUrl = "{{ route('admin.inventario.edit', ':id') }}";
+
+                // Inicializar DataTable
+                return $('#inventario').DataTable({
+                    "language": {
+                        "url": "{{ asset('/json/i18n/es_es.json') }}"
+                    },
+                    responsive: true,
+                    retrieve: true,
+                    processing: true,
+                    ajax: {
+                        url: "{{ route('productos.index.ajax') }}",
+                        type: "POST",
+                        'data': function(d) {
+                            d._token = postData._token;
+                            d.origen = postData.origen;
+                            d.sucursal_id = $('#sucursal_filter').val();
+                        }
+                    },
+                    'columns': [{
+                            data: 'id',
+                            name: 'id',
+                            visible: false,
+                            searchable: false
+                        },
+                        {
+                            data: 'image',
+                            render: function(data, type, row) {
+                                return '<img class="h-auto max-w-20 sm:max-w-20 md:max-w-40 lg:max-w-40 object-cover object-center" src="' +
+                                    data + '" alt="">';
+                            }
+                        },
+                        {
+                            data: 'sucursal_nombre',
+                            name: 'sucursal_nombre'
+
+                        },
+                        {
+                            data: 'producto_nombre',
+                            name: 'producto_nombre'
+                        },
+                        {
+                            data: 'codigo_barra',
+                            name: 'codigo_barra'
+                        },
+                        {
+                            data: 'cantidad',
+                            defaultContent: 'SIN INVENTARIO'
+                        },
+                        {
+                            data: 'producto_apartado',
+                            defaultContent: 'Apartado'
+                        },
+                        {
+                            data: 'producto_servicio',
+                            defaultContent: 'Servicio'
+                        },
+                        {
+                            data: 'producto_garantia',
+                            defaultContent: 'Garantia'
+                        },
+                        {
+                            data: 'precio_costo',
+                            render: function(data, type, row) {
+                                // Verificar si el dato es nulo, indefinido o vacío
+                                if (data === null || data === undefined || data === '') {
+                                    return '$0.00';  // Valor por defecto si no hay dato
+                                }
+                                // Formatear el número con separadores de miles y decimales
+                                var formattedNumber = $.fn.dataTable.render.number(',', '.', 2).display(data);
+                                // Agregar el símbolo de pesos al valor formateado
+                                return '$ ' + formattedNumber;
+                            },
+                            defaultContent: '$0.00'
+                        },
+                        {
+                            data: 'precio_publico',
+                            render: function(data, type, row) {
+                                // Verificar si el dato es nulo, indefinido o vacío
+                                if (data === null || data === undefined || data === '') {
+                                    return '$0.00';  // Valor por defecto si no hay dato
+                                }
+                                // Formatear el número con separadores de miles y decimales
+                                var formattedNumber = $.fn.dataTable.render.number(',', '.', 2).display(data);
+                                // Agregar el símbolo de pesos al valor formateado
+                                return '$ ' + formattedNumber;
+                            },
+                            defaultContent: '$0.00'
+                        },
+                        {
+                            data: 'precio_medio_mayoreo',
+                            render: function(data, type, row) {
+                                // Verificar si el dato es nulo, indefinido o vacío
+                                if (data === null || data === undefined || data === '') {
+                                    return '$0.00';  // Valor por defecto si no hay dato
+                                }
+                                // Formatear el número con separadores de miles y decimales
+                                var formattedNumber = $.fn.dataTable.render.number(',', '.', 2).display(data);
+                                // Agregar el símbolo de pesos al valor formateado
+                                return '$ ' + formattedNumber;
+                            },
+                            defaultContent: '$0.00'
+                        },
+                        {
+                            data: 'precio_mayoreo',
+                            render: function(data, type, row) {
+                                // Verificar si el dato es nulo, indefinido o vacío
+                                if (data === null || data === undefined || data === '') {
+                                    return '$0.00';  // Valor por defecto si no hay dato
+                                }
+                                // Formatear el número con separadores de miles y decimales
+                                var formattedNumber = $.fn.dataTable.render.number(',', '.', 2).display(data);
+                                // Agregar el símbolo de pesos al valor formateado
+                                return '$ ' + formattedNumber;
+                            },
+                            defaultContent: '$0.00'
+                        },
+                        {
+                            data: 'activo',
+                            render: function(data, type, row) {
+                                if (data == 0) {
+                                    return '<span class="bg-red-100 text-red-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Eliminado</span>';
+                                } else if (data == 1) {
+                                    return '<span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Activo</span>';
+                                }
+                                return '';
+                            }
+                        },
+                        {
+                            data: 'id',
+                            render: function(data, type, row) {
+                                var editLink = editUrl.replace(':id', data);
+
+                                return `
+                                    <a href="${editLink}"
+                                        data-id="${data}"
+                                        data-popover-target="editar${data}" data-popover-placement="left"
+                                        class="open-modal edit-item text-white mb-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                            width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28" />
+                                        </svg>
+                                        <span class="sr-only">Editar</span>
+                                    </a>
+                                    <div id="tooltip-editar-${data}" role="tooltip"
+                                        class="absolute z-10 invisible inline-block w-54 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                                        <div class="p-2 space-y-2">
+                                            <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Editar</h6>
+                                        </div>
+                                    </div>
+                                `;
+                                /*return `
+                                <a href="${editLink}"
+                                    data-popover-target="editar${data}"
+                                    data-popover-placement="left"
+                                    class="open-modal edit-item text-white mb-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                        width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28"/>
+                                    </svg>
+                                    <span class="sr-only">Editar</span>
+                                </a>
+                                <div id="editar${data}" role="tooltip"
+                                    class="popover-content absolute z-10 invisible inline-block w-54 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                                    <div class="p-2 space-y-2">
+                                        <h6 class="font-semibold text-gray-900 dark:text-black">&nbsp; Editar</h6>
+                                    </div>
+                                    <div data-popper-arrow></div>
+                                </div>
+                                `;*/
+
+                            }
+                        }
+                    ],
+                    drawCallback: function(settings) {
+                        // Agregar eventos de hover para mostrar y ocultar el tooltip
+                        $('[data-id]').each(function() {
+                            const triggerEl = $(this);
+                            const tooltipId = `#tooltip-editar-${triggerEl.data('id')}`;
+                            const tooltipEl = $(tooltipId);
+
+                            const tooltip = $('#tooltip-editar-' + $(this).data('id'));
+                            tooltip.addClass('tooltip-content');
+
+                            // Mostrar tooltip al pasar el cursor
+                            triggerEl.hover(
+                                function() {
+                                    tooltipEl.removeClass('invisible opacity-0');
+                                    tooltipEl.addClass('visible opacity-100');
+                                },
+                                function() {
+                                    tooltipEl.removeClass('visible opacity-100');
+                                    tooltipEl.addClass('invisible opacity-0');
+                                }
+                            );
+                        });
+                    }
+                });
+            }
 
             // RECARGAR TABLA
             $('#reloadTable').on('click', function() {
@@ -140,215 +349,6 @@
 
         });
 
-        function productos() {
-            const postData = {
-                _token: $('input[name=_token]').val(),
-                origen: 'productos.inventario',
-            };
-            var editUrl = "{{ route('admin.inventario.edit', ':id') }}";
 
-            // Inicializar DataTable
-            return $('#inventario').DataTable({
-                "language": {
-                    "url": "{{ asset('/json/i18n/es_es.json') }}"
-                },
-                responsive: true,
-                retrieve: true,
-                processing: true,
-                ajax: {
-                    url: "{{ route('productos.index.ajax') }}",
-                    type: "POST",
-                    'data': function(d) {
-                        d._token = postData._token;
-                        d.origen = postData.origen;
-                        d.sucursal_id = $('#sucursal_filter').val();
-                    }
-                },
-                'columns': [{
-                        data: 'id',
-                        name: 'id',
-                        visible: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'image',
-                        render: function(data, type, row) {
-                            return '<img class="h-auto max-w-20 sm:max-w-20 md:max-w-40 lg:max-w-40 object-cover object-center" src="' +
-                                data + '" alt="">';
-                        }
-                    },
-                    {
-                        data: 'sucursal_nombre',
-                        name: 'sucursal_nombre'
-                        
-                    },
-                    {
-                        data: 'producto_nombre',
-                        name: 'producto_nombre'
-                    },
-                    {
-                        data: 'codigo_barra',
-                        name: 'codigo_barra'
-                    },
-                    {
-                        data: 'cantidad',
-                        defaultContent: 'SIN INVENTARIO'
-                    },
-                    {
-                        data: 'producto_apartado',
-                        defaultContent: 'Apartado'
-                    },
-                    {
-                        data: 'producto_servicio',
-                        defaultContent: 'Servicio'
-                    },
-                    {
-                        data: 'producto_garantia',
-                        defaultContent: 'Garantia'
-                    },
-                    {
-                        data: 'precio_costo',
-                        render: function(data, type, row) {
-                            // Verificar si el dato es nulo, indefinido o vacío
-                            if (data === null || data === undefined || data === '') {
-                                return '$0.00';  // Valor por defecto si no hay dato
-                            }
-                            // Formatear el número con separadores de miles y decimales
-                            var formattedNumber = $.fn.dataTable.render.number(',', '.', 2).display(data);
-                            // Agregar el símbolo de pesos al valor formateado
-                            return '$ ' + formattedNumber;
-                        },
-                        defaultContent: '$0.00'
-                    },
-                    {
-                        data: 'precio_publico',
-                        render: function(data, type, row) {
-                            // Verificar si el dato es nulo, indefinido o vacío
-                            if (data === null || data === undefined || data === '') {
-                                return '$0.00';  // Valor por defecto si no hay dato
-                            }
-                            // Formatear el número con separadores de miles y decimales
-                            var formattedNumber = $.fn.dataTable.render.number(',', '.', 2).display(data);
-                            // Agregar el símbolo de pesos al valor formateado
-                            return '$ ' + formattedNumber;
-                        },
-                        defaultContent: '$0.00'
-                    },
-                    {
-                        data: 'precio_medio_mayoreo',
-                        render: function(data, type, row) {
-                            // Verificar si el dato es nulo, indefinido o vacío
-                            if (data === null || data === undefined || data === '') {
-                                return '$0.00';  // Valor por defecto si no hay dato
-                            }
-                            // Formatear el número con separadores de miles y decimales
-                            var formattedNumber = $.fn.dataTable.render.number(',', '.', 2).display(data);
-                            // Agregar el símbolo de pesos al valor formateado
-                            return '$ ' + formattedNumber;
-                        },
-                        defaultContent: '$0.00'
-                    },
-                    {
-                        data: 'precio_mayoreo',
-                        render: function(data, type, row) {
-                            // Verificar si el dato es nulo, indefinido o vacío
-                            if (data === null || data === undefined || data === '') {
-                                return '$0.00';  // Valor por defecto si no hay dato
-                            }
-                            // Formatear el número con separadores de miles y decimales
-                            var formattedNumber = $.fn.dataTable.render.number(',', '.', 2).display(data);
-                            // Agregar el símbolo de pesos al valor formateado
-                            return '$ ' + formattedNumber;
-                        },
-                        defaultContent: '$0.00'
-                    },
-                    {
-                        data: 'activo',
-                        render: function(data, type, row) {
-                            if (data == 0) {
-                                return '<span class="bg-red-100 text-red-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Eliminado</span>';
-                            } else if (data == 1) {
-                                return '<span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Activo</span>';
-                            }
-                            return '';
-                        }
-                    },
-                    {
-                        data: 'id',
-                        render: function(data, type, row) {
-                            var editLink = editUrl.replace(':id', data);
-
-                            return `
-                                <a href="${editLink}"
-                                    data-id="${data}"
-                                    data-popover-target="editar${data}" data-popover-placement="left"
-                                    class="open-modal edit-item text-white mb-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                        width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28" />
-                                    </svg>
-                                    <span class="sr-only">Editar</span>
-                                </a>
-                                <div id="tooltip-editar-${data}" role="tooltip"
-                                    class="absolute z-10 invisible inline-block w-54 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
-                                    <div class="p-2 space-y-2">
-                                        <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Editar</h6>
-                                    </div>
-                                </div>
-                            `;
-                            /*return `
-                            <a href="${editLink}"
-                                data-popover-target="editar${data}" 
-                                data-popover-placement="left"
-                                class="open-modal edit-item text-white mb-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                    width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28"/>
-                                </svg>
-                                <span class="sr-only">Editar</span>
-                            </a>
-                            <div id="editar${data}" role="tooltip"
-                                class="popover-content absolute z-10 invisible inline-block w-54 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
-                                <div class="p-2 space-y-2">
-                                    <h6 class="font-semibold text-gray-900 dark:text-black">&nbsp; Editar</h6>
-                                </div>
-                                <div data-popper-arrow></div>
-                            </div>
-                            `;*/
-
-                        }
-                    }
-                ],
-                drawCallback: function(settings) {
-                    // Agregar eventos de hover para mostrar y ocultar el tooltip
-                    $('[data-id]').each(function() {
-                        const triggerEl = $(this);
-                        const tooltipId = `#tooltip-editar-${triggerEl.data('id')}`;
-                        const tooltipEl = $(tooltipId);
-
-                        const tooltip = $('#tooltip-editar-' + $(this).data('id'));
-                        tooltip.addClass('tooltip-content');
-
-                        // Mostrar tooltip al pasar el cursor
-                        triggerEl.hover(
-                            function() {
-                                tooltipEl.removeClass('invisible opacity-0');
-                                tooltipEl.addClass('visible opacity-100');
-                            },
-                            function() {
-                                tooltipEl.removeClass('visible opacity-100');
-                                tooltipEl.addClass('invisible opacity-0');
-                            }
-                        );
-                    });
-                }
-  
-
-            });
-        }
     </script>
 @stop

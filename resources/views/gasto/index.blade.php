@@ -42,6 +42,32 @@
     <div class="shadow-md rounded-lg p-4 dark:bg-gray-800">
         <div class="grid grid-cols-1 lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-4">
             <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
+                <div class="mb-4">
+                    <button id="reloadTable"
+                        class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        Recargar Tabla
+                    </button>
+                </div>
+
+                <!-- Mensaje de carga sobre la tabla -->
+                <div id="loadingOverlay" class="absolute inset-0 flex items-center justify-center z-50 hidden">
+                    <div class="relative flex items-center">
+                        <!-- Contenedor para el texto de carga -->
+                        <div class="text-white text-lg font-bold p-4 bg-gray-900 rounded flex items-center">
+                            <svg aria-hidden="true"
+                                class="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                                viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                                    fill="currentColor" />
+                                <path
+                                    d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                                    fill="currentFill" />
+                            </svg>
+                            &nbsp;Procesando
+                        </div>
+                    </div>
+                </div>
                 <table id="gastos" class="table table-striped" style="width:100%">
                     <thead>
                         <tr>
@@ -55,77 +81,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($gastos as $item)
-                            <tr>
-                                <td>{{ $item->id }}</td>
-                                <td>{{ $item->gasto }}</td>
-                                <td>{{ $item->tipoGasto->tipo_gasto }}</td>
-                                <td>{{ $item->tipo_gasto_id }}</td>
-                                <td>
-                                    @if( $item->activo == 0 )
-                                        <span class="bg-red-100 text-red-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Eliminado</span>
-                                    @endif
-                                    @if( $item->activo == 1 )
-                                        <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Activo</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($item->activo == 1)
-                                        <a href="#"
-                                            data-id="{{ $item->id }}"
-                                            data-popover-target="editar{{ $item->id }}" data-popover-placement="bottom"
-                                            class="open-modal edit-item text-white mb-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28" />
-                                            </svg>
-                                            <span class="sr-only">Editar</span>
-                                        </a>
-                                        <a href="{{ route('admin.gastos.destroy', $item->id) }}"
-                                            data-popover-target="eliminar{{ $item->id }}" data-popover-placement="bottom"
-                                            data-id="{{ $item->id }}"
-                                            class="delete-item mb-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                                    stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-                                            <span class="sr-only">Eliminar</span>
-                                        </a>
-                                        <div id="editar{{ $item->id }}" role="tooltip"
-                                            class="absolute z-10 invisible inline-block w-54 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
-                                            <div class="p-2 space-y-2">
-                                                <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Editar</h6>
-                                            </div>
-                                        </div>
-                                        <div id="eliminar{{ $item->id }}" role="tooltip"
-                                            class="absolute z-10 invisible inline-block w-54 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
-                                            <div class="p-2 space-y-2">
-                                                <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Eliminar</h6>
-                                            </div>
-                                        </div>
-                                    @else
-                                        <a href="{{ route('admin.gastos.edit', $item->id) }}"
-                                            data-popover-target="activar{{ $item->id }}" data-popover-placement="bottom"
-                                            data-id="{{ $item->id }}"
-                                            class="activa-item mb-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16 10 3-3m0 0-3-3m3 3H5v3m3 4-3 3m0 0 3 3m-3-3h14v-3"/>
-                                            </svg>                                                                                           
-                                            <span class="sr-only">Activar</span>
-                                        </a>
-                                        <div id="activar{{ $item->id }}" role="tooltip"
-                                            class="absolute z-10 invisible inline-block w-54 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
-                                            <div class="p-2 space-y-2">
-                                                <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Cambiar a activo</h6>
-                                            </div>
-                                        </div>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
                     </tbody>
                 </table>
                 @include('gasto._modal_editar')
@@ -163,19 +118,68 @@
         @endif
 
         $(document).ready(function() {
-            var tblGastos = new DataTable('#gastos', {
-                responsive: true,
-                "language": {
-                    "url": "{{ asset('/json/i18n/es_es.json') }}"
-                },
-                columnDefs: [
-                    {
-                        targets: 3, // Índice de la columna que quieres ocultar (Tipo de gasto_id)
-                        visible: false, // Oculta la columna
-                        searchable: false // Opcional: excluye esta columna de la búsqueda
+
+            let tblGastos;
+            cargarTipoGasto();
+
+            function cargarTipoGasto() {
+                const postData = {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    origen: "gasto.index"
+                };
+
+                if ($.fn.DataTable.isDataTable('#gastos')) {
+                    $('#gastos').DataTable().clear().destroy();
+                }
+
+                // ORDENAR CANTIDADES CON FORMATO "$1,234.56"
+                $.extend($.fn.dataTable.ext.type.order, {
+                    "currency-mx-pre": function (data) {
+                        if (!data) return 0;
+
+                        // Elimina $, comas y espacios
+                        return parseFloat(
+                            data.replace('$', '').replace(/,/g, '').trim()
+                        );
                     }
-                ]
+                });
+
+                tblGastos = $('#gastos').DataTable({
+                    processing: true,
+                    serverSide: false, // cambiar a true si quieres paginación del lado del servidor
+                    responsive: true,
+                    order: [], // evita que intente ordenar automático
+                    ajax: {
+                        url: "{{ route('gasto.index.ajax') }}",
+                        type: "POST",
+                        data: postData
+                    },
+                    columns: [
+                        { data: 'id'},
+                        { data: 'gasto' },
+                        { data: 'tipo_gasto' },
+                        { data: 'tipo_gasto_id', visible: false },
+                        { data: 'es_activo' },
+                        { data: 'acciones', render: function(data){
+                            return $('<div/>').html(data).text();
+                        }}
+                    ],
+                    language: { url: "{{ asset('/json/i18n/es_es.json') }}" }
+                });
+
+                //  Re-inicializa Flowbite cada vez que DataTables repinta
+                tblGastos.on('draw', function () {
+                    if (typeof window.initFlowbite === "function") {
+                        window.initFlowbite();
+                    }
+                });
+            }
+
+            // 🔄 Botón de recargar
+            $("#reloadTable").on("click", function() {
+                cargarTipoGasto();
             });
+
 
             // Manejar el clic en el botón para mostrar el modal
             $('#gastos tbody').on('click', '.open-modal', function() {
@@ -220,137 +224,86 @@
             // Edita Forma de pago
             $(document).on('click', '.edit-item', function(e) {
                 e.preventDefault();
-                
-                var id = $(this).data('id');
+
                 var table = $('#gastos').DataTable();
-                
-                // Encuentra la fila en la que se hizo clic
                 var currentRow = $(this).closest('tr');
-                
-                // Verifica si la fila actual es una fila de detalles
-                var isDetailRow = currentRow.hasClass('child');
-                
-                var rowData;
-                
-                if (isDetailRow) {
-                    // Si es una fila de detalle, obten la fila principal correspondiente
-                    var parentRow = currentRow.prev('tr');
-                    rowData = table.row(parentRow).data();
-                } else {
-                    // Si no es una fila de detalle, obtén los datos de la fila actual
-                    var row = table.row(currentRow);
-                    rowData = row.data();
-                }
 
-                // Verifica que rowData esté disponible y contenga la columna deseada
-                var tipo_gasto_id = rowData && rowData[3] ? rowData[3] : null;
-
-                // Obtener el valor del texto en el segundo <td> de la fila más cercana
-                var gasto = $(this).closest('tr').find('td:eq(1)').text().trim();
-
-                if (!gasto) {
-                    // Si no se obtiene el valor de la fila principal, buscar en el row details
-                    gasto = $(this).closest('tr').prev('tr').find('td:eq(1)').text().trim();
-                }
-                
-                // Llenar el formulario del modal con los datos
-                $('#editId').val(id);
-                $('#editGasto').val(gasto);
-                $('#editTipoGasto').val(tipo_gasto_id).trigger('change');
-                showModal(id);
-
-                // Inicializar select2 después de que el modal esté visible
-                $('#editTipoGasto').select2({
-                    placeholder: "-- TIPO GASTO --",
-                    allowClear: true,
-                    dropdownParent: $('#editModal') // Esto asegura que el dropdown se renderice dentro del modal
-                });
-
-                // Ajusta la altura del select2
-                $('.select2-selection--single').css({
-                    'height': '2.5rem', // Ajusta la altura según sea necesario
-                    'display': 'flex',
-                    'align-items': 'center'
-                });
-
-                $('.select2-selection__rendered').css({
-                    'line-height': '2.5rem', // Asegúrate de que coincida con la altura del input
-                    'padding-left': '0.5rem', // Ajusta el padding según sea necesario
-                    'color': '#374151' // Asegúrate de que coincida con el texto del input
-                });
-
-                $('.select2-selection__arrow').css({
-                    'height': '2.5rem', // Ajusta la altura según sea necesario
-                    'top': '50%',
-                    'transform': 'translateY(-50%)'
-                });
-
-                // ACTIVA LA BUSQUEDA
-                $(document).on('select2:open', () => {
-                    let allFound = document.querySelectorAll('.select2-container--open .select2-search__field');
-                    $(this).one('mouseup keyup', () => {
-                        setTimeout(() => {
-                            allFound[allFound.length - 1].focus();
-                        }, 0);
-                    });
-                });
-            });
-            
-            /*
-            $(document).on('click', '.edit-item', function(e) {
-                e.preventDefault();
-                var id = $(this).data('id');
-                var gasto = $(this).closest('tr').find('td:eq(1)').text().trim();
-                // Obtén la fila de DataTables correspondiente al botón o enlace clicado
-                var row = $('#gastos').DataTable().row($(this).closest('tr'));
-                // Obtén los datos de la fila, incluyendo las columnas ocultas
+                // Detectar si es fila child (responsive)
+                var row = table.row(currentRow.hasClass('child') ? currentRow.prev() : currentRow);
                 var rowData = row.data();
-                // Accede al valor de la columna oculta (tipo_gasto_id)
-                var tipo_gasto_id = rowData[3]; // El índice de la columna que está oculta
 
-                // Llenar el formulario del modal con los datos
+                if (!rowData) {
+                    console.error("No se pudo obtener rowData");
+                    return;
+                }
+
+                // Obtener datos desde AJAX (datatable)
+                var id = rowData.id;
+                var gasto = rowData.gasto.replace(/\$/g, '');
+                var tipo_gasto_id = rowData.tipo_gasto_id; // ← directo del JSON
+
+                // Llenar campos del modal
                 $('#editId').val(id);
                 $('#editGasto').val(gasto);
-                $('#editTipoGasto').val(tipo_gasto_id).trigger('change');
-                showModal(id);
 
-                // Inicializar select2 después de que el modal esté visible
+                // Inicializar select2 *ANTES* de asignar el valor
                 $('#editTipoGasto').select2({
                     placeholder: "-- TIPO GASTO --",
                     allowClear: true,
-                    dropdownParent: $('#editModal') // Esto asegura que el dropdown se renderice dentro del modal
+                    dropdownParent: $('#editModal')
                 });
 
-                // Ajusta la altura del select2
+                // Asignar valor al select2
+                $('#editTipoGasto').val(tipo_gasto_id).trigger('change');
+
+                // Mostrar modal
+                showModal(id);
+
+                /*** Ajustes visuales (opcional, si lo usabas antes) ***/
                 $('.select2-selection--single').css({
-                    'height': '2.5rem', // Ajusta la altura según sea necesario
+                    'height': '2.5rem',
                     'display': 'flex',
                     'align-items': 'center'
                 });
 
                 $('.select2-selection__rendered').css({
-                    'line-height': '2.5rem', // Asegúrate de que coincida con la altura del input
-                    'padding-left': '0.5rem', // Ajusta el padding según sea necesario
-                    'color': '#374151' // Asegúrate de que coincida con el texto del input
+                    'line-height': '2.5rem',
+                    'padding-left': '0.5rem',
+                    'color': '#374151'
                 });
 
                 $('.select2-selection__arrow').css({
-                    'height': '2.5rem', // Ajusta la altura según sea necesario
+                    'height': '2.5rem',
                     'top': '50%',
                     'transform': 'translateY(-50%)'
                 });
 
-                // ACTIVA LA BUSQUEDA
+                // Activar búsqueda automática al abrir
                 $(document).on('select2:open', () => {
                     let allFound = document.querySelectorAll('.select2-container--open .select2-search__field');
-                    $(this).one('mouseup keyup', () => {
-                        setTimeout(() => {
-                            allFound[allFound.length - 1].focus();
-                        }, 0);
-                    });
+                    setTimeout(() => {
+                        allFound[allFound.length - 1].focus();
+                    }, 0);
                 });
             });
-            */
+
+            //COLOCAR COMAS EN INPUT NUMBER
+            $(document).on('input', '.gasto', function () {
+                let value = $(this).val();
+                value = value.replace(/\$/g, '');
+                value = value.replace(/[^0-9.]/g, '');
+                let parts = value.split('.');
+                if (parts.length > 2) value = parts[0] + '.' + parts[1];
+                let entero = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                value = parts.length === 2 ? entero + '.' + parts[1] : entero;
+                $(this).val(value);
+            });
+
+            $('form').on('submit', function () {
+                $('.gasto').each(function() {
+                    $(this).val($(this).val().replace(/,/g, ''));
+                });
+            });
 
             $('#saveChanges').on('click', function() {
                 $('#editForm').submit();

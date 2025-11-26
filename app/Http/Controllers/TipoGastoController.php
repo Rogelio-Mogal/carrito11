@@ -13,11 +13,11 @@ class TipoGastoController extends Controller
         $this->middleware('auth:sanctum');
         //$this->middleware(['can:Gestión de roles']);
     }
-    
+
     public function index()
     {
         $tipogasto = TipoGasto::all();
-        return view('tipo_gasto.index', compact('tipogasto'));
+        return view('tipo_gasto.index');
     }
 
     public function create()
@@ -92,10 +92,10 @@ class TipoGastoController extends Controller
             // Asignar el nuevo valor al modelo
             $tipogasto->tipo_gasto = $request->tipo_gasto;
 
-            if ($tipogasto->isDirty()) { 
+            if ($tipogasto->isDirty()) {
                 try{
                     $tipogasto->tipo_gasto = $request->tipo_gasto;
-                    $tipogasto->updated_at = Carbon::now(); 
+                    $tipogasto->updated_at = Carbon::now();
                     $tipogasto->save();
 
                     session()->flash('swal', [
@@ -134,7 +134,7 @@ class TipoGastoController extends Controller
                     ],
                     'buttonsStyling' => false
                 ]);
-    
+
                 return redirect()->route('admin.tipo.gasto.index');
             }
         }
@@ -142,7 +142,7 @@ class TipoGastoController extends Controller
         // ACTIVAMOS EL REGISTRO
         if ($request->activa == 1){
             try {
-                // Remueve los últimos 5 caracteres de 'forma_pago' 
+                // Remueve los últimos 5 caracteres de 'forma_pago'
                 $tipo_gasto = substr($tipogasto->tipo_gasto, 0, -6);
 
 
@@ -227,7 +227,7 @@ class TipoGastoController extends Controller
                 ],
                 'success' => 'El tipo de gasto se eliminó correctamente.'
             ], 200);
-    
+
         } catch (\Exception $e) {
             return response()->json([
                 'swal' => [
@@ -241,6 +241,30 @@ class TipoGastoController extends Controller
                 ],
                 'error' => $e->getMessage(),
             ], 400);
+        }
+    }
+
+    public function tipo_gasto_index_ajax(Request $request)
+    {
+        if ($request->origen == 'tipoGasto.index') {
+
+            $tipoGasto = TipoGasto::all()
+                ->map(function ($item) {
+
+                    // --- Etiqueta de Matriz ---
+                $es_activo = $item->activo == 1
+                    ? '<span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Activo</span>'
+                    : '<span class="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">Eliminado</span>';
+
+                return [
+                    'id'        => $item->id,
+                    'tipo_gasto' => $item->tipo_gasto,
+                    'es_activo' => $es_activo,
+                    'acciones' => e(view('forma_pago.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json([ 'data' => $tipoGasto ]);
         }
     }
 }

@@ -205,6 +205,12 @@ Route::post('usuario/index/ajax', [UserController::class, 'usuarios_index_ajax']
 Route::post('venta/index/ajax', [VentasController::class, 'ventas_index_ajax'])
 	->name('venta.index.ajax');
 
+Route::post('tipo/gasto/index/ajax', [TipoGastoController::class, 'tipo_gasto_index_ajax'])
+	->name('tipo.gasto.index.ajax');
+
+Route::post('gasto/index/ajax', [GastosController::class, 'gasto_index_ajax'])
+	->name('gasto.index.ajax');
+
 Route::post('forma/pago/index/ajax', [FormaPagoController::class, 'forma_pago_index_ajax'])
 	->name('forma.pago.index.ajax');
 
