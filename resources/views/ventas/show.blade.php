@@ -37,14 +37,11 @@
                         {{ $venta->tipo_venta }}
                     </div>
 
-
-
                     <div class="sm:col-span-12 lg:col-span-5 md:col-span-5">
                         <label for="nombre_cliente"
                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
                         {{ $venta->cliente->full_name ?? 'SIN CLIENTE' }}
                     </div>
-
 
                     <div class="sm:col-span-12 lg:col-span-2 md:col-span-2">
                         <label for="tipo_cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -52,7 +49,6 @@
                         </label>
                         {{ $venta->cliente->tipo_cliente ?? 'SIN TIPO' }}
                     </div>
-
 
                     <!-- ##### MODULO DE PRODUCTOS-PONCHADOS  #########   -->
 
@@ -88,51 +84,49 @@
                                                         <td>{{ $detalle->cantidad }}</td>
                                                         <td>{{ $detalle->producto ? $detalle->producto->nombre : $detalle->producto_comun }}
                                                         </td>
-                                                        <td>{{ number_format($detalle->precio, 2) }}</td>
-                                                        <td>{{ number_format($detalle->total, 2) }}</td>
-                                                            @if ($detalle->tipo_item === 'PRODUCTO')
+                                                        <td>$ {{ number_format($detalle->precio, 2) }}</td>
+                                                        <td>$ {{ number_format($detalle->total, 2) }}</td>
+
+                                                        @if ($detalle->tipo_item === 'PRODUCTO')
+                                                            <td colspan="4"> <!-- engloba tus 3 td + el td del botón -->
                                                                 <form action="{{ route('admin.ventas.cancelarProducto', $detalle->id) }}" method="POST">
                                                                     @csrf
-                                                                    <!-- Cantidad a devolver -->
-                                                                    <td>
+
+                                                                    <div class="flex items-center gap-3">
+
+                                                                        <!-- Cantidad -->
                                                                         <input type="number" name="cantidad" min="1" max="{{ $detalle->cantidad }}" value="1"
                                                                             class="w-16 border border-gray-300 rounded px-2 py-1 text-sm">
-                                                                    </td>
 
-                                                                    <!-- Motivo (radios + textarea en una sola línea) -->
-                                                                    <td colspan="2">
-                                                                        <div class="flex items-center gap-3">
-                                                                            <!-- Radios -->
-                                                                            <div class="flex items-center gap-2 text-xs">
-                                                                                <label class="inline-flex items-center">
-                                                                                    <input type="radio" name="tipo_cancelacion" value="devolucion" checked class="mr-1">
-                                                                                    Devolución
-                                                                                </label>
-                                                                                <label class="inline-flex items-center">
-                                                                                    <input type="radio" name="tipo_cancelacion" value="error" class="mr-1">
-                                                                                    Error
-                                                                                </label>
-                                                                            </div>
-
-                                                                            <!-- Detalle -->
-                                                                            <textarea name="motivo_cancelacion" rows="1"
-                                                                                class="flex-1 border border-gray-300 rounded px-2 py-1 text-xs"
-                                                                                placeholder="Detalle"></textarea>
+                                                                        <!-- Radios -->
+                                                                        <div class="flex items-center gap-2 text-xs">
+                                                                            <label class="inline-flex items-center">
+                                                                                <input type="radio" name="tipo_cancelacion" value="devolucion" checked>
+                                                                                Devolución
+                                                                            </label>
+                                                                            <label class="inline-flex items-center">
+                                                                                <input type="radio" name="tipo_cancelacion" value="error">
+                                                                                Error
+                                                                            </label>
                                                                         </div>
-                                                                    </td>
 
-                                                                    <!-- Botón -->
-                                                                    <td>
+                                                                        <!-- Motivo -->
+                                                                        <textarea name="motivo_cancelacion" rows="1"
+                                                                            class="flex-1 border border-gray-300 rounded px-2 py-1 text-xs"
+                                                                            placeholder="Detalle"></textarea>
+
+                                                                        <!-- Botón -->
                                                                         <button type="submit"
                                                                             class="text-white bg-yellow-500 hover:bg-yellow-600 font-medium rounded-lg text-xs px-3 py-1.5">
                                                                             Devolver
                                                                         </button>
-                                                                    </td>
+
+                                                                    </div>
                                                                 </form>
-                                                            @else
-                                                                <td colspan="4" class="text-center text-gray-400">No aplica</td>
-                                                            @endif
-                                                       
+                                                            </td>
+                                                        @else
+                                                            <td colspan="4" class="text-center text-gray-400">No aplica</td>
+                                                        @endif
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -140,7 +134,6 @@
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                     <!-- ##### FIN MODULO DE PRODUCTOS-PONCHADOS  #########   -->
@@ -166,9 +159,12 @@
                                 <div>
                                     <label class="block mb-1 text-sm font-medium text-gray-700">{{ $metodo }}</label>
                                     <input type="hidden" name="formas_pago[{{ $index }}][metodo]" value="{{ $metodo }}">
-                                    <input type="number" name="formas_pago[{{ $index }}][monto]"
-                                        value="{{ isset($pagosArray[$metodo]) ? $pagosArray[$metodo]->monto : 0 }}"
+                                    <input type="text" name="formas_pago[{{ $index }}][monto]"
+                                        value="{{ isset($pagosArray[$metodo])
+                                        ? number_format($pagosArray[$metodo]->monto, 2, '.', ',')
+                                        : number_format(0, 2, '.', ',') }}"
                                         step="any"
+                                        readonly
                                         class="forma-pago w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                             @endforeach
@@ -176,8 +172,9 @@
                             {{-- Monto a crédito --}}
                             <div id="monto_credito_container" class="sm:col-span-2">
                                 <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">Monto a crédito</label>
-                                <input type="number" name="monto_credito" id="monto_credito" step="any"
-                                    value="{{ $venta->monto_credito ?? 0 }}"
+                                <input type="text" name="monto_credito" id="monto_credito" step="any"
+                                    value="{{ number_format($venta->monto_credito ?? 0, 2, '.', ',') }}"
+                                    readonly
                                     class="forma-pago bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                                     min="0">
                             </div>
@@ -221,8 +218,6 @@
                                 <label class="block text-xl font-medium text-gray-900">Faltante</label>
                                 <span id="faltante_texto" class="text-red-600 font-bold">${{ number_format($faltante, 2) }}</span>
                                 <input type="hidden" id="total_faltante" name="total_faltante">
-
-
                             </div>
                             <div class="sm:col-span-12 lg:col-span-3">
                                 <label class="block text-xl font-medium text-gray-900">Cambio</label>
@@ -245,15 +240,11 @@
                                 </div>
                                 <textarea name="motivo_cancelacion" placeholder="Escribe el motivo"
                                     class="w-full border border-gray-300 rounded px-2 py-1 text-sm mb-2" rows="3"></textarea>
-                                
+
                                 <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded">
                                     Cancelar Venta
                                 </button>
                             </form>
-                            
-
-
-
                         </div>
                     </div>
                 </div>
@@ -267,6 +258,26 @@
 
 @section('js')
     <script>
+        document.addEventListener("submit", function (e) {
+
+            // Obtener el formulario que se está enviando
+            const form = e.target;
+
+            // Buscar textarea dentro del formulario
+            const textarea = form.querySelector("textarea[name='motivo_cancelacion']");
+
+            // Si no existe textarea, no validamos ese form
+            if (!textarea) return;
+
+            // Validación
+            if (textarea.value.trim() === "") {
+                e.preventDefault();
+                alert("Debe escribir un motivo de cancelación.");
+                textarea.focus();
+            }
+
+        }, true); // 👈 captura en fase CAPTURA (necesario para DataTables)
+
         $(document).ready(function() {
             var rolesTable = new DataTable('#compras_detalles', {
                 responsive: true,

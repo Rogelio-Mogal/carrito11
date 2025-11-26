@@ -203,35 +203,45 @@
                     <div>
                         <label class="block mb-1 text-sm font-medium text-gray-700">Efectivo</label>
                         <input type="hidden" name="formas_pago[0][metodo]" value="Efectivo">
-                        <input type="number" name="formas_pago[0][monto]" id="efectivo" step="any"
+                        <input type="text" class="monto-formateado gasto forma-pago w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        data-hidden="#efectivo">
+                        <input type="hidden" name="formas_pago[0][monto]" id="efectivo" step="any"
                             class="forma-pago w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <div>
                         <label>T. Débito</label>
                         <input type="hidden" name="formas_pago[1][metodo]" value="TDD">
-                        <input type="number" name="formas_pago[1][monto]" id="debito" step="any"
+                        <input type="text" class="monto-formateado gasto w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                        data-hidden="#debito">
+                        <input type="hidden" name="formas_pago[1][monto]" id="debito" step="any"
                             class="forma-pago w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <div>
                         <label>T. Crédito</label>
                         <input type="hidden" name="formas_pago[2][metodo]" value="TDC">
-                        <input type="number" name="formas_pago[2][monto]" id="credito" step="any"
+                        <input type="text" class="monto-formateado gasto w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                        data-hidden="#credito">
+                        <input type="hidden" name="formas_pago[2][monto]" id="credito" step="any"
                             class="forma-pago w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <div>
                         <label>Transferencia</label>
                         <input type="hidden" name="formas_pago[3][metodo]" value="Transferencia">
-                        <input type="number" name="formas_pago[3][monto]" id="transferencia" step="any"
+                        <input type="text" class="monto-formateado gasto w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                        data-hidden="#transferencia">
+                        <input type="hidden" name="formas_pago[3][monto]" id="transferencia" step="any"
                             class="forma-pago w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <div id="monto_credito_container" class="hidden sm:col-span-12 lg:col-span-2">
                         <label class="block mb-1 text-sm font-medium text-gray-900 dark:text-white">Monto a
                             crédito</label>
-                        <input type="number" name="monto_credito" id="monto_credito" step="any"
+                        <input type="text" class="monto-formateado gasto bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                        data-hidden="#monto_credito">
+                        <input type="hidden" name="monto_credito" id="monto_credito" step="any"
                             class="forma-pago bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                             min="0">
                     </div>
@@ -540,6 +550,43 @@
         }
 
         $(document).ready(function() {
+
+            // FORMATEAR MIENTRAS ESCRIBE
+            $(document).on('input', '.monto-formateado', function () {
+                let value = $(this).val();
+
+                // Quitar $ o cualquier carácter raro
+                value = value.replace(/[^\d.]/g, '');
+
+                // Separar decimales
+                let parts = value.split('.');
+                if (parts.length > 2) {
+                    value = parts[0] + '.' + parts[1];
+                    parts = value.split('.');
+                }
+
+                // Formatear miles
+                let entero = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+                // Reconstruir
+                let final = parts.length === 2 ? entero + '.' + parts[1] : entero;
+
+                $(this).val(final);
+
+                // Guardar valor "limpio" en el hidden
+                let hiddenID = $(this).data('hidden');
+                $(hiddenID).val(value.replace(/,/g, ''));
+            });
+
+            // ANTES DE ENVIAR EL FORMULARIO
+            $('form').on('submit', function () {
+                $('.monto-formateado').each(function () {
+                    let hidden = $(this).data('hidden');
+                    let limpio = $(this).val().replace(/,/g, '');
+                    $(hidden).val(limpio);
+                });
+            });
+
             // Arreglos globales para almacenar los anticipos aplicados
             let anticiposAplicados = [];
             let notasCreditoAplicadas = [];
