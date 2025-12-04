@@ -211,6 +211,9 @@ Route::post('tipo/gasto/index/ajax', [TipoGastoController::class, 'tipo_gasto_in
 Route::post('gasto/index/ajax', [GastosController::class, 'gasto_index_ajax'])
 	->name('gasto.index.ajax');
 
+Route::post('asignar/gasto/index/ajax', [AsignarGastosController::class, 'asignar_gasto_index_ajax'])
+	->name('asignar.gasto.index.ajax');
+
 Route::post('forma/pago/index/ajax', [FormaPagoController::class, 'forma_pago_index_ajax'])
 	->name('forma.pago.index.ajax');
 

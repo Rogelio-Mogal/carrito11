@@ -336,19 +336,13 @@
 
             // RECARGAR TABLA
             $('#reloadTable').on('click', function() {
-                $('#loadingOverlay').removeClass('hidden'); // Mostrar overlay
-                table.ajax.reload(function() {
-                    $('#loadingOverlay').addClass('hidden'); // Ocultar overlay después de recargar
-                });
+                table.ajax.reload();
             });
 
             // 🔹 Refrescar tabla al cambiar filtro
             $('#sucursal_filter').on('change', function() {
                 table.ajax.reload();
             });
-
         });
-
-
     </script>
 @stop

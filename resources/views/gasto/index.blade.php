@@ -77,7 +77,6 @@
                             <th>Tipo de gasto_id</th>
                             <th>Estatus</th>
                             <th>Opciones</th>
-
                         </tr>
                     </thead>
                     <tbody>
@@ -316,13 +315,17 @@
 
                 // Utilizar SweetAlert2 para mostrar un mensaje de confirmación
                 Swal.fire({
-                    title: '¿Estás seguro?',
+                    title: '¿Estás seguro de eliminar el registro?',
                     text: 'No podrás revertir esto',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Sí, eliminarlo'
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    customClass: {
+                        confirmButton: 'text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5',
+                        cancelButton: 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 ml-2'
+                    },
+                    buttonsStyling: false
                 }).then((result) => {
                     if (result.value) {
                         console.log('as: '+id);
@@ -375,13 +378,17 @@
 
                 // Utilizar SweetAlert2 para mostrar un mensaje de confirmación
                 Swal.fire({
-                    title: 'El tipo de gasto está deshabilitada',
-                    text: '¿Está seguro de activar el tipo de gasto?',
+                    title: 'El gasto está deshabilitada',
+                    text: '¿Está seguro de activar el gasto?',
                     icon: 'info',
                     showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Sí, activar'
+                    confirmButtonText: 'Sí, activar',
+                    cancelButtonText: 'Cancelar',
+                    customClass: {
+                        confirmButton: 'text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5',
+                        cancelButton: 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 ml-2'
+                    },
+                    buttonsStyling: false
                 }).then((result) => {
                     if (result.value) {
                         console.log(id);

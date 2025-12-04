@@ -258,6 +258,7 @@ class GastosController extends Controller
 
     public function gasto_index_ajax(Request $request)
     {
+
         if ($request->origen == 'gasto.index') {
 
             $gasto = Gasto::with('tipoGasto')->get()
@@ -270,7 +271,8 @@ class GastosController extends Controller
 
                 return [
                     'id'        => $item->id,
-                    'gasto' => '$' . number_format($item->gasto, 2, '.', ','),
+                    //'gasto' => '$' . number_format($item->gasto, 2, '.', ','),
+                    'gasto' => $item->gasto,
                     'tipo_gasto' => $item->tipoGasto->tipo_gasto,
                     'tipo_gasto_id' => $item->tipo_gasto_id,
                     'es_activo' => $es_activo,

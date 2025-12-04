@@ -16,9 +16,10 @@ class AsignarGastosController extends Controller
         $this->middleware('auth:sanctum');
         //$this->middleware(['can:Gestión de roles']);
     }
-    
-    public function index(Request $request)
+
+    public function index()
     {
+        /*
         setlocale(LC_ALL, "Spanish" );
         $mes = request('mes');
         $fechaInicio = $request->get('fechaInicio');
@@ -49,6 +50,10 @@ class AsignarGastosController extends Controller
                 return view ('asignar_gasto.index', compact( 'asignarGastos','mes'));
             }
         }
+        */
+
+         $now = new \DateTime();
+        return view ('asignar_gasto.index', compact('now'));
     }
 
     public function create()
@@ -223,7 +228,7 @@ class AsignarGastosController extends Controller
                 ],
                 'success' => 'La asignación de gasto se eliminó correctamente.'
             ], 200);
-    
+
         } catch (\Exception $e) {
             return response()->json([
                 'swal' => [
@@ -237,6 +242,87 @@ class AsignarGastosController extends Controller
                 ],
                 'error' => $e->getMessage(),
             ], 400);
+        }
+    }
+
+    public function asignar_gasto_index_ajax(Request $request)
+    {
+        if ($request->origen == 'asignar.gasto.index') {
+
+            if ($request->filtro === "NINGUNO") {
+                $query = AsignarGasto::with(['gasto.tipoGasto','formaPago'])
+                    ->orderBy('id', 'DESC');
+            }
+
+            setlocale(LC_ALL, "Spanish" );
+
+            $mes = $request->mes;
+            $fechaInicio = $request->fechaInicio;
+            $fechaFin = $request->fechaFin;
+
+            // ---------------------------------------
+            // 1. SI NO SE ENVÍA NADA → CARGA POR MES ACTUAL
+            // ---------------------------------------
+            if (is_null($mes) && is_null($fechaInicio) && is_null($fechaFin)) {
+
+                $fechaHoy = Carbon::now()->format('m');
+
+                $query = AsignarGasto::with(['gasto.tipoGasto', 'formaPago'])
+                    ->whereMonth('asignar_gastos.fecha', $fechaHoy)
+                    ->orderBy('id', 'DESC');
+            }
+
+            // ---------------------------------------
+            // 2. FILTRO POR MES (mes_hidden == 'MES')
+            // ---------------------------------------
+            elseif ($request->mes_hidden === 'MES') {
+
+                $digitosMes = substr($mes, -2);
+
+                $query = AsignarGasto::with(['gasto.tipoGasto', 'formaPago'])
+                    ->whereMonth('asignar_gastos.fecha', $digitosMes)
+                    ->orderBy('id', 'DESC');
+            }
+
+            // ---------------------------------------
+            // 3. FILTRO POR RANGO (rango == 'RANGO')
+            // ---------------------------------------
+            elseif ($request->rango === 'RANGO') {
+
+                $query = AsignarGasto::with(['gasto.tipoGasto', 'formaPago'])
+                    ->whereBetween(
+                        'asignar_gastos.fecha',
+                        ["$fechaInicio 00:00:00", "$fechaFin 23:59:59"]
+                    )
+                    ->orderBy('id', 'DESC');
+            }
+
+            // Ejecutar consulta
+            $items = $query->get();
+
+            // ---------------------------------------
+            // Mapear para DataTable
+            //—---------------------------------------
+            $gasto = $items->map(function ($item) {
+
+                $es_activo = $item->activo == 1
+                    ? '<span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Activo</span>'
+                    : '<span class="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">Eliminado</span>';
+
+                return [
+                    'id'            => $item->id,
+                    'fecha'         => Carbon::parse($item->fecha)->format('d/m/Y H:i:s'),
+                    'gasto'         => '$' . number_format($item->gasto->gasto, 2, '.', ','),
+                    'tipo'          => $item->gasto->tipoGasto->tipo_gasto,
+                    'monto'         => '$' . number_format($item->monto, 2, '.', ','),
+                    'forma_pago'    => $item->formaPago->forma_pago,
+                    'nota'          => $item->nota,
+                    'es_activo'     => $es_activo,
+                    'acciones'      => e(view('asignar_gasto.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json([ 'data' => $gasto ]);
         }
     }
 }

@@ -44,30 +44,78 @@
     ?>
     <div class="shadow-md rounded-lg p-4 dark:bg-gray-800">
         <div class="grid grid-cols-1 lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-4">
+            <!-- Mensaje de carga sobre la tabla -->
+            <div id="loadingOverlay" class="absolute inset-0 flex items-center justify-center z-50 hidden">
+                <div class="relative flex items-center">
+                    <!-- Contenedor para el texto de carga -->
+                    <div class="text-white text-lg font-bold p-4 bg-gray-900 rounded flex items-center">
+                        <svg aria-hidden="true"
+                            class="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                            viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                                fill="currentColor" />
+                            <path
+                                d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                                fill="currentFill" />
+                        </svg>
+                        &nbsp;Procesando
+                    </div>
+                </div>
+            </div>
             <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
-                <form id="filtroForm" name="filtroForm" action="{{ route('admin.asignar.gasto.index') }}">
-                    <input type="hidden" name="mes_hidden" id="mes_hidden">
-                    <input type="hidden" name="rango" id="rango">
-                    <div class="grid lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-2">
-                        <div class="sm:col-span-12 lg:col-span-4 md:col-span-4">
-                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Filtro por mes</label>
-                            <input type="month" name="mes" id="mes" step="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                value="{{ isset($mes) ? $mes : $now->format('Y-m') }}" onchange="updateHiddenValue()">
+
+                <form id="filtroForm">
+                    <div class="grid grid-cols-12 gap-3">
+                        <!-- TIPO DE FILTRO -->
+                        <div class="col-span-12">
+                            <label class="block mb-2 text-sm font-medium text-gray-900">Tipo de filtro</label>
+                            <div class="flex gap-6 items-center">
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="tipoFiltro" value="NINGUNO" id="radioNinguno" class="w-4 h-4" checked>
+                                    <span>Ninguno</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="tipoFiltro" value="MES" id="radioMes" class="w-4 h-4">
+                                    <span>Por mes</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="tipoFiltro" value="RANGO" id="radioRango" class="w-4 h-4">
+                                    <span>Por rango de fechas</span>
+                                </label>
+                            </div>
                         </div>
-                        <div class="sm:col-span-12 lg:col-span-3 md:col-span-3">
-                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fecha inicio</label>
-                            <input type="date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" name="fechaInicio" id="fechaInicio"
-                                value="{{ $fechaActual }}">
+                        <!-- FILTRO POR MES -->
+                        <div id="filtroMes" class="col-span-4 hidden">
+                            <label class="block mb-2 text-sm font-medium text-gray-900">Mes</label>
+                            <input type="month" id="mes" class="bg-gray-50 border border-gray-300 rounded-lg p-2.5 w-full"
+                            value="{{ isset($mes) ? $mes : $now->format('Y-m') }}" onchange="updateHiddenValue()">
                         </div>
-                        <div class="sm:col-span-12 lg:col-span-3 md:col-span-3">
-                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fecha fin</label>
-                            <input type="date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" name="fechaFin" id="fechaFin"
-                                value="{{ $fechaActual }}">
+                        <!-- RANGO DE FECHAS -->
+                        <div id="filtroRango" class="col-span-8 hidden grid grid-cols-8 gap-3">
+                            <div class="col-span-4">
+                                <label class="block mb-2 text-sm font-medium text-gray-900">Fecha inicio</label>
+                                <input type="date" id="fechaInicio"
+                                    class="bg-gray-50 border border-gray-300 rounded-lg p-2.5 w-full"
+                                  value="{{ $fechaActual }}">
+                            </div>
+                            <div class="col-span-4">
+                                <label class="block mb-2 text-sm font-medium text-gray-900">Fecha fin</label>
+                                <input type="date" id="fechaFin"
+                                    class="bg-gray-50 border border-gray-300 rounded-lg p-2.5 w-full"
+                                  value="{{ $fechaActual }}">
+                            </div>
                         </div>
-                        <div class="sm:col-span-12 lg:col-span-2 md:col-span-2">
-                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">&nbsp;</label>
-                            <button id="btn-filtro" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
-                                onclick="filtrarFormulario()">Filtrar</button>
+                        <!-- BOTONES -->
+                        <div class="col-span-12 flex gap-3 mt-2">
+                            <button type="button" id="btnFiltrar"
+                                class="text-white bg-green-600 hover:bg-green-700 px-5 py-2 rounded-lg">
+                                Filtrar
+                            </button>
+                            <button type="button" id="reloadTable"
+                                class="text-white bg-blue-500 hover:bg-blue-600 px-5 py-2 rounded-lg">
+                                Recargar tabla
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -90,84 +138,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($asignarGastos as $item)
-                            <tr>
-                                <td>{{ $item->id }}</td>
-                                <td>{{ $item->fecha }}</td>
-                                <td>{{ $item->gasto->gasto }}</td>
-                                <td>{{ $item->gasto->tipoGasto->tipo_gasto }}</td>
-                                <td>{{ $item->monto }}</td>
-                                <td>{{ $item->formaPago->forma_pago }}</td>
-                                <td>{!! $item->nota !!}</td>
-                                <td>
-                                    @if( $item->activo == 0 )
-                                        <span class="bg-red-100 text-red-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Eliminado</span>
-                                    @endif
-                                    @if( $item->activo == 1 )
-                                        <span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Activo</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($item->activo == 1)
-                                        {{--
-                                        <a href="{{ route('admin.clientes.edit', $item->id) }}"
-                                            data-id="{{ $item->id }}"
-                                            data-popover-target="editar{{ $item->id }}" data-popover-placement="bottom"
-                                            class="open-modal edit-item text-white mb-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28" />
-                                            </svg>
-                                            <span class="sr-only">Editar</span>
-                                        </a>
-                                        --}}
-                                        <a href="{{ route('admin.asignar.gasto.destroy', $item->id) }}"
-                                            data-popover-target="eliminar{{ $item->id }}" data-popover-placement="bottom"
-                                            data-id="{{ $item->id }}"
-                                            class="delete-item mb-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                                    stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-                                            <span class="sr-only">Eliminar</span>
-                                        </a>
-                                        {{--
-                                        <div id="editar{{ $item->id }}" role="tooltip"
-                                            class="absolute z-10 invisible inline-block w-54 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
-                                            <div class="p-2 space-y-2">
-                                                <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Editar</h6>
-                                            </div>
-                                        </div>
-                                        --}}
-                                        <div id="eliminar{{ $item->id }}" role="tooltip"
-                                            class="absolute z-10 invisible inline-block w-54 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
-                                            <div class="p-2 space-y-2">
-                                                <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Eliminar</h6>
-                                            </div>
-                                        </div>
-                                    @else
-                                        <a href="#"
-                                            data-popover-target="activar{{ $item->id }}" data-popover-placement="bottom"
-                                            data-id="{{ $item->id }}"
-                                            class="activa-item mb-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16 10 3-3m0 0-3-3m3 3H5v3m3 4-3 3m0 0 3 3m-3-3h14v-3"/>
-                                            </svg>                                                                                           
-                                            <span class="sr-only">Activar</span>
-                                        </a>
-                                        <div id="activar{{ $item->id }}" role="tooltip"
-                                            class="absolute z-10 invisible inline-block w-54 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
-                                            <div class="p-2 space-y-2">
-                                                <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Cambiar a activo</h6>
-                                            </div>
-                                        </div>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -179,36 +149,135 @@
 
 @section('js')
     <script>
-        // Cambio input si es por mes
-        function updateHiddenValue() {
-            // Obtener el valor del input de tipo month
-            const selectedMonth = document.getElementById('mes').value;
-
-            // Actualizar el valor del input oculto
-            document.getElementById('mes_hidden').value = 'MES';
-            document.getElementById('rango').value = '';
-
-            // Enviar el formulario
-            document.getElementById('filtroForm').submit();
-        }
-
-        function filtrarFormulario() {
-            // Modificar el valor del input 'rango'
-            const rangoInput = document.getElementById('rango');
-            document.getElementById('mes_hidden').value = '';
-            rangoInput.value = 'RANGO'; // Puedes cambiar 'Tu nuevo valor aquí' por el valor que desees
-
-            // Enviar el formulario
-            document.getElementById('rangoConsulta').submit();
-        }
-        
         $(document).ready(function() {
-            var tblAsignarGasto = new DataTable('#asignar_gasto', {
-                responsive: true,
-                "language": {
-                    "url": "{{ asset('/json/i18n/es_es.json') }}"
-                },
-                "order": [[0, "desc"]]
+            let tblGastos;
+            cargarAsignaGasto();
+
+            function cargarAsignaGasto() {
+
+                if ($.fn.DataTable.isDataTable('#asignar_gasto')) {
+                    $('#asignar_gasto').DataTable().clear().destroy();
+                }
+
+                // ORDENAR CANTIDADES CON FORMATO "$1,234.56"
+                $.extend($.fn.dataTable.ext.type.order, {
+                    "currency-mx-pre": function (data) {
+                        if (!data) return 0;
+
+                        // Elimina $, comas y espacios
+                        return parseFloat(
+                            data.replace('$', '').replace(/,/g, '').trim()
+                        );
+                    }
+                });
+
+                tblGastos = $('#asignar_gasto').DataTable({
+                    processing: true,
+                    serverSide: false, // cambiar a true si quieres paginación del lado del servidor
+                    responsive: true,
+                    order: [], // evita que intente ordenar automático
+                    ajax: {
+                        url: "{{ route('asignar.gasto.index.ajax') }}",
+                        type: "POST",
+                        data: function(d){
+                            return $.extend(d, {
+                                _token: $('meta[name="csrf-token"]').attr('content'),
+                                origen: "asignar.gasto.index",
+                            });
+                        }
+                    },
+                    columns: [
+                        { data: 'id'},
+                        { data: 'fecha'},
+                        { data: 'gasto' },
+                        { data: 'tipo' },
+                        { data: 'monto' },
+                        { data: 'forma_pago' },
+                        { data: 'nota' },
+                        { data: 'es_activo' },
+                        { data: 'acciones', render: function(data){
+                            return $('<div/>').html(data).text();
+                        }}
+                    ],
+                    language: { url: "{{ asset('/json/i18n/es_es.json') }}" }
+                });
+
+                //  Re-inicializa Flowbite cada vez que DataTables repinta
+                tblGastos.on('draw', function () {
+                    if (typeof window.initFlowbite === "function") {
+                        window.initFlowbite();
+                    }
+                });
+            }
+
+            // 🔄 Botón de recargar
+            $("#reloadTable").on("click", function() {
+                $// Dejar seleccionado NINGUNO
+                $("#radioNinguno").prop("checked", true);
+
+                // Ocultar ambos filtros
+                $("#filtroMes").addClass("hidden");
+                $("#filtroRango").addClass("hidden");
+
+                // Limpiar valores
+                $("#mes").val("");
+                $("#fechaInicio").val("");
+                $("#fechaFin").val("");
+
+                cargarAsignaGasto();
+            });
+
+            // Mostrar u ocultar filtros según selección
+            $("input[name='tipoFiltro']").on("change", function () {
+
+                let tipo = $(this).val();
+
+                if (tipo === "MES") {
+                    $("#filtroMes").removeClass("hidden");
+                    $("#filtroRango").addClass("hidden");
+                } else if (tipo === "RANGO") {
+                    $("#filtroRango").removeClass("hidden");
+                    $("#filtroMes").addClass("hidden");
+                }else if (tipo === "NINGUNO") {
+                    $("#filtroMes").addClass("hidden");
+                    $("#filtroRango").addClass("hidden");
+                }
+            });
+
+            // FILTRAR (envío AJAX al DataTable)
+            $("#btnFiltrar").on("click", function () {
+
+                let tipo = $("input[name='tipoFiltro']:checked").val();
+
+                let postData = {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    origen: "asignar.gasto.index",
+                };
+
+                if (tipo === "MES") {
+                    postData.mes_hidden = "MES";
+                    postData.mes = $("#mes").val();
+                }
+
+                if (tipo === "RANGO") {
+                    postData.rango = "RANGO";
+                    postData.fechaInicio = $("#fechaInicio").val();
+                    postData.fechaFin = $("#fechaFin").val();
+                }
+
+                if (tipo === "NINGUNO") {
+                    postData.filtro = "NINGUNO";
+                }
+
+                // 🔥 Ahora SÍ enviamos los datos correctamente al DataTable
+                tblGastos.ajax.reload(null, false);
+                tblGastos.ajax.params = postData;
+
+                tblGastos.settings()[0].ajax.data = function(d){
+                    return $.extend(d, postData);
+                };
+
+                tblGastos.ajax.reload();
             });
 
             // ACTIVA LA BUSQUEDA
@@ -236,13 +305,17 @@
 
                 // Utilizar SweetAlert2 para mostrar un mensaje de confirmación
                 Swal.fire({
-                    title: '¿Estás seguro?',
+                    title: '¿Estás seguro de eliminar el registro?',
                     text: 'No podrás revertir esto',
-                    icon: 'warning',
+                    icon: 'info',
                     showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Sí, eliminarlo'
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    customClass: {
+                        confirmButton: 'text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5',
+                        cancelButton: 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 ml-2'
+                    },
+                    buttonsStyling: false
                 }).then((result) => {
                     if (result.value) {
                         console.log('as: '+id);
@@ -299,9 +372,13 @@
                     text: '¿Está seguro de activar asignar gasto?',
                     icon: 'info',
                     showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Sí, activar'
+                    confirmButtonText: 'Sí, activar',
+                    cancelButtonText: 'Cancelar',
+                    customClass: {
+                        confirmButton: 'text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5',
+                        cancelButton: 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 ml-2'
+                    },
+                    buttonsStyling: false
                 }).then((result) => {
                     if (result.value) {
                         console.log(id);
