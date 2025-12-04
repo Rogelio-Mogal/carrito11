@@ -18,8 +18,10 @@ class ClientesController extends Controller
 
     public function index()
     {
-        $clientes = Cliente::where('id', '!=', 1)->get();
-        return view('clientes.index', compact('clientes'));
+        //$clientes = Cliente::where('id', '!=', 1)->get();
+        //return view('clientes.index', compact('clientes'));
+
+        return view('clientes.index');
     }
 
     public function create()
@@ -343,6 +345,31 @@ class ClientesController extends Controller
 
     public function clientes_index_ajax(Request $request)
     {
+        // CLIENTES PARA EL INDEX
+        if ($request->origen == 'clientes.index') {
+            $clientes = Cliente::where('id', '!=', 1)->get()
+                ->map(function ($item) {
+
+                    // --- Etiqueta de Matriz ---
+                $es_activo = $item->activo == 1
+                    ? '<span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Activo</span>'
+                    : '<span class="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">Eliminado</span>';
+
+                return [
+                    'id'        => $item->id,
+                    'full_name' => $item->full_name,
+                    'email' => $item->email,
+                    'telefono' => $item->telefono,
+                    'direccion' => $item->direccion,
+                    'tipo_cliente' => $item->tipo_cliente,
+                    'ejecutivo_id' => $item->ejecutivo_id,
+                    'es_activo' => $es_activo,
+                    'acciones' => e(view('gasto.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json(['data' => $clientes]);
+        }
 
         // CLIENTES PARA EL APARTADO DE COTIZACIONES
         if ($request->origen == 'clientes.cotizaciones') {

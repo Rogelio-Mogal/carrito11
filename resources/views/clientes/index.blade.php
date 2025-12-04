@@ -21,6 +21,12 @@
     <div class="shadow-md rounded-lg p-4 dark:bg-gray-800">
         <div class="grid grid-cols-1 lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-4">
             <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
+                 <div class="mb-4">
+                    <button id="reloadTable"
+                        class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        Recargar Tabla
+                    </button>
+                </div>
                 <table id="cliente" class="table table-striped" style="width:100%">
                     <thead>
                         <tr>
@@ -38,6 +44,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {{--
                         @foreach ($clientes as $item)
                             <tr>
                                 <td>{{ $item->id }}</td>
@@ -99,7 +106,7 @@
                                             class="activa-item mb-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                                             <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16 10 3-3m0 0-3-3m3 3H5v3m3 4-3 3m0 0 3 3m-3-3h14v-3"/>
-                                            </svg>                                                                                           
+                                            </svg>
                                             <span class="sr-only">Activar</span>
                                         </a>
                                         <div id="activar{{ $item->id }}" role="tooltip"
@@ -112,6 +119,7 @@
                                 </td>
                             </tr>
                         @endforeach
+                        --}}
                     </tbody>
                 </table>
             </div>
@@ -126,11 +134,70 @@
     <script>
 
         $(document).ready(function() {
-            var clientesTable = new DataTable('#cliente', {
-                responsive: true,
-                "language": {
-                    "url": "{{ asset('/json/i18n/es_es.json') }}"
-                },
+
+            let tblGastos;
+            cargarCliente();
+
+            function cargarCliente() {
+
+                if ($.fn.DataTable.isDataTable('#cliente')) {
+                    $('#cliente').DataTable().clear().destroy();
+                }
+
+                // ORDENAR CANTIDADES CON FORMATO "$1,234.56"
+                $.extend($.fn.dataTable.ext.type.order, {
+                    "currency-mx-pre": function (data) {
+                        if (!data) return 0;
+
+                        // Elimina $, comas y espacios
+                        return parseFloat(
+                            data.replace('$', '').replace(/,/g, '').trim()
+                        );
+                    }
+                });
+
+                tblGastos = $('#cliente').DataTable({
+                    processing: true,
+                    serverSide: false, // cambiar a true si quieres paginación del lado del servidor
+                    responsive: true,
+                    order: [], // evita que intente ordenar automático
+                    ajax: {
+                        url: "{{ route('clientes.index.ajax') }}",
+                        type: "POST",
+                        data: function(d){
+                            return $.extend(d, {
+                                _token: $('meta[name="csrf-token"]').attr('content'),
+                                origen: "clientes.index",
+                            });
+                        }
+                    },
+                    columns: [
+                        { data: 'id'},
+                        { data: 'full_name'},
+                        { data: 'email' },
+                        { data: 'telefono' },
+                        { data: 'direccion' },
+                        { data: 'tipo_cliente' },
+                        { data: 'ejecutivo_id' },
+                        { data: 'es_activo' },
+                        { data: 'acciones', render: function(data){
+                            return $('<div/>').html(data).text();
+                        }}
+                    ],
+                    language: { url: "{{ asset('/json/i18n/es_es.json') }}" }
+                });
+
+                //  Re-inicializa Flowbite cada vez que DataTables repinta
+                tblGastos.on('draw', function () {
+                    if (typeof window.initFlowbite === "function") {
+                        window.initFlowbite();
+                    }
+                });
+            }
+
+            // 🔄 Botón de recargar
+            $("#reloadTable").on("click", function() {
+                cargarCliente();
             });
 
             // Manejar el clic en la opción "Eliminar"

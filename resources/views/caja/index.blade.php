@@ -31,7 +31,6 @@
             <table id="caja" class="table table-striped" style="width:100%">
                 <thead>
                     <tr>
-
                         <th>ID</th>
                         <th>Origen</th>
                         <th>Monto</th>
@@ -39,7 +38,6 @@
                         <th>Motivo</th>
                         <th>Fecha</th>
                         <th>Opciones</th>
-
                     </tr>
                 </thead>
                 <tbody>
