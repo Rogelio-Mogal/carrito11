@@ -84,7 +84,7 @@ class ProveedoresController extends Controller
             return view('proveedores.edit', compact('proveedor','metodo'));
         }else{
             return redirect()->route('admin.proveedores.index');
-        } 
+        }
     }
 
     public function update(Request $request, $id)
@@ -218,7 +218,7 @@ class ProveedoresController extends Controller
                 ],
                 'buttonsStyling' => false  // Deshabilitar el estilo predeterminado de SweetAlert2
             ]);
-    
+
         } catch (\Exception $e) {
             $query = $e->getMessage();
             session()->flash('swal', [
@@ -233,6 +233,33 @@ class ProveedoresController extends Controller
             return redirect()->back()
                 ->with('status', 'Hubo un error al ingresar los datos, por favor intente de nuevo.')
                 ->withErrors(['error' => $e->getMessage()]); // Aquí pasas el mensaje de error
+        }
+    }
+
+    public function proveedor_index_ajax(Request $request)
+    {
+
+        if ($request->origen == 'proveedor.index') {
+
+            $proveedores = Proveedor::where('id', '!=', 1)->get()
+                ->map(function ($item) {
+
+                // --- Etiqueta de Matriz ---
+                $es_activo = $item->activo == 1
+                    ? '<span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Activo</span>'
+                    : '<span class="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">Eliminado</span>';
+
+                return [
+                    'id'        => $item->id,
+                    'proveedor' => $item->proveedor,
+                    'correo' => $item->correo,
+                    'telefono' => $item->telefono,
+                    'es_activo' => $es_activo,
+                    'acciones' => e(view('proveedores.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json([ 'data' => $proveedores ]);
         }
     }
 }

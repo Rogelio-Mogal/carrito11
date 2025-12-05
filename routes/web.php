@@ -90,6 +90,9 @@ Route::get('/obtener-precios', [PreciosController::class, 'obtenerPrecios'])
 Route::post('clientes/index/ajax', [ClientesController::class, 'clientes_index_ajax'])
 	->name('clientes.index.ajax');
 
+Route::post('proveedor/index/ajax', [ProveedoresController::class, 'proveedor_index_ajax'])
+	->name('proveedor.index.ajax');
+
 Route::resource('/roles', RoleController::class)->names('admin.roles')
     ->except(['show']);
 Route::resource('/permissions', PermissionController::class)->names('admin.permissions')
