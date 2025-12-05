@@ -53,6 +53,12 @@
 <div class="shadow-md rounded-lg p-4 dark:bg-gray-800">
     <div class="grid grid-cols-1 lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-4">
         <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
+            <div class="mb-4">
+                <button id="reloadTable"
+                    class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                    Recargar Tabla
+                </button>
+            </div>
             <table id="precios" class="table table-striped" style="width:100%">
                 <thead>
                     <tr>
@@ -69,6 +75,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {{--
                     @foreach ($precios as $item)
                         <tr>
                             <td> {{ $item->id }} </td>
@@ -117,6 +124,7 @@
                             </td>
                         </tr>
                     @endforeach
+                    --}}
                 </tbody>
             </table>
             @include('precios._modal_edita_precios')
@@ -131,11 +139,56 @@
 @section('js')
 <script>
     $(document).ready(function() {
-        var preciosTable = new DataTable('#precios', {
-            responsive: true,
-            "language": {
-                "url": "{{ asset('/json/i18n/es_es.json') }}"
-            },
+
+        let tblPrecios;
+        cargarPrecios();
+
+        function cargarPrecios() {
+
+            if ($.fn.DataTable.isDataTable('#precios')) {
+                $('#precios').DataTable().clear().destroy();
+            }
+
+            tblPrecios = $('#precios').DataTable({
+                processing: true,
+                serverSide: false, // cambiar a true si quieres paginación del lado del servidor
+                responsive: true,
+                ajax: {
+                    url: "{{ route('precio.index.ajax') }}",
+                    type: "POST",
+                    data: function(d){
+                        return $.extend(d, {
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            origen: "precio.index",
+                        });
+                    }
+                },
+                columns: [
+                    { data: 'id' },
+                    { data: 'desde' },
+                    { data: 'hasta' },
+                    { data: 'publico' },
+                    { data: 'medio' },
+                    { data: 'mayoreo' },
+                    { data: 'caracteristica' },
+                    { data: 'tipo_precio' },
+                    { data: 'precio' },
+                    { data: 'acciones' }
+                ],
+                language: { url: "{{ asset('/json/i18n/es_es.json') }}" }
+            });
+
+            //  Re-inicializa Flowbite cada vez que DataTables repinta
+            tblPrecios.on('draw', function () {
+                if (typeof window.initFlowbite === "function") {
+                    window.initFlowbite();
+                }
+            });
+        }
+
+        // Botón de recargar
+        $("#reloadTable").on("click", function() {
+            cargarPrecios();
         });
 
         // Manejar el clic en el botón para mostrar el modal
@@ -159,7 +212,7 @@
         });
 
         // Listener for details control
-        preciosTable.on('responsive-display', function(e, datatable, row, showHide, update) {
+        tblPrecios.on('responsive-display', function(e, datatable, row, showHide, update) {
             var rowData = row.data();
             if (showHide) {
                 var id = rowData[0];
@@ -189,35 +242,61 @@
                 dataType: 'json',
                 data: ajaxData,
                 success: function(response) {
-                    if (response.data) {
-                        // Genearar el modal de edición
-                        let modal = $('#edit-modal'); // + id);
+                    if (!response.data) return;
 
-                        // Cambiar valores del formulario en el modal
-                        var updateUrl = "{{ route('admin.precios.update', ':id') }}".replace(':id',
-                            id);
-                        modal.find('form').attr('action', updateUrl);
-                        modal.find('#tipo_precio').val(response.data.tipo_precio);
-                        modal.find('#porcentaje_publico').val(response.data.porcentaje_publico);
-                        modal.find('#porcentaje_medio').val(response.data.porcentaje_medio);
-                        modal.find('#porcentaje_mayoreo').val(response.data.porcentaje_mayoreo);
-                        modal.find('#especifico_publico').val(response.data.especifico_publico);
-                        modal.find('#especifico_medio').val(response.data.especifico_medio);
-                        modal.find('#especifico_mayoreo').val(response.data.especifico_mayoreo);
+                    let modal = $('#edit-modal');
 
-                        var desdeFormatted = formatCurrency(response.data.desde);
-                        var hastaFormatted = formatCurrency(response.data.hasta);
+                    let d = response.data;
 
-                        // Añadir los valores de "Desde" y "Hasta" en el encabezado del modal
-                        modal.find('#desde').text('$'+desdeFormatted);
-                        modal.find('#hasta').text('$'+hastaFormatted);
+                    // Encabezado
+                    modal.find('#desde').text('$' + formatCurrency(d.desde));
+                    modal.find('#hasta').text('$' + formatCurrency(d.hasta));
 
-                        // Mostrar el modal
-                        modal.removeClass('hidden');
+                    // Tipo precio oculto
+                    modal.find('#tipo_precio').val(d.tipo_precio);
+
+                    // Construir inputs dinámicamente
+                    let html = '';
+
+                    if (d.tipo_precio == 1) {
+                        html = `
+                            <div class="col-span-12">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">% Público</label>
+                                <input type="text" name="porcentaje_publico" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" value="${d.porcentaje_publico}">
+                            </div>
+
+                            <div class="col-span-12">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">% Medio</label>
+                                <input type="text" name="porcentaje_medio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" value="${d.porcentaje_medio}">
+                            </div>
+
+                            <div class="col-span-12">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">% Mayoreo</label>
+                                <input type="text" name="porcentaje_mayoreo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" value="${d.porcentaje_mayoreo}">
+                            </div>
+                        `;
                     } else {
-                        // No hay datos, manejar el caso donde no se encuentra el registro
-                        console.log('No se encontro el Id')
+                        html = `
+                            <div class="col-span-12">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Público</label>
+                                <input type="text" name="especifico_publico" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" value="${d.especifico_publico}">
+                            </div>
+
+                            <div class="col-span-12">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Medio</label>
+                                <input type="text" name="especifico_medio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" value="${d.especifico_medio}">
+                            </div>
+
+                            <div class="col-span-12">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Mayoreo</label>
+                                <input type="text" name="especifico_mayoreo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" value="${d.especifico_mayoreo}">
+                            </div>
+                        `;
                     }
+
+                    $('#contenedorCampos').html(html);
+
+                    modal.show();
                 },
                 error: function(response) {
                     Swal.fire({

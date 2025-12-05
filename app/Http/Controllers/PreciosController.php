@@ -24,7 +24,7 @@ class PreciosController extends Controller
         ->orderBy('id', 'asc')
         ->get();
 
-        return view('precios.index', compact('precios'));
+        return view('precios.index'); //, compact('precios'));
     }
 
     public function create(Request $request)
@@ -137,7 +137,7 @@ class PreciosController extends Controller
             'desde' => 'required|numeric',
             'hasta' => 'required|numeric|gt:desde', // Asegura que hasta sea mayor que desde
         ]);
-    
+
         // Obtener el último registro de la tabla precios
         $tipoPrecio = $request->input('tipo_precio');
         $precio = $request->input('precio');
@@ -151,14 +151,14 @@ class PreciosController extends Controller
         }
         $ultimoHasta = $ultimoPrecio ? $ultimoPrecio->hasta : 0;
         $siguienteDesde = $ultimoHasta + 1;
-    
+
         // Validar que el rango sea consecutivo
         $desde = $request->input('desde');
         if ($desde != $siguienteDesde) {
             $mensaje = 'El rango debe comenzar desde ' . $siguienteDesde;
             return json_encode(['error'=> $mensaje, 'rango'=>$siguienteDesde]);
         }
-    
+
         // Resto del código para validar solapamiento y guardar el registro en la base de datos
         $mensaje = 'No esta repetido';
         return json_encode(['success'=> $mensaje,'rango'=>$siguienteDesde]);
@@ -204,7 +204,7 @@ class PreciosController extends Controller
                     ->where('precio', 'INTERNO')
                     ->where('producto_caracteristica_id', $id)
                     ->first();
-   
+
 
                 if ($precios === null ){ //|| $precios->isEmpty()) {
                     // La consulta está vacía
@@ -236,5 +236,79 @@ class PreciosController extends Controller
         }
 
         return json_encode(['precio' => $precios, 'tipo' => $tipo]);
+    }
+
+    public function precio_index_ajax(Request $request)
+    {
+
+        if ($request->origen == 'precio.index') {
+
+            $precios = Precio::select('precios.*','producto_caracteristicas.nombre')
+                ->leftJoin('producto_caracteristicas', 'precios.producto_caracteristica_id', '=', 'producto_caracteristicas.id')
+                ->where('precios.activo',1)
+                ->orderBy('id', 'asc')
+                ->get()
+                ->map(function ($item) {
+
+                // Formateo de números
+                $desde = '$' . number_format($item->desde, 2, '.', ',');
+                $hasta = '$' . number_format($item->hasta, 2, '.', ',');
+
+                // Tipo de precio dinámico
+                if ($item->tipo_precio == 1) {
+                    $publico   = $item->porcentaje_publico . ' %';
+                    $medio     = $item->porcentaje_medio . ' %';
+                    $mayoreo   = $item->porcentaje_mayoreo . ' %';
+                    $tipo      = 'General';
+                } else {
+                    $publico   = '$' . number_format($item->especifico_publico, 2, '.', ',');
+                    $medio     = '$' . number_format($item->especifico_medio, 2, '.', ',');
+                    $mayoreo   = '$' . number_format($item->especifico_mayoreo, 2, '.', ',');
+                    $tipo      = 'Específico';
+                }
+
+                // Característica
+                $caracteristica = $item->productoCaracteristica->id == 3
+                    ? ''
+                    : $item->productoCaracteristica->nombre;
+
+                // Botón edit
+                $botonEditar = '
+                    <a href="#"
+                        data-id="'.$item->id.'"
+                        data-popover-target="editar'.$item->id.'"
+                        data-popover-placement="bottom"
+                        class="open-modal edit-item text-white mb-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                            fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28" />
+                        </svg>
+                    </a>
+                    <div id="editar'.$item->id.'" role="tooltip"
+                        class="absolute z-10 invisible inline-block w-54 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                        <div class="p-2 space-y-2">
+                            <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Editar</h6>
+                        </div>
+                    </div>
+                ';
+
+                return [
+                    'id' => $item->id,
+                    'desde' => $desde,
+                    'hasta' => $hasta,
+                    'publico' => $publico,
+                    'medio' => $medio,
+                    'mayoreo' => $mayoreo,
+                    'caracteristica' => $caracteristica,
+                    'tipo_precio' => $tipo,
+                    'precio' => $item->precio,
+                    'acciones' => $botonEditar
+                ];
+            });
+
+            return response()->json([ 'data' => $precios ]);
+        }
     }
 }
