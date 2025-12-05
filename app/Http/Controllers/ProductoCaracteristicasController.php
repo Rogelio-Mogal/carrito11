@@ -19,8 +19,7 @@ class ProductoCaracteristicasController extends Controller
 
     public function index()
     {
-        $caracteristica = ProductoCaracteristica::where('id', '>', 4)->get();
-        return view('producto_caracteristica.index', compact('caracteristica'));
+        return view('producto_caracteristica.index');
     }
 
     public function create()
@@ -53,7 +52,7 @@ class ProductoCaracteristicasController extends Controller
             $caracteristica = new ProductoCaracteristica();
             $caracteristica->nombre = $request->nombre;
             $caracteristica->tipo = $request->tipo;
-            
+
             if($request->file('imagen')){
                 //$imageStorage = Storage::put('productos', $request->imagen);
                 //$caracteristica->imagen = $imageStorage;
@@ -64,14 +63,14 @@ class ProductoCaracteristicasController extends Controller
 
 
                 //$imageStorage = Storage::disk('s3')->putFileAs('productos', $request->imagen, $file_name);
-                
+
                 /*
                 //CODIGO CORRECTO, FUNCIONA SIN EL PAQIETE
                 $imageStorage = Storage::putFileAs('productos', $request->imagen ,$file_name, [
                     'visibility' => 'public',
                 ]);
                 */
-        
+
 
                 // CON EL PAQUETE INTERVENTION/IMAGE
                 /*
@@ -98,8 +97,8 @@ class ProductoCaracteristicasController extends Controller
                 // IMAGEN NORMAL
                 $manager = new ImageManager(new Driver());
                 $img = $manager->read('storage/'.$imageStorage);
-                $img->save('storage/'.$imageStorage, 90, 'jpg' ); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion   
-                
+                $img->save('storage/'.$imageStorage, 90, 'jpg' ); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion
+
                 // IMAGEN THUMB
                 $imgThumb = $manager->read('storage/'.$imageStorageThumb);
                 $imgThumb->scale(null, 210, function($constraint){
@@ -161,7 +160,7 @@ class ProductoCaracteristicasController extends Controller
     public function update(Request $request, $id)
     {
         $caracteristica = ProductoCaracteristica::findorfail($id);
-        
+
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255',
             'tipo' => 'required|in:MARCA,FAMILIA,SUB_FAMILIA',
@@ -181,7 +180,7 @@ class ProductoCaracteristicasController extends Controller
         try {
             $caracteristica->nombre = $request->nombre;
             $caracteristica->tipo = $request->tipo;
-            
+
             if($request->file('imagen')){
                 // Eliminamos la imagen anterior
                 /*if($caracteristica->imagen){
@@ -189,10 +188,10 @@ class ProductoCaracteristicasController extends Controller
                     // Extraer solo la ruta del archivo desde la URL
                     $imagePath = parse_url($imageUrl, PHP_URL_PATH);
                     $imagePath = str_replace('storage/', '', $imagePath);
-                    
+
                     if (Storage::disk('s3')->exists($imagePath)) {
                         Storage::disk('s3')->delete($imagePath);
-                    } 
+                    }
                 }*/
 
                 if($caracteristica->imagen){
@@ -201,17 +200,17 @@ class ProductoCaracteristicasController extends Controller
                     // Extraer solo la ruta del archivo desde la URL
                     $imagePath = parse_url($imageUrl, PHP_URL_PATH);
                     $imagePath = str_replace('storage/', '', $imagePath);
-                    
+
                     if (Storage::disk('public')->exists($imagePath)) {
                         Storage::disk('public')->delete($imagePath);
-                    } 
+                    }
 
                     // IMG THUMS
                     $imageUrlThum = $caracteristica->img_thumb;
                     // Extraer solo la ruta del archivo desde la URL
                     $imagePathThum = parse_url($imageUrlThum, PHP_URL_PATH);
                     $imagePathThum = str_replace('storage/', '', $imagePathThum);
-                    
+
                     if (Storage::disk('public')->exists($imagePathThum)) {
                         Storage::disk('public')->delete($imagePathThum);
                     }
@@ -222,7 +221,7 @@ class ProductoCaracteristicasController extends Controller
                 $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
                 $file_name = $slug.'-'.substr(str_shuffle($permitted_chars), 0, 3).'.'.$request->file('imagen')->getClientOriginalExtension();
                 //$imageStorage = $request->file('imagen')->storeAs('productos', $file_name);
-                
+
                 $imageStorage = Storage::putFileAs('caracteristicas', $request->imagen ,$file_name, [
                     'visibility' => 'public',
                 ]);
@@ -234,8 +233,8 @@ class ProductoCaracteristicasController extends Controller
                 // IMAGEN NORMAL
                 $manager = new ImageManager(new Driver());
                 $img = $manager->read('storage/'.$imageStorage);
-                $img->save('storage/'.$imageStorage, 90, 'jpg' ); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion   
-                
+                $img->save('storage/'.$imageStorage, 90, 'jpg' ); // Ruta de la imagen, Calidad de imagen, trabajara la imagen como jpg pero no la cambiara de extencion
+
                 // IMAGEN THUMB
                 $imgThumb = $manager->read('storage/'.$imageStorageThumb);
                 $imgThumb->scale(null, 210, function($constraint){
@@ -323,7 +322,7 @@ class ProductoCaracteristicasController extends Controller
                 ],
                 'buttonsStyling' => false  // Deshabilitar el estilo predeterminado de SweetAlert2
             ]);
-    
+
             //return redirect()->route('admin.users.index');
         } catch (\Exception $e) {
             $query = $e->getMessage();
@@ -339,6 +338,33 @@ class ProductoCaracteristicasController extends Controller
             return redirect()->back()
                 ->with('status', 'Hubo un error al ingresar los datos, por favor intente de nuevo.')
                 ->withErrors(['error' => $e->getMessage()]); // Aquí pasas el mensaje de error
+        }
+    }
+
+    public function caracteristica_index_ajax(Request $request)
+    {
+
+        if ($request->origen == 'caracteristica.index') {
+
+            $caracteristica = ProductoCaracteristica::where('id', '>', 4)->get()
+                ->map(function ($item) {
+
+                // --- Etiqueta de Matriz ---
+                $es_activo = $item->activo == 1
+                    ? '<span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Activo</span>'
+                    : '<span class="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">Eliminado</span>';
+
+                return [
+                    'id'        => $item->id,
+                    'image'     => '<img class="h-auto max-w-xs object-cover object-center" src="'.asset($item->image).'" alt="Imagen">',
+                    'nombre'    => $item->nombre,
+                    'tipo'      => $item->tipo,
+                    'es_activo' => $es_activo,
+                    'acciones'  => e(view('producto_caracteristica.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json([ 'data' => $caracteristica ]);
         }
     }
 }

@@ -93,6 +93,9 @@ Route::post('clientes/index/ajax', [ClientesController::class, 'clientes_index_a
 Route::post('proveedor/index/ajax', [ProveedoresController::class, 'proveedor_index_ajax'])
 	->name('proveedor.index.ajax');
 
+Route::post('caracteristica/index/ajax', [ProductoCaracteristicasController::class, 'caracteristica_index_ajax'])
+	->name('caracteristica.index.ajax');
+
 Route::resource('/roles', RoleController::class)->names('admin.roles')
     ->except(['show']);
 Route::resource('/permissions', PermissionController::class)->names('admin.permissions')
