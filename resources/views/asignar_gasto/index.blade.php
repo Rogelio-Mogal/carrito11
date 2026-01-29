@@ -48,6 +48,78 @@
 
                 <form id="filtroForm">
                     <div class="grid grid-cols-12 gap-3">
+                        <div class="col-span-12">
+                            <label class="block mb-2 text-sm font-medium text-gray-900">
+                                Tipo de filtro
+                            </label>
+
+                            <div class="flex flex-wrap items-center gap-6">
+
+                                <!-- NINGUNO -->
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="tipoFiltro" value="NINGUNO"
+                                        id="radioNinguno" class="w-4 h-4" checked>
+                                    <span>Ninguno</span>
+                                </label>
+
+                                <!-- POR MES -->
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="tipoFiltro" value="MES"
+                                        id="radioMes" class="w-4 h-4">
+                                    <span>Por mes</span>
+                                </label>
+
+                                <!-- INPUT MES -->
+                                <div id="filtroMes" class="hidden">
+                                    <input
+                                        type="month"
+                                        id="mes"
+                                        class="bg-gray-50 border border-gray-300 rounded-lg p-2.5"
+                                        value="{{ isset($mes) ? $mes : $now->format('Y-m') }}">
+                                </div>
+
+                                <!-- POR RANGO -->
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="tipoFiltro" value="RANGO"
+                                        id="radioRango" class="w-4 h-4">
+                                    <span>Por rango</span>
+                                </label>
+
+                                <!-- RANGO DE FECHAS -->
+                                <div id="filtroRango" class="hidden flex gap-2">
+                                    <input
+                                        type="date"
+                                        id="fechaInicio"
+                                        class="bg-gray-50 border border-gray-300 rounded-lg p-2.5"
+                                        value="{{ $fechaActual }}">
+
+                                    <input
+                                        type="date"
+                                        id="fechaFin"
+                                        class="bg-gray-50 border border-gray-300 rounded-lg p-2.5"
+                                        value="{{ $fechaActual }}">
+                                </div>
+
+                                <!-- BOTONES -->
+                                <div class="flex gap-3 ml-auto">
+
+                                    <button
+                                        type="button"
+                                        id="btnFiltrar"
+                                        class="text-white bg-green-600 hover:bg-green-700 px-5 py-2 rounded-lg">
+                                        Filtrar
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        id="reloadTable"
+                                        class="text-white bg-blue-500 hover:bg-blue-600 px-5 py-2 rounded-lg">
+                                        Recargar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {{--
                         <!-- TIPO DE FILTRO -->
                         <div class="col-span-12">
                             <label class="block mb-2 text-sm font-medium text-gray-900">Tipo de filtro</label>
@@ -67,13 +139,13 @@
                             </div>
                         </div>
                         <!-- FILTRO POR MES -->
-                        <div id="filtroMes" class="col-span-4 hidden">
+                        <div id="filtroMes" class="col-span-2 hidden">
                             <label class="block mb-2 text-sm font-medium text-gray-900">Mes</label>
                             <input type="month" id="mes" class="bg-gray-50 border border-gray-300 rounded-lg p-2.5 w-full"
                             value="{{ isset($mes) ? $mes : $now->format('Y-m') }}">
                         </div>
                         <!-- RANGO DE FECHAS -->
-                        <div id="filtroRango" class="col-span-8 hidden grid grid-cols-8 gap-3">
+                        <div id="filtroRango" class="col-span-3 hidden grid grid-cols-8 gap-3">
                             <div class="col-span-4">
                                 <label class="block mb-2 text-sm font-medium text-gray-900">Fecha inicio</label>
                                 <input type="date" id="fechaInicio"
@@ -98,6 +170,7 @@
                                 Recargar tabla
                             </button>
                         </div>
+                        --}}
                     </div>
                 </form>
             </div>
