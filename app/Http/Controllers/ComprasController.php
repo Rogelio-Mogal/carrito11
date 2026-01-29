@@ -34,8 +34,10 @@ class ComprasController extends Controller
         //    $compra->usuario_nombre = User::find($compra->wci)->name;
         //}
 
-        //return view('compras.index', compact('compras'));
+        $now = new \DateTime();
+        return view('compras.index', compact('now'));
 
+        /*
         setlocale(LC_ALL, "Spanish" );
         $mes = request('mes');
         $fechaInicio = $request->get('fechaInicio');
@@ -80,6 +82,7 @@ class ComprasController extends Controller
                 return view ('compras.index', compact( 'compras','mes'));
             }
         }
+        */
     }
 
     public function create(Request $request)
@@ -287,17 +290,17 @@ class ComprasController extends Controller
                     ->where('sucursal_id', $compra->sucursal_id)
                     ->orderBy('created_at', 'desc')
                     ->first();
-            
+
                 // Inicializar variables para las cantidades
                 $saldoActual = $ultimoRegistro ? $ultimoRegistro->saldo : 0;
-            
+
                 // Cantidades a agregar
                 $cantidadEntrada = $request->cantVenta[$key] ?? 0;
                 $cantidadSalida = 0;
-            
+
                 // Calcular el nuevo saldo
                 $nuevoSaldo = $saldoActual + $cantidadEntrada - $cantidadSalida;
-            
+
                 // Crear el nuevo registro en el kardex
                 $kardex = new Kardex();
                 $kardex->sucursal_id = $compra->sucursal_id;
@@ -324,9 +327,9 @@ class ComprasController extends Controller
                 ],
                 'buttonsStyling' => false
             ]);
-    
+
             return redirect()->route('admin.compras.index');
-            
+
         } catch (\Exception $e) {
             DB::rollback();
             session()->flash('swal', [
@@ -452,7 +455,7 @@ class ComprasController extends Controller
                     $precioMedio = $entero + $especifico_medio;
                     $precioMayoreo = $entero + $especifico_mayoreo;
                 }
-                
+
                 if ($inventario) {
                     $inventario->cantidad -= $detalle->cantidad; // Restar la cantidad del inventario
                     $inventario->precio_costo = $precio_anterior;
@@ -560,7 +563,7 @@ class ComprasController extends Controller
                     $inventario->precio_mayoreo = $precio_mayoreo;
                     $inventario->updated_at = Carbon::now();
                     $inventario->save();
-                } 
+                }
             }
 
             // ACTUALIZAMOS EL NUMERO DE SERIE
@@ -588,17 +591,17 @@ class ComprasController extends Controller
                 $ultimoRegistro = Kardex::where('producto_id', $productoId)
                     ->orderBy('created_at', 'desc')
                     ->first();
-            
+
                 // Inicializar variables para las cantidades
                 $saldoActual = $ultimoRegistro ? $ultimoRegistro->saldo : 0;
-            
+
                 // Cantidades a agregar
                 $cantidadEntrada = $request->cantVenta[$key] ?? 0;
                 $cantidadSalida = 0;
-            
+
                 // Calcular el nuevo saldo
                 $nuevoSaldo = $saldoActual + $cantidadEntrada - $cantidadSalida;
-            
+
                 // Crear el nuevo registro en el kardex
                 $kardex = new Kardex();
                 $kardex->producto_id = $productoId;
@@ -649,8 +652,8 @@ class ComprasController extends Controller
     /*
     public function productos_compra(Request $request)
     {
-        // $request->input('existencia') 
-        // $request->input('inventario') 
+        // $request->input('existencia')
+        // $request->input('inventario')
         if($request->input('inventario') == 0){ //TODOS
             $productos = Productos::where('id', '!=', 1)
                 ->where('tipo', '=', 'PRODUCTO')
@@ -669,4 +672,84 @@ class ComprasController extends Controller
         }
     }
     */
+    public function compras_index_ajax(Request $request)
+    {
+        if ($request->origen == 'compras.index') {
+
+            if ($request->filtro === "NINGUNO") {
+                $query =  Compra::where('id', '>', 1)
+                    ->orderBy('id', 'DESC');
+            }
+
+            setlocale(LC_ALL, "Spanish" );
+
+            $mes = $request->mes;
+            $fechaInicio = $request->fechaInicio;
+            $fechaFin = $request->fechaFin;
+
+            // ---------------------------------------
+            // 1. SI NO SE ENVÍA NADA → CARGA POR MES ACTUAL
+            // ---------------------------------------
+            if (is_null($mes) && is_null($fechaInicio) && is_null($fechaFin)) {
+
+                $fechaHoy = Carbon::now()->format('m');
+
+                $query =  Compra::where('id', '>', 1)
+                    ->whereMonth('fecha_compra', $fechaHoy)
+                    ->orderBy('id', 'DESC');
+            }
+
+            // ---------------------------------------
+            // 2. FILTRO POR MES (mes_hidden == 'MES')
+            // ---------------------------------------
+            elseif ($request->mes_hidden === 'MES') {
+
+                $digitosMes = substr($mes, -2);
+
+                $query =  Compra::where('id', '>', 1)
+                    ->whereMonth('fecha_compra', $digitosMes)
+                    ->orderBy('id', 'DESC');
+            }
+
+            // ---------------------------------------
+            // 3. FILTRO POR RANGO (rango == 'RANGO')
+            // ---------------------------------------
+            elseif ($request->rango === 'RANGO') {
+
+                $query =  Compra::where('id', '>', 1)
+                    ->whereBetween(
+                        'fecha_compra',
+                        ["$fechaInicio 00:00:00", "$fechaFin 23:59:59"]
+                    )
+                    ->orderBy('id', 'DESC');
+            }
+
+            // Ejecutar consulta
+            $items = $query->get();
+
+            // ---------------------------------------
+            // Mapear para DataTable
+            //—---------------------------------------
+            $gasto = $items->map(function ($item) {
+
+                $es_activo = $item->activo == 1
+                    ? '<span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Activo</span>'
+                    : '<span class="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">Eliminado</span>';
+
+                return [
+                    'id'                => $item->id,
+                    'num_factura'       => $item->num_factura,
+                    'usuario_nombre'    => $item->usuario_nombre,
+                    'proveedor'         => $item->proveedor->proveedor,
+                    'fecha_captura'     => Carbon::parse($item->fecha_captura)->format('d/m/Y H:i:s'),
+                    'fecha_compra'      => Carbon::parse($item->fecha_compra)->format('d/m/Y H:i:s'),
+                    'total'             => '$' . number_format($item->total, 2, '.', ','),
+                    'es_activo'         => $es_activo,
+                    'acciones'          => e(view('compras.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json([ 'data' => $gasto ]);
+        }
+    }
 }

@@ -52,7 +52,7 @@ class AsignarGastosController extends Controller
         }
         */
 
-         $now = new \DateTime();
+        $now = new \DateTime();
         return view ('asignar_gasto.index', compact('now'));
     }
 

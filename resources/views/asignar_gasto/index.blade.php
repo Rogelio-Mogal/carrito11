@@ -70,7 +70,7 @@
                         <div id="filtroMes" class="col-span-4 hidden">
                             <label class="block mb-2 text-sm font-medium text-gray-900">Mes</label>
                             <input type="month" id="mes" class="bg-gray-50 border border-gray-300 rounded-lg p-2.5 w-full"
-                            value="{{ isset($mes) ? $mes : $now->format('Y-m') }}" onchange="updateHiddenValue()">
+                            value="{{ isset($mes) ? $mes : $now->format('Y-m') }}">
                         </div>
                         <!-- RANGO DE FECHAS -->
                         <div id="filtroRango" class="col-span-8 hidden grid grid-cols-8 gap-3">
@@ -250,7 +250,7 @@
                     postData.filtro = "NINGUNO";
                 }
 
-                // 🔥 Ahora SÍ enviamos los datos correctamente al DataTable
+                // Ahora SÍ enviamos los datos correctamente al DataTable
                 tblGastos.ajax.reload(null, false);
                 tblGastos.ajax.params = postData;
 

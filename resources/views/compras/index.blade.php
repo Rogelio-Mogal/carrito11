@@ -40,29 +40,57 @@
 <div class="shadow-md rounded-lg p-4 dark:bg-gray-800">
     <div class="grid grid-cols-1 lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-4">
         <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
-            <form id="filtroForm" name="filtroForm" action="{{ route('admin.compras.index') }}">
-                <input type="hidden" name="mes_hidden" id="mes_hidden">
-                <input type="hidden" name="rango" id="rango">
-                <div class="grid lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-2">
-                    <div class="sm:col-span-12 lg:col-span-4 md:col-span-4">
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Filtro por mes</label>
-                        <input type="month" name="mes" id="mes" step="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            value="{{ isset($mes) ? $mes : $now->format('Y-m') }}" onchange="updateHiddenValue()">
+            <form id="filtroForm">
+                <div class="grid grid-cols-12 gap-3">
+                    <!-- TIPO DE FILTRO -->
+                    <div class="col-span-12">
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Tipo de filtro</label>
+                        <div class="flex gap-6 items-center">
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="tipoFiltro" value="NINGUNO" id="radioNinguno" class="w-4 h-4" checked>
+                                <span>Ninguno</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="tipoFiltro" value="MES" id="radioMes" class="w-4 h-4">
+                                <span>Por mes</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="tipoFiltro" value="RANGO" id="radioRango" class="w-4 h-4">
+                                <span>Por rango de fechas</span>
+                            </label>
+                        </div>
                     </div>
-                    <div class="sm:col-span-12 lg:col-span-3 md:col-span-3">
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fecha inicio</label>
-                        <input type="date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" name="fechaInicio" id="fechaInicio"
-                            value="{{ $fechaActual }}">
+                    <!-- FILTRO POR MES -->
+                    <div id="filtroMes" class="col-span-4 hidden">
+                        <label class="block mb-2 text-sm font-medium text-gray-900">Mes</label>
+                        <input type="month" id="mes" class="bg-gray-50 border border-gray-300 rounded-lg p-2.5 w-full"
+                        value="{{ isset($mes) ? $mes : $now->format('Y-m') }}">
                     </div>
-                    <div class="sm:col-span-12 lg:col-span-3 md:col-span-3">
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fecha fin</label>
-                        <input type="date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" name="fechaFin" id="fechaFin"
-                            value="{{ $fechaActual }}">
+                    <!-- RANGO DE FECHAS -->
+                    <div id="filtroRango" class="col-span-8 hidden grid grid-cols-8 gap-3">
+                        <div class="col-span-4">
+                            <label class="block mb-2 text-sm font-medium text-gray-900">Fecha inicio</label>
+                            <input type="date" id="fechaInicio"
+                                class="bg-gray-50 border border-gray-300 rounded-lg p-2.5 w-full"
+                                value="{{ $fechaActual }}">
+                        </div>
+                        <div class="col-span-4">
+                            <label class="block mb-2 text-sm font-medium text-gray-900">Fecha fin</label>
+                            <input type="date" id="fechaFin"
+                                class="bg-gray-50 border border-gray-300 rounded-lg p-2.5 w-full"
+                                value="{{ $fechaActual }}">
+                        </div>
                     </div>
-                    <div class="sm:col-span-12 lg:col-span-2 md:col-span-2">
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">&nbsp;</label>
-                        <button id="btn-filtro" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
-                            onclick="filtrarFormulario()">Filtrar</button>
+                    <!-- BOTONES -->
+                    <div class="col-span-12 flex gap-3 mt-2">
+                        <button type="button" id="btnFiltrar"
+                            class="text-white bg-green-600 hover:bg-green-700 px-5 py-2 rounded-lg">
+                            Filtrar
+                        </button>
+                        <button type="button" id="reloadTable"
+                            class="text-white bg-blue-500 hover:bg-blue-600 px-5 py-2 rounded-lg">
+                            Recargar tabla
+                        </button>
                     </div>
                 </div>
             </form>
@@ -84,6 +112,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {{--
                     @foreach ($compras as $item)
                         <tr>
                             <td> {{ $item->id }} </td>
@@ -92,7 +121,7 @@
                             <td> {{ $item->proveedor->proveedor }} </td>
                             <td> {{ Carbon::parse($item->fecha_captura)->format('d/m/Y H:i:s') }} </td>
                             <td> {{ Carbon::parse($item->fecha_compra)->format('d/m/Y H:i:s') }} </td>
-                            {{--<td> {{ $item->tipo }} </td>--}}
+                            <!--<td> {{ $item->tipo }} </td>-->
                             <td> {{ '$' . number_format($item->total, 2, '.', ',') }} </td>
                             <td>
                                 @if( $item->activo == 0 )
@@ -140,10 +169,11 @@
                                     <div class="p-2 space-y-2">
                                         <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Eliminar</h6>
                                     </div>
-                                </div> 
+                                </div>
                             </td>
                         </tr>
                     @endforeach
+                    --}}
                 </tbody>
             </table>
         </div>
@@ -155,36 +185,135 @@
 
 @section('js')
 <script>
-    // Cambio input si es por mes
-    function updateHiddenValue() {
-        // Obtener el valor del input de tipo month
-        const selectedMonth = document.getElementById('mes').value;
-
-        // Actualizar el valor del input oculto
-        document.getElementById('mes_hidden').value = 'MES';
-        document.getElementById('rango').value = '';
-
-        // Enviar el formulario
-        document.getElementById('filtroForm').submit();
-    }
-
-    function filtrarFormulario() {
-        // Modificar el valor del input 'rango'
-        const rangoInput = document.getElementById('rango');
-        document.getElementById('mes_hidden').value = '';
-        rangoInput.value = 'RANGO'; // Puedes cambiar 'Tu nuevo valor aquí' por el valor que desees
-
-        // Enviar el formulario
-        document.getElementById('rangoConsulta').submit();
-    }
-
     $(document).ready(function() {
-        var compraTable = new DataTable('#compras', {
-            responsive: true,
-            "language": {
-                "url": "{{ asset('/json/i18n/es_es.json') }}"
-            },
-            "order": [[0, "desc"]]
+        let tblGastos;
+        cargarAsignaGasto();
+
+        function cargarAsignaGasto() {
+
+            if ($.fn.DataTable.isDataTable('#compras')) {
+                $('#compras').DataTable().clear().destroy();
+            }
+
+            // ORDENAR CANTIDADES CON FORMATO "$1,234.56"
+            $.extend($.fn.dataTable.ext.type.order, {
+                "currency-mx-pre": function (data) {
+                    if (!data) return 0;
+
+                    // Elimina $, comas y espacios
+                    return parseFloat(
+                        data.replace('$', '').replace(/,/g, '').trim()
+                    );
+                }
+            });
+
+            tblGastos = $('#compras').DataTable({
+                processing: true,
+                serverSide: false, // cambiar a true si quieres paginación del lado del servidor
+                responsive: true,
+                order: [], // evita que intente ordenar automático
+                ajax: {
+                    url: "{{ route('compra.index.ajax') }}",
+                    type: "POST",
+                    data: function(d){
+                        return $.extend(d, {
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            origen: "compras.index",
+                        });
+                    }
+                },
+                columns: [
+                    { data: 'id'},
+                    { data: 'num_factura'},
+                    { data: 'usuario_nombre' },
+                    { data: 'proveedor' },
+                    { data: 'fecha_captura' },
+                    { data: 'fecha_compra' },
+                    { data: 'total' },
+                    { data: 'es_activo' },
+                    { data: 'acciones', render: function(data){
+                        return $('<div/>').html(data).text();
+                    }}
+                ],
+                language: { url: "{{ asset('/json/i18n/es_es.json') }}" }
+            });
+
+            //  Re-inicializa Flowbite cada vez que DataTables repinta
+            tblGastos.on('draw', function () {
+                if (typeof window.initFlowbite === "function") {
+                    window.initFlowbite();
+                }
+            });
+        }
+
+        // 🔄 Botón de recargar
+        $("#reloadTable").on("click", function() {
+            $// Dejar seleccionado NINGUNO
+            $("#radioNinguno").prop("checked", true);
+
+            // Ocultar ambos filtros
+            $("#filtroMes").addClass("hidden");
+            $("#filtroRango").addClass("hidden");
+
+            // Limpiar valores
+            $("#mes").val("");
+            $("#fechaInicio").val("");
+            $("#fechaFin").val("");
+
+            cargarAsignaGasto();
+        });
+
+        // Mostrar u ocultar filtros según selección
+        $("input[name='tipoFiltro']").on("change", function () {
+
+            let tipo = $(this).val();
+
+            if (tipo === "MES") {
+                $("#filtroMes").removeClass("hidden");
+                $("#filtroRango").addClass("hidden");
+            } else if (tipo === "RANGO") {
+                $("#filtroRango").removeClass("hidden");
+                $("#filtroMes").addClass("hidden");
+            }else if (tipo === "NINGUNO") {
+                $("#filtroMes").addClass("hidden");
+                $("#filtroRango").addClass("hidden");
+            }
+        });
+
+        // FILTRAR (envío AJAX al DataTable)
+        $("#btnFiltrar").on("click", function () {
+
+            let tipo = $("input[name='tipoFiltro']:checked").val();
+
+            let postData = {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                origen: "asignar.gasto.index",
+            };
+
+            if (tipo === "MES") {
+                postData.mes_hidden = "MES";
+                postData.mes = $("#mes").val();
+            }
+
+            if (tipo === "RANGO") {
+                postData.rango = "RANGO";
+                postData.fechaInicio = $("#fechaInicio").val();
+                postData.fechaFin = $("#fechaFin").val();
+            }
+
+            if (tipo === "NINGUNO") {
+                postData.filtro = "NINGUNO";
+            }
+
+            // Ahora SÍ enviamos los datos correctamente al DataTable
+            tblGastos.ajax.reload(null, false);
+            tblGastos.ajax.params = postData;
+
+            tblGastos.settings()[0].ajax.data = function(d){
+                return $.extend(d, postData);
+            };
+
+            tblGastos.ajax.reload();
         });
 
         // Manejar el clic en la opción "Eliminar"
@@ -194,13 +323,17 @@
 
             // Utilizar SweetAlert2 para mostrar un mensaje de confirmación
             Swal.fire({
-                title: '¿Estás seguro?',
+                title: '¿Estás seguro de eliminar el registro?',
                 text: 'No podrás revertir esto',
-                icon: 'warning',
+                icon: 'info',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, eliminarlo'
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5',
+                    cancelButton: 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 ml-2'
+                },
+                buttonsStyling: false
             }).then((result) => {
                 if (result.value) {
                     console.log(id);

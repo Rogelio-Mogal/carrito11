@@ -99,6 +99,9 @@ Route::post('caracteristica/index/ajax', [ProductoCaracteristicasController::cla
 Route::post('precio/index/ajax', [PreciosController::class, 'precio_index_ajax'])
 	->name('precio.index.ajax');
 
+Route::post('compra/index/ajax', [ComprasController::class, 'compras_index_ajax'])
+	->name('compra.index.ajax');
+
 Route::resource('/roles', RoleController::class)->names('admin.roles')
     ->except(['show']);
 Route::resource('/permissions', PermissionController::class)->names('admin.permissions')
