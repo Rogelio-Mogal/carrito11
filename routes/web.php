@@ -229,6 +229,9 @@ Route::post('asignar/gasto/index/ajax', [AsignarGastosController::class, 'asigna
 Route::post('forma/pago/index/ajax', [FormaPagoController::class, 'forma_pago_index_ajax'])
 	->name('forma.pago.index.ajax');
 
+Route::post('cotizaciones/index/ajax', [CotizacionesController::class, 'cotizaciones_index_ajax'])
+	->name('cotizacion.index.ajax');
+
 Route::resource('/clientes', ClientesController::class)->names('admin.clientes')
 ->except('show');
 

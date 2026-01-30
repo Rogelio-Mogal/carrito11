@@ -203,6 +203,11 @@
 
 @section('js')
     <script>
+        const hoy = new Date();
+
+        const fechaActual = hoy.toISOString().split('T')[0]; // 2026-01-30
+        const mesActual = hoy.toISOString().slice(0, 7);     // 2026-01
+
         $(document).ready(function() {
             let tblGastos;
             cargarAsignaGasto();
@@ -273,10 +278,10 @@
                 $("#filtroMes").addClass("hidden");
                 $("#filtroRango").addClass("hidden");
 
-                // Limpiar valores
-                $("#mes").val("");
-                $("#fechaInicio").val("");
-                $("#fechaFin").val("");
+                // Asignar valores por defecto
+                $("#mes").val(mesActual);
+                $("#fechaInicio").val(fechaActual);
+                $("#fechaFin").val(fechaActual);
 
                 cargarAsignaGasto();
             });

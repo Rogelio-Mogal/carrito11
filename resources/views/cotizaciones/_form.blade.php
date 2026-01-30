@@ -20,8 +20,8 @@
         <label for="cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
         <input type="text" id="cliente" name="cliente" required
             class="infoCot bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            placeholder="Cliente" 
-            value="{{ old('cliente', $cotizacion->cliente ? $cotizacion->cliente : optional($cotizacion->clienteDocumento)->full_name) }}" 
+            placeholder="Cliente"
+            value="{{ old('cliente', $cotizacion->cliente ? $cotizacion->cliente : optional($cotizacion->clienteDocumento)->full_name) }}"
             readonly/>
         <input type="hidden" name="cliente_id" id="cliente_id" class="infoCot" value="{{ old('cliente_id', $cotizacion->cliente_id) }}">
         <input type="hidden" name="tipo" id="tipo" value="COTIZACIÓN">
@@ -32,8 +32,8 @@
         <label for="direccion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Dirección</label>
         <input type="text" id="direccion" name="direccion"
             class="infoCot bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            placeholder="Dirección" 
-            value="{{ old('direccion', $cotizacion->direccion ? $cotizacion->direccion : optional($cotizacion->clienteDocumento)->direccion) }}"  
+            placeholder="Dirección"
+            value="{{ old('direccion', $cotizacion->direccion ? $cotizacion->direccion : optional($cotizacion->clienteDocumento)->direccion) }}"
             readonly />
     </div>
     <div class="sm:col-span-12 lg:col-span-1 md:col-span-1">
@@ -81,7 +81,7 @@
         <label for="tipo_precio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo de precio</label>
         <div class="input-group">
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="tipo_precio" id="inlineRadio1" value="CLIENTE PÚBLICO"  {{ (old('tipo_precio', $cotizacion->tipo_precio) == 'CLIENTE PÚBLICO' || (!$cotizacion->tipo_precio && !old('tipo_precio'))) ? 'checked' : '' }}> 
+                <input class="form-check-input" type="radio" name="tipo_precio" id="inlineRadio1" value="CLIENTE PÚBLICO"  {{ (old('tipo_precio', $cotizacion->tipo_precio) == 'CLIENTE PÚBLICO' || (!$cotizacion->tipo_precio && !old('tipo_precio'))) ? 'checked' : '' }}>
                 <label class="text-sm font-medium text-gray-800 dark:text-gray-200" for="inlineRadio1">P. PÚBLICO</label>
             </div>
             <div class="form-check form-check-inline">
@@ -131,7 +131,8 @@
     @include('clientes._modal_clientes')
 
     <br/>
-    <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
+
+    <div class="sm:col-span-12 lg:col-span-12 md:col-span-12 hidden">
         <button type="submit" id="btn-submit"
             class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
             @if ($metodo == 'create')
@@ -141,14 +142,27 @@
             @endif
         </button>
     </div>
+
 </div>
 
 @section('js')
     <script>
         let tableProductos;
         let tableClientes;
+
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3500,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        });
+
         $(document).ready(function() {
-            
             productos(); // Llama a la función para inicializar DataTable
             clientes();
 
@@ -157,7 +171,7 @@
             if(detalle > 0){
                 allDetalleCotizacion(detalle);
             }
-            
+
             // MUESTRA EL MODAL DE LOS PRODUCTOS
             $('#btn-product').click(async  function() {
                 // Mostrar el modal primero si está oculto
@@ -360,7 +374,7 @@
                     }
                 } else {
                     console.error("La tabla no está inicializada correctamente.");
-                } 
+                }
             });
 
             // SELECCIONO EL CLIENTE DEL DATATABLES
@@ -407,7 +421,7 @@
                     }
                 } else {
                     console.error("La tabla no está inicializada correctamente.");
-                } 
+                }
             });
 
             // REGISTRO DE PRODUCTO EN COMUN
@@ -464,7 +478,7 @@
                         $('#btn-product-comun').trigger('click');
                     }, 100); // Ajusta el retraso según sea necesario
                     // ## fin quita los repetidos ## //
-                    
+
                     //$("#addProductoModal").modal('hide');
                     $('#modal_cantidad').val('');
                     $('#modal_precio').val('');
@@ -482,8 +496,8 @@
                             confirmButton: 'text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
                         },
                         buttonsStyling: false
-                    });  
-                }  
+                    });
+                }
             });
 
             // CAMBIA EL PRECIO DE ACUERDO A PRECIO PUBLICO, MEDIO MAYOREO , MAYOREO;
@@ -508,7 +522,11 @@
                         tipo_precio : tipoCliente,
                         tipo : 'actualiza-precios',
                     },
-                    success:function(response){ 
+                    success:function(response){
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Precios actualizados'
+                        });
                         allDetalleCotizacion(cotizacionId);
                     },
                     error: function(response) {
@@ -520,7 +538,7 @@
                     },
                 });
             });
-            
+
             // ACTUALIZA LA CANTIDAD DEL PRODUCTO
             $(document).on('change', '.cantidad',function(e) {
                 var $row = $(this).closest("tr");
@@ -541,9 +559,13 @@
                         tipo_precio : tipoCliente,
                         tipo : 'actualiza-cantidad',
                     },
-                    success:function(response){ 
+                    success:function(response){
                         //console.log('response: '+response);
                         //allDetalleCotizacion(cotizacionId);
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Cantidad actualizada'
+                        });
                         allDetalleCotizacion(response.documento_id);
                     },
                     error: function(response) {
@@ -576,6 +598,10 @@
                     dataType: 'json',
                     data: ajaxData,
                     success: function(response) {
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Precio actualizado'
+                        });
                         allDetalleCotizacion(cotizacionId);
                     },
                     error: function(response) {
@@ -617,7 +643,12 @@
                         tipo_precio: tipo_precio,
                         origen: 'actualiza.datos.cliente',
                     },
-                    success:function(response){ 
+                    success:function(response){
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Datos actualizados'
+                        });
+
                         allDetalleCotizacion(cotizacionId);
                     },
                     error: function(response) {
@@ -647,7 +678,12 @@
                         "_token": "{{ csrf_token() }}",
                         id : id,
                     },
-                    success:function(response){ 
+                    success:function(response){
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Producto eliminado'
+                        });
+
                         allDetalleCotizacion(cotizacionId);
                     },
                     error: function(response) {
@@ -672,7 +708,7 @@
                 }, 100);
             });
 
-            // LIMPIAMOS LOS DATOS DEL CLIENTE PARA PODER 
+            // LIMPIAMOS LOS DATOS DEL CLIENTE PARA PODER
             // INTRODUCIR UN CLIENE NO AGREGADO EN EL SISTEMA
             // EL CLIENTE SIEMPRE SERÁ PÚBLICO
             $(document).on('click','#clearCliente',function(e){
@@ -753,7 +789,7 @@
                     $('#item_table_1 tr .importe').map(function() {
                         var $row = $(this).closest("tr");
                         var subVenta = parseFloat($row.find(".importe").val());
-                        
+
                         if (!isNaN(subVenta) && subVenta.length !== 0) {
                             sum += subVenta;
                         }
@@ -791,7 +827,7 @@
                     await clientes();
                 }
             }
- 
+
             // OBTEMGO LOS PRODUCTOS POR AJAX
             async function productos() {
                 const postData = {
@@ -978,7 +1014,7 @@
                         direccion : $('#direccion').val(),
                         fecha : fecha,
                         total : total,
-                         producto_comun:producto, 
+                         producto_comun:producto,
                          producto_id : productoId,
                          documento_id : cotizacionId,
                          cantidad : cant,
@@ -999,10 +1035,15 @@
                         type:"POST",
                         dataType: 'json',
                         data:  ajaxData,
-                        success:function(response){ 
+                        success:function(response){
                             $(response).each(function(i, v){ // indice, valor
                                 $('#cotizacionId').val(v.id);
                                 cotizacionId = v.id;
+                            });
+
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Cotización creada correctamente'
                             });
 
                             allDetalleCotizacion(cotizacionId);
@@ -1026,7 +1067,7 @@
                 else if ( cotizacionId > 0 ){
                     const ajaxData2 = {
                         "_token": "{{ csrf_token() }}",
-                        producto_comun:producto, 
+                        producto_comun:producto,
                         producto_id : productoId,
                         documento_id : cotizacionId,
                         cantidad : cant,
@@ -1045,9 +1086,14 @@
                         type:"POST",
                         dataType: 'json',
                         data:  ajaxData2,
-                        success:function(response){ 
+                        success:function(response){
                             //$('#inputMedicamento').val('').trigger('change')
                             //$('.medicamento').val('');
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Producto agregado'
+                            });
+
                             allDetalleCotizacion(cotizacionId);
                         },
                         error: function(xhr, status, error) {
@@ -1062,11 +1108,11 @@
                             });*/
                         },
                     });
-                }     
+                }
             };
 
             //AJAX GET DETALLE COTIZACIÓN
-            function allDetalleCotizacion(id){  
+            function allDetalleCotizacion(id){
                 var ruta = '{{ route("admin.cotizacion.detalles.show", ":id") }}';
                 ruta = ruta.replace(':id', id);
                 var html = '';
@@ -1079,7 +1125,7 @@
                         "_token": "{{ csrf_token() }}",
                         id : id,
                     },
-                    success:function(response){ 
+                    success:function(response){
                         //var html = '';
                         if (response && response.detalles_documentos && response.detalles_documentos.length > 0) {
                             // Loop through each detail and add it to the table
@@ -1093,7 +1139,7 @@
                                     produccto = `${detail.producto_documento.nombre}`;
                                 }else{
                                     produccto = `${detail.producto_comun}`;
-                                }                            
+                                }
 
                                 html += `
                                     <tr class="text-center">
@@ -1105,12 +1151,12 @@
                                         </td>
                                         <td>${produccto}</td>
                                         <td style="width:120px;">
-                                            <input type="number" name="precio[]" class="precio campo-requerido bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                                            <input type="number" name="precio[]" class="precio campo-requerido bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                             min="${detail.precio_mayoreo}" value="${detail.precio}" step="any" required/>
                                         </td>
                                         <td>${detail.importe}</td>
                                         <td class="text-center">
-                                            <form method="POST" id="form-delete" action="${elimina}" class="d-inline btn-eliminar"> 
+                                            <form method="POST" id="form-delete" action="${elimina}" class="d-inline btn-eliminar">
                                                 @csrf @method('DELETE')
                                                 <button type="button" name="remove" id="remove" class="remove focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm p-2.5 me-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
                                                     <svg class="w-6 h-6 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">

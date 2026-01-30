@@ -31,6 +31,12 @@
 <div class="shadow-md rounded-lg p-4 dark:bg-gray-800">
     <div class="grid grid-cols-1 lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-4">
         <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
+            <div class="mb-4">
+                <button id="reloadTable"
+                    class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                    Recargar Tabla
+                </button>
+            </div>
             <table id="cotizaciones" class="table table-striped" style="width:100%">
                 <thead>
                     <tr>
@@ -39,7 +45,7 @@
                                 class="px-3 py-2 text-xs font-medium text-center inline-flex items-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                                 <svg class="w-4 h-4 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                </svg>                                                                    
+                                </svg>
                                 <span class="sr-only">Seleccionar</span>
                             </button>
 
@@ -47,7 +53,7 @@
                                 class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium text-center inline-flex items-center rounded-lg text-xs px-3 py-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
                                 <svg class="w-4 h-4 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                  </svg>                                  
+                                  </svg>
                                   <span class="sr-only">Eliminar selección</span>
                             </button>
 
@@ -73,6 +79,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {{--
                     @foreach ($cotizaciones as $item)
                         <tr>
                             <td>
@@ -83,8 +90,7 @@
                                 @endif
                             </td>
                             <td> {{ $item->id }} </td>
-                            <td> {{ $item->cliente ? $item->cliente : optional($item->clienteDocumento)->full_name }}
-                                {{-- $item->clienteDocumento->full_name --}} </td>
+                            <td> {{ $item->cliente ? $item->cliente : optional($item->clienteDocumento)->full_name }} </td>
                             <td> {{ Carbon::parse($item->fecha)->format('d/m/Y H:i:s') }} </td>
                             <td> {{ '$' . number_format($item->total, 2, '.', ',') }} </td>
                             <td>
@@ -97,18 +103,6 @@
                                         class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">LISTO</span>
                                 @endif
                             </td>
-                            {{--
-                            <td>
-                                @if ($item->activo == 0)
-                                    <span
-                                        class="bg-red-100 text-red-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Eliminado</span>
-                                @endif
-                                @if ($item->activo == 1)
-                                    <span
-                                        class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Activo</span>
-                                @endif
-                            </td>
-                            --}}
                             <td>
                                 <a href="{{ route('admin.cotizacion.show', $item->id) }}"
                                     data-popover-target="detalles{{ $item->id }}" data-popover-placement="bottom"
@@ -133,7 +127,7 @@
                                         </svg>
                                         <span class="sr-only">Listo</span>
                                     </a>
-                                    
+
                                     <a href="{{ route('admin.cotizacion.edit', $item->id) }}"
                                         data-popover-target="editar{{ $item->id }}" data-popover-placement="bottom"
                                         class="text-white mb-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
@@ -185,6 +179,7 @@
                             </td>
                         </tr>
                     @endforeach
+                    --}}
                 </tbody>
             </table>
         </div>
@@ -197,24 +192,98 @@
 @section('js')
 <script>
     $(document).ready(function() {
-        var cotizacionTable = new DataTable('#cotizaciones', {
-            responsive: true,
-            "language": {
-                "url": "{{ asset('/json/i18n/es_es.json') }}"
-            },
-            "columnDefs": [{
-                    "orderable": false,
-                    "targets": 0,
-                    "width": "130px"
+        cargarCotizaciones();
+
+        function cargarCotizaciones() {
+            const postData = {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                origen: "cotizacion.index"
+            };
+
+            if ($.fn.DataTable.isDataTable('#cotizaciones')) {
+                $('#cotizaciones').DataTable().clear().destroy();
+            }
+
+            // Para ordenar las fechas
+            $.extend($.fn.dataTable.ext.type.order, {
+                "date-eu-pre": function (value) {
+                    if (!value || value.trim() === "") return 0;
+
+                    // value = "25/11/2025 12:54:00"
+                    const [fecha, hora] = value.split(" ");
+                    if (!fecha) return 0;
+
+                    const [dia, mes, año] = fecha.split("/");
+                    const [h, m, s] = hora ? hora.split(":") : ["00", "00", "00"];
+
+                    // Convertir a formato sortable: YYYYMMDDHHMMSS
+                    return (año + mes + dia + h + m + s) * 1;
+                }
+            });
+
+            // ORDENAR CANTIDADES CON FORMATO "$1,234.56"
+            $.extend($.fn.dataTable.ext.type.order, {
+                "currency-mx-pre": function (data) {
+                    if (!data) return 0;
+
+                    // Elimina $, comas y espacios
+                    return parseFloat(
+                        data.replace('$', '').replace(/,/g, '').trim()
+                    );
+                }
+            });
+
+            var cotizacionesTable = $('#cotizaciones').DataTable({
+                processing: true,
+                serverSide: false, // cambiar a true si quieres paginación del lado del servidor
+                responsive: true,
+                order: [[1, 'desc']], // id DESC
+                ajax: {
+                    url: "{{ route('cotizacion.index.ajax') }}",
+                    type: "POST",
+                    data: postData
                 },
-                {
-                    "type": "num",
-                    "targets": 1
-                } // Define que la primera columna es de tipo numérico
-            ],
-            "order": [
-                [1, "desc"]
-            ]
+                columns: [
+                    { data: 'check', orderable: false, searchable: false },
+                    { data: 'id', visible: false },
+                    { data: 'cliente' },
+                    { data: 'fecha', type: "date-eu" },
+                    { data: 'total', type: "currency-mx" },
+                    { data: 'estado', orderable: false },
+                    {
+                        data: 'acciones',
+                        orderable: false,
+                        searchable: false,
+                        render: function (data) {
+                            return $('<div/>').html(data).text();
+                        }
+                    }
+                ],
+                columnDefs: [
+                    {
+                        targets: 0,          // checkbox
+                        orderable: false,
+                        width: "130px"
+                    },
+                    {
+                        targets: 1,          // id oculto
+                        type: "num"
+                    }
+                ],
+                language: { url: "{{ asset('/json/i18n/es_es.json') }}" }
+            });
+
+            //  Re-inicializa Flowbite cada vez que DataTables repinta
+            cotizacionesTable.on('draw', function () {
+                if (typeof window.initFlowbite === "function") {
+                    window.initFlowbite();
+                }
+            });
+        }
+
+        // 🔄 Botón de recargar
+        $("#reloadTable").on("click", function() {
+            cargarCotizaciones();
         });
 
         var selectedItems = [];
@@ -279,12 +348,16 @@
 
                 Swal.fire({
                     title: '¿Está seguro de eliminar los elementos seleccionados?',
-                    type: 'question',
+                    text: 'No podrás revertir esto',
+                    icon: 'question',
                     showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Sí",
-                    cancelButtonText: "No"
+                    confirmButtonText: 'Sí, eliminarlo',
+                    cancelButtonText: 'Cancelar',
+                    customClass: {
+                        confirmButton: 'text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5',
+                        cancelButton: 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 ml-2'
+                    },
+                    buttonsStyling: false
                 }).then((result) => {
                     if (result.value) {
                         // Eliminar los elementos seleccionados aquí
@@ -356,10 +429,15 @@
                 title: '¿La cotización esta lista?',
                 text: 'No podrás revertir esto',
                 icon: 'warning',
+
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí'
+                confirmButtonText: 'Sí',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5',
+                    cancelButton: 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 ml-2'
+                },
+                buttonsStyling: false
             }).then((result) => {
                 if (result.value) {
                     console.log(id);
@@ -417,9 +495,13 @@
                 text: 'No podrás revertir esto',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, eliminarlo'
+                confirmButtonText: 'Sí, eliminarlo',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5',
+                    cancelButton: 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 ml-2'
+                },
+                buttonsStyling: false
             }).then((result) => {
                 if (result.value) {
                     console.log(id);

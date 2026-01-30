@@ -20,17 +20,12 @@ class CotizacionesController extends Controller
 
     public function index()
     {
-        $cotizaciones = Documento::where('tipo','COTIZACIÓN')
-        ->with(['clienteDocumento'])
-        ->where('activo',1)
-        ->orderBy('id', 'DESC')
-        ->get();
 
         /*foreach ($cotizaciones as $cotizacion) {
             $cotizacion->usuario_nombre = User::find($cotizacion->wci)->name;
         }*/
 
-        return view('cotizaciones.index', compact('cotizaciones'));
+        return view('cotizaciones.index');
     }
 
     public function create(Request $request)
@@ -47,7 +42,6 @@ class CotizacionesController extends Controller
 
     public function store(Request $request)
     {
-        //dd($request->all());
         $validator = Validator::make($request->all(), [
             'fecha' => 'required|date',
             'cliente' => 'required|string|max:255',
@@ -112,7 +106,7 @@ class CotizacionesController extends Controller
             $totalCompra = 0;
             //foreach ($request->producto_id as $key => $value) {
                 $importe = $request->importe;
-        
+
                 $nameComun = '';
                 if($request->is_producto_comun == '1'){
                     //PRODUCTO COMÚN
@@ -154,9 +148,9 @@ class CotizacionesController extends Controller
                 ],
                 'buttonsStyling' => false
             ]);
-    
+
             return redirect()->route('admin.cotizacion.index');*/
-            
+
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -272,7 +266,7 @@ class CotizacionesController extends Controller
             $totalCompra = 0;
             foreach ($request->producto_id as $key => $value) {
                 $importe = $request->importe[$key];
-        
+
                 $nameComun = '';
                 if($request->is_producto_comun[$key] == 1){
                     //PRODUCTO COMÚN
@@ -313,9 +307,9 @@ class CotizacionesController extends Controller
                 ],
                 'buttonsStyling' => false
             ]);
-    
+
             return redirect()->route('admin.cotizacion.index');
-            
+
         } catch (\Exception $e) {
             DB::rollback();
             session()->flash('swal', [
@@ -401,7 +395,7 @@ class CotizacionesController extends Controller
                     ], 200);
                 }
             }
-            
+
 
         } catch (\Exception $e) {
             $query = $e->getMessage();
@@ -479,6 +473,60 @@ class CotizacionesController extends Controller
             return redirect()->back()
                 ->with('status', 'Hubo un error al ingresar los datos, por favor intente de nuevo.')
                 ->withErrors(['error' => $e->getMessage()]); // Aquí pasas el mensaje de error
+        }
+    }
+
+    public function cotizaciones_index_ajax(Request $request)
+    {
+        if ($request->origen == 'cotizacion.index') {
+
+            $cotizaciones = Documento::where('tipo','COTIZACIÓN')
+            ->with(['clienteDocumento'])
+            ->where('activo',1)
+            ->orderBy('id', 'DESC')
+            ->get()
+            ->map(function ($item) {
+                // ✅ CHECKBOX
+                $check = '';
+
+                if ($item->activo == 1) {
+                    $check = '
+                        <input type="checkbox"
+                            class="checkbox_check w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded"
+                            value="' . $item->id . '">
+                    ';
+                }
+
+                // ✅ CLIENTE
+                $cliente = $item->cliente
+                    ? $item->cliente
+                    : optional($item->clienteDocumento)->full_name;
+
+                // ✅ BADGE ESTADO
+                if ($item->estado == 'CREADO') {
+                    $estado = '<span class="bg-red-100 text-red-800 text-sm px-2.5 py-0.5 rounded">CREADO</span>';
+                } else {
+                    $estado = '<span class="bg-green-100 text-green-800 text-sm px-2.5 py-0.5 rounded">LISTO</span>';
+                }
+
+                return [
+                    'check'      => $check,
+                    'id'         => $item->id,
+                    'cliente'    => $cliente,
+                    'fecha'      => Carbon::parse($item->fecha)->format('d/m/Y H:i:s'),
+                    //'folio'      => $item->folio,
+                    //'tipo_venta' => $item->tipo_venta,
+                    'total'      => '$' . number_format($item->total, 2),
+                    'estado'     => $estado,
+
+                    // vista parcial Blade renderizada
+                    'acciones' => e(view('cotizaciones.partials.acciones', compact('item'))->render()),
+                ];
+            });
+
+            return response()->json([
+                'data' => $cotizaciones
+            ]);
         }
     }
 }
