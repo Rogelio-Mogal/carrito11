@@ -22,7 +22,8 @@ class GarantiaController extends Controller
 
     public function index(Request $request)
     {
-        return view('garantias.index');
+        $now = new \DateTime();
+        return view('garantias.index', compact('now'));
     }
 
     public function create()
@@ -172,7 +173,7 @@ class GarantiaController extends Controller
                 $garantia->nota_solucion = $request->nota_solucion;
                 $garantia->estatus = 'resuelto';
                 $garantia->fecha_cierre = now();
-                
+
                 $detalle = [
                     [
                         'producto_id' => $garantia->producto_id,
@@ -186,7 +187,7 @@ class GarantiaController extends Controller
                 switch ($request->solucion) {
                     case 'Nota de crédito':
                         // Generar nota de crédito asociada
-                       
+
                         $notaCredito = $garantia->notaCreditos()->create([
                             'cliente_id' => $garantia->cliente_id,
                             'monto'      => $garantia->importe,
@@ -235,7 +236,7 @@ class GarantiaController extends Controller
 
                     case 'Cambio físico':
                         // Reconstruimos $detalle desde la garantía
-                        
+
 
                         // Obtenemos la sucursal del usuario autenticado
                         $sucursalId = auth()->user()->sucursal_id;
@@ -306,7 +307,7 @@ class GarantiaController extends Controller
                         // Lógica si no procede
                         break;
                 }
-            } 
+            }
 
             // 2️⃣ Flujo: destino del producto (reasignado o baja)
             if ($request->has('destino_producto')) {
@@ -370,7 +371,7 @@ class GarantiaController extends Controller
                     }
                 }
             }
-            
+
             // 3️⃣ Flujo: actualización de datos generales (cuando no es solución ni destino)
             if (!$request->has('solucion') && !$request->has('destino_producto')) {
                 // Actualizar campos básicos
@@ -457,8 +458,38 @@ class GarantiaController extends Controller
         // TODAS LAS GARANTIAS PARA EL INDEX
         if ($request->origen == 'garantia.index') {
 
-            $garantias = Garantia::with(['cliente', 'producto', 'venta'])
-            ->orderBy('fecha_registro', 'desc')
+            $filtro = $request->input('filtro')
+            ?? $request->input('mes_hidden')
+            ?? $request->input('rango');
+            $mes          = $request->input('mes');          // '2026-01'
+            $fechaInicio  = $request->input('fechaInicio');  // '2026-01-01'
+            $fechaFin     = $request->input('fechaFin');     // '2026-01-31'
+
+            $garantiaQuery = Garantia::with(['cliente', 'producto', 'venta'])
+            ->orderBy('fecha_registro', 'desc');
+
+            if ($filtro === 'MES' && filled($mes)) {
+                $fecha = Carbon::createFromFormat('Y-m', $mes);
+
+                $garantiaQuery
+                    ->whereYear('fecha_registro', $fecha->year)
+                    ->whereMonth('fecha_registro', $fecha->month);
+            }
+
+            if ($filtro === 'RANGO' && $fechaInicio && $fechaFin) {
+                $garantiaQuery->whereBetween('fecha_registro', [
+                    Carbon::parse($fechaInicio)->startOfDay(),
+                    Carbon::parse($fechaFin)->endOfDay(),
+                ]);
+            }
+
+            if (!$filtro) {
+                $garantiaQuery
+                    ->whereMonth('fecha_registro', now()->month)
+                    ->whereYear('fecha_registro', now()->year);
+            }
+
+            $garantias = $garantiaQuery
             ->get()
             ->map(function ($item) {
                 $acciones = '';
@@ -468,7 +499,7 @@ class GarantiaController extends Controller
                     //$acciones .= '<a href="'.route('ticket.venta', $item->venta->id).'" target="_blank" class="btn btn-green">Ticket</a>';
 
                     $acciones .= '
-                    <a href="' . route('ticket.garantia', $item->id) . '" target="_blank" 
+                    <a href="' . route('ticket.garantia', $item->id) . '" target="_blank"
                         data-popover-target="ticket-tooltip'.$item->id.'" data-popover-placement="bottom"
                         class="mb-1 text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
                             <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -486,10 +517,8 @@ class GarantiaController extends Controller
 
                 // Solución (pendiente)
                 if ($item->estatus === 'pendiente') {
-                    //$acciones .= '<a href="'.route('admin.garantias.solucion', $item->id).'" class="btn btn-yellow">Solución</a>';
-
                     $acciones .= '
-                    <a href="'.route('admin.garantias.solucion', $item->id).'" 
+                    <a href="'.route('admin.garantias.solucion', $item->id).'"
                         data-popover-target="solucion-tooltip'.$item->id.'" data-popover-placement="bottom"
                         class="mb-1 text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
                             <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -505,7 +534,7 @@ class GarantiaController extends Controller
                     </div>';
 
                     $acciones .= '
-                    <a href="'.route('admin.garantias.edit', $item->id).'" 
+                    <a href="'.route('admin.garantias.edit', $item->id).'"
                         data-popover-target="edit-tooltip'.$item->id.'" data-popover-placement="bottom"
                         class="mb-1 text-white bg-yellow-400 hover:bg-yellow-500 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
                             <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -521,7 +550,7 @@ class GarantiaController extends Controller
                     </div>';
 
                     $acciones .= '
-                    <a href="'.route('admin.garantias.destroy', $item->id).'" 
+                    <a href="'.route('admin.garantias.destroy', $item->id).'"
                         data-popover-target="delet-tooltip'.$item->id.'" data-popover-placement="bottom"
                         class="mb-1 text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
                             <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -535,26 +564,15 @@ class GarantiaController extends Controller
                             <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Eliminar</h6>
                         </div>
                     </div>';
-
-
-                    
-                    //$acciones .= '<a href="'.route('admin.garantias.solucion', $item->id).'" class="btn btn-yellow">Solución</a>';
-
-                    // Editar y eliminar
-                    //$acciones .= '<a href="'.route('admin.garantias.edit', $item->id).'" class="btn btn-blue">Editar</a>';
-                    //$acciones .= '<a href="'.route('admin.garantias.destroy', $item->id).'" class="btn btn-gray">Eliminar</a>';
                 }
 
                 // Acciones solo si está resuelto
                 if ($item->estatus === 'resuelto' && $item->destino_producto === null && $item->solucion !== 'No procede') {
-                   /* $acciones .= '<a href="'.route('admin.garantias.pasarVenta', $item->id).'" class="btn btn-purple">Pasar a venta</a>';
-                    $acciones .= '<a href="'.route('admin.garantias.devolverEfectivo', $item->id).'" class="btn btn-red">Devolver efectivo</a>';
-                    $acciones .= '<a href="'.route('admin.garantias.entregarEquipo', $item->id).'" class="btn btn-blue">Entregar equipo</a>';*/
                     $acciones .= '
                         <form method="POST" action="'.route('admin.garantias.update', $item->id).'" class="form-destino" style="display:inline;">
                             '.csrf_field().method_field('PUT').'
                             <input type="hidden" name="destino_producto" value="reasignado">
-                            <button type="button" 
+                            <button type="button"
                                 data-popover-target="reasignar-tooltip'.$item->id.'" data-popover-placement="bottom"
                                 class="btn-destino mb-1 text-white bg-purple-600 hover:bg-purple-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center"
                                 data-tipo="reasignado">
@@ -575,7 +593,7 @@ class GarantiaController extends Controller
                         <form method="POST" action="'.route('admin.garantias.update', $item->id).'"  class="form-destino" style="display:inline;">
                             '.csrf_field().method_field('PUT').'
                             <input type="hidden" name="destino_producto" value="baja">
-                            <button type="button" 
+                            <button type="button"
                                 data-popover-target="baja-tooltip'.$item->id.'" data-popover-placement="bottom"
                                 class="btn-destino mb-1 text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center"
                                 data-tipo="baja">
@@ -592,8 +610,6 @@ class GarantiaController extends Controller
                             </div>
                         </div>';
                 }
-
-                
 
                 return [
                     'id' => $item->id,

@@ -116,6 +116,7 @@
                 </div>
             </form>
         </div>
+
         <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
             <table id="compras" class="table table-striped" style="width:100%">
                 <thead>
@@ -206,7 +207,7 @@
 
 @section('js')
 <script>
-     const hoy = new Date();
+    const hoy = new Date();
 
     const fechaActual = hoy.toISOString().split('T')[0]; // 2026-01-30
     const mesActual = hoy.toISOString().slice(0, 7);     // 2026-01
@@ -274,7 +275,7 @@
 
         // 🔄 Botón de recargar
         $("#reloadTable").on("click", function() {
-            $// Dejar seleccionado NINGUNO
+            // Dejar seleccionado NINGUNO
             $("#radioNinguno").prop("checked", true);
 
             // Ocultar ambos filtros

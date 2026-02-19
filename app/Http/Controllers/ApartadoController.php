@@ -26,7 +26,8 @@ class ApartadoController extends Controller
 
     public function index()
     {
-        return view('apartado.index');
+        $now = new \DateTime();
+        return view('apartado.index', compact('now'));
     }
 
     public function create()
@@ -281,7 +282,14 @@ class ApartadoController extends Controller
     {
         // TODOS LOS APARTADOS PARA INDEX
         if ($request->origen == 'apartado.index') {
-            $anticipoPorCliente = AnticipoApartado::select(
+            $filtro = $request->input('filtro')
+            ?? $request->input('mes_hidden')
+            ?? $request->input('rango');
+            $mes          = $request->input('mes');          // '2026-01'
+            $fechaInicio  = $request->input('fechaInicio');  // '2026-01-01'
+            $fechaFin     = $request->input('fechaFin');     // '2026-01-31'
+
+            $anticipoQuery = AnticipoApartado::select(
                 'cliente_id',
                 \DB::raw('SUM(debia) as total_debia'),
                 \DB::raw('SUM(abona) as total_abona'),
@@ -289,11 +297,32 @@ class ApartadoController extends Controller
             )
             ->where('tipo','APARTADO')
             ->with('cliente') // carga el cliente
-            ->groupBy('cliente_id')
-            ->get();
+            ->groupBy('cliente_id');
 
-            // Retornar los datos con nombres que coincidan con los columnas DataTables
-            $data = $anticipoPorCliente->map(function($item) {
+            if ($filtro === 'MES' && filled($mes)) {
+                $fecha = Carbon::createFromFormat('Y-m', $mes);
+
+                $anticipoQuery
+                    ->whereYear('fecha', $fecha->year)
+                    ->whereMonth('fecha', $fecha->month);
+            }
+
+            if ($filtro === 'RANGO' && $fechaInicio && $fechaFin) {
+                $anticipoQuery->whereBetween('fecha', [
+                    Carbon::parse($fechaInicio)->startOfDay(),
+                    Carbon::parse($fechaFin)->endOfDay(),
+                ]);
+            }
+
+            if (!$filtro) {
+                $anticipoQuery
+                    ->whereMonth('fecha', now()->month)
+                    ->whereYear('fecha', now()->year);
+            }
+
+            $data = $anticipoQuery
+            ->get()
+            ->map(function ($item) {
                 $ultimoAnticipo = AnticipoApartado::where('cliente_id', $item->cliente_id)
                 ->where('tipo','APARTADO')
                 ->orderByDesc('id')

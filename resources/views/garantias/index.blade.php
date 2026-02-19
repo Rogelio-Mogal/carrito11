@@ -28,16 +28,91 @@
     </div>
 @endsection
 
+<?php
+    $fechaActual = date('Y-m-d');
+?>
+
 <div class="shadow-md rounded-lg p-4 dark:bg-gray-800">
     <div class="grid grid-cols-1 lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-4">
         <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
-            <div class="mb-4">
-                <button id="reloadTable"
-                    class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                    Recargar Tabla
-                </button>
-            </div>
+            <form id="filtroForm">
+                <div class="grid grid-cols-12 gap-3">
+                    <div class="col-span-12">
+                        <label class="block mb-2 text-sm font-medium text-gray-900">
+                            Tipo de filtro
+                        </label>
 
+                        <div class="flex flex-wrap items-center gap-6">
+
+                            <!-- NINGUNO -->
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="tipoFiltro" value="NINGUNO"
+                                    id="radioNinguno" class="w-4 h-4" checked>
+                                <span>Ninguno</span>
+                            </label>
+
+                            <!-- POR MES -->
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="tipoFiltro" value="MES"
+                                    id="radioMes" class="w-4 h-4">
+                                <span>Por mes</span>
+                            </label>
+
+                            <!-- INPUT MES -->
+                            <div id="filtroMes" class="hidden">
+                                <input
+                                    type="month"
+                                    id="mes"
+                                    class="bg-gray-50 border border-gray-300 rounded-lg p-2.5"
+                                    value="{{ isset($mes) ? $mes : $now->format('Y-m') }}">
+                            </div>
+
+                            <!-- POR RANGO -->
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="tipoFiltro" value="RANGO"
+                                    id="radioRango" class="w-4 h-4">
+                                <span>Por rango</span>
+                            </label>
+
+                            <!-- RANGO DE FECHAS -->
+                            <div id="filtroRango" class="hidden flex gap-2">
+                                <input
+                                    type="date"
+                                    id="fechaInicio"
+                                    class="bg-gray-50 border border-gray-300 rounded-lg p-2.5"
+                                    value="{{ $fechaActual }}">
+
+                                <input
+                                    type="date"
+                                    id="fechaFin"
+                                    class="bg-gray-50 border border-gray-300 rounded-lg p-2.5"
+                                    value="{{ $fechaActual }}">
+                            </div>
+
+                            <!-- BOTONES -->
+                            <div class="flex gap-3 ml-auto">
+
+                                <button
+                                    type="button"
+                                    id="btnFiltrar"
+                                    class="text-white bg-green-600 hover:bg-green-700 px-5 py-2 rounded-lg">
+                                    Filtrar
+                                </button>
+
+                                <button
+                                    type="button"
+                                    id="reloadTable"
+                                    class="text-white bg-blue-500 hover:bg-blue-600 px-5 py-2 rounded-lg">
+                                    Recargar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
             <table id="tablaGarantias" class="table table-striped" style="width:100%">
                 <thead>
                     <tr>
@@ -68,7 +143,14 @@
 
 @section('js')
 <script>
+    const hoy = new Date();
+
+    const fechaActual = hoy.toISOString().split('T')[0]; // 2026-01-30
+    const mesActual = hoy.toISOString().slice(0, 7);     // 2026-01
+    let filtros = {};
+
     $(document).ready(function() {
+        let GarantiasTable;
         cargarGarantias();
 
         function cargarGarantias() {
@@ -81,14 +163,20 @@
                 $('#tablaGarantias').DataTable().clear().destroy();
             }
 
-            var GarantiasTable = $('#tablaGarantias').DataTable({
+            GarantiasTable = $('#tablaGarantias').DataTable({
                 processing: true,
                 serverSide: false, // cambiar a true si quieres paginación del lado del servidor
                 responsive: true,
                 ajax: {
                     url: "{{ route('garantias.index.ajax') }}",
                     type: "POST",
-                    data: postData
+                    data: function (d) {
+                        return $.extend(d, {
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            origen: "garantia.index",
+                            ...filtros
+                        });
+                    }
                 },
                 columns: [
                     { data: 'id', visible: false },
@@ -118,7 +206,57 @@
 
         // 🔄 Botón de recargar
         $("#reloadTable").on("click", function() {
-            cargarGarantias();
+            $("#radioNinguno").prop("checked", true);
+            $("#filtroMes, #filtroRango").addClass("hidden");
+
+            $("#mes").val(mesActual);
+            $("#fechaInicio").val(fechaActual);
+            $("#fechaFin").val(fechaActual);
+
+            filtros = {};
+            GarantiasTable.ajax.reload();
+        });
+
+         // Mostrar u ocultar filtros según selección
+        $("input[name='tipoFiltro']").on("change", function () {
+
+            let tipo = $(this).val();
+
+            if (tipo === "MES") {
+                $("#filtroMes").removeClass("hidden");
+                $("#filtroRango").addClass("hidden");
+            } else if (tipo === "RANGO") {
+                $("#filtroRango").removeClass("hidden");
+                $("#filtroMes").addClass("hidden");
+            }else if (tipo === "NINGUNO") {
+                $("#filtroMes").addClass("hidden");
+                $("#filtroRango").addClass("hidden");
+            }
+        });
+
+        // FILTRAR (envío AJAX al DataTable)
+        $("#btnFiltrar").on("click", function () {
+
+            let tipo = $("input[name='tipoFiltro']:checked").val();
+
+            filtros = {};
+
+            if (tipo === "MES") {
+                filtros.filtro = "MES";
+                filtros.mes = $("#mes").val();
+            }
+
+            if (tipo === "RANGO") {
+                filtros.filtro = "RANGO";
+                filtros.fechaInicio = $("#fechaInicio").val();
+                filtros.fechaFin = $("#fechaFin").val();
+            }
+
+            if (tipo === "NINGUNO") {
+                filtros.filtro = null;
+            }
+
+            GarantiasTable.ajax.reload();
         });
 
         var cotizacionTable = new DataTable('#garantias', {

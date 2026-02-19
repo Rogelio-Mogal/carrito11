@@ -24,7 +24,8 @@ class AnticipoController extends Controller
 
     public function index()
     {
-        return view('anticipo.index');
+        $now = new \DateTime();
+        return view('anticipo.index', compact('now'));
     }
 
     public function create()
@@ -243,6 +244,65 @@ class AnticipoController extends Controller
     {
         // TODOS LOS ANTICIPOS PARA INDEX
         if ($request->origen == 'anticipo.apartado.index') {
+
+            $filtro = $request->input('filtro')
+            ?? $request->input('mes_hidden')
+            ?? $request->input('rango');
+            $mes          = $request->input('mes');          // '2026-01'
+            $fechaInicio  = $request->input('fechaInicio');  // '2026-01-01'
+            $fechaFin     = $request->input('fechaFin');     // '2026-01-31'
+
+            $anticipoQuery = AnticipoApartado::select(
+                'cliente_id',
+                \DB::raw('SUM(debia) as total_debia'),
+                \DB::raw('SUM(abona) as total_abona'),
+                \DB::raw('SUM(debe) as total_debe')
+            )
+            ->where('tipo','ANTICIPO')
+            ->with('cliente') // carga el cliente
+            ->groupBy('cliente_id');
+
+            if ($filtro === 'MES' && filled($mes)) {
+                $fecha = Carbon::createFromFormat('Y-m', $mes);
+
+                $anticipoQuery
+                    ->whereYear('fecha', $fecha->year)
+                    ->whereMonth('fecha', $fecha->month);
+            }
+
+            if ($filtro === 'RANGO' && $fechaInicio && $fechaFin) {
+                $anticipoQuery->whereBetween('fecha', [
+                    Carbon::parse($fechaInicio)->startOfDay(),
+                    Carbon::parse($fechaFin)->endOfDay(),
+                ]);
+            }
+
+            if (!$filtro) {
+                $anticipoQuery
+                    ->whereMonth('fecha', now()->month)
+                    ->whereYear('fecha', now()->year);
+            }
+
+            $data = $anticipoQuery
+            ->get()
+            ->map(function ($item) {
+                $ultimoAnticipo = AnticipoApartado::where('cliente_id', $item->cliente_id)
+                ->where('tipo','ANTICIPO')
+                ->orderByDesc('id')
+                ->first();
+                return [
+                    'cliente_id'   => $item->cliente_id,
+                    'cliente'      => $item->cliente?->full_name ?? 'Sin cliente',
+                    'total_credito'=> $item->total_debia,   // total debia como "Monto"
+                    'total_saldo'  => $item->total_debe,    // total debe como "Saldo actual"
+                    'estatus'      => $ultimoAnticipo?->estatus ?? 'N/A',
+                ];
+            });
+
+
+
+
+            /*
             $anticipoPorCliente = AnticipoApartado::select(
                 'cliente_id',
                 \DB::raw('SUM(debia) as total_debia'),
@@ -268,6 +328,7 @@ class AnticipoController extends Controller
                     'estatus'      => $ultimoAnticipo?->estatus ?? 'N/A',
                 ];
             });
+            */
 
             return response()->json(['data' => $data]);
         }

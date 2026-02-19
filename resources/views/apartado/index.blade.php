@@ -45,6 +45,11 @@
 
 @stop
 
+<?php
+    $fechaActual = date('Y-m-d');
+?>
+
+
 @section('content')
 @section('action')
     <a href="{{ route('admin.apartado.create') }}"
@@ -52,29 +57,85 @@
 @endsection
 <div class="shadow-md rounded-lg p-4 dark:bg-gray-800">
     <div class="hola grid grid-cols-1 lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-4">
+
         <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
-            <div class="mb-4">
-                <button id="reloadTable"
-                    class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                    Recargar Tabla
-                </button>
-            </div>
+            <form id="filtroForm">
+                <div class="grid grid-cols-12 gap-3">
+                    <div class="col-span-12">
+                        <label class="block mb-2 text-sm font-medium text-gray-900">
+                            Tipo de filtro
+                        </label>
 
+                        <div class="flex flex-wrap items-center gap-6">
 
-            {{--
-                <label for="sucursal_filter">Sucursal:</label>
-                <select id="sucursal_filter" class="form-select">
-                    <option value="">Todas</option>
-                    @foreach ($sucursales as $sucursal)
-                        <option value="{{ $sucursal->id }}"
-                            {{ isset($sucursalUsuario) && $sucursalUsuario == $sucursal->id ? 'selected' : '' }}>
-                            {{ $sucursal->nombre }}
-                        </option>
-                    @endforeach
-                </select>
-                <br>
-                --}}
+                            <!-- NINGUNO -->
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="tipoFiltro" value="NINGUNO"
+                                    id="radioNinguno" class="w-4 h-4" checked>
+                                <span>Ninguno</span>
+                            </label>
 
+                            <!-- POR MES -->
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="tipoFiltro" value="MES"
+                                    id="radioMes" class="w-4 h-4">
+                                <span>Por mes</span>
+                            </label>
+
+                            <!-- INPUT MES -->
+                            <div id="filtroMes" class="hidden">
+                                <input
+                                    type="month"
+                                    id="mes"
+                                    class="bg-gray-50 border border-gray-300 rounded-lg p-2.5"
+                                    value="{{ isset($mes) ? $mes : $now->format('Y-m') }}">
+                            </div>
+
+                            <!-- POR RANGO -->
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="tipoFiltro" value="RANGO"
+                                    id="radioRango" class="w-4 h-4">
+                                <span>Por rango</span>
+                            </label>
+
+                            <!-- RANGO DE FECHAS -->
+                            <div id="filtroRango" class="hidden flex gap-2">
+                                <input
+                                    type="date"
+                                    id="fechaInicio"
+                                    class="bg-gray-50 border border-gray-300 rounded-lg p-2.5"
+                                    value="{{ $fechaActual }}">
+
+                                <input
+                                    type="date"
+                                    id="fechaFin"
+                                    class="bg-gray-50 border border-gray-300 rounded-lg p-2.5"
+                                    value="{{ $fechaActual }}">
+                            </div>
+
+                            <!-- BOTONES -->
+                            <div class="flex gap-3 ml-auto">
+
+                                <button
+                                    type="button"
+                                    id="btnFiltrar"
+                                    class="text-white bg-green-600 hover:bg-green-700 px-5 py-2 rounded-lg">
+                                    Filtrar
+                                </button>
+
+                                <button
+                                    type="button"
+                                    id="reloadTable"
+                                    class="text-white bg-blue-500 hover:bg-blue-600 px-5 py-2 rounded-lg">
+                                    Recargar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
             <table id="apartado" class="table table-striped " style="width:100%">
                 <thead>
                     <tr>
@@ -98,18 +159,17 @@
 
 @section('js')
 <script>
+    const hoy = new Date();
+
+    const fechaActual = hoy.toISOString().split('T')[0]; // 2026-01-30
+    const mesActual = hoy.toISOString().slice(0, 7);     // 2026-01
+    let filtros = {};
+
     var editUrl = "{{ route('admin.apartado.show', ':id') }}";
     $(document).ready(function() {
+        let table;
         // Inicializar DataTable
-        var table = apartado();
-
-        // RECARGAR TABLA
-        $('#reloadTable').on('click', function() {
-            $('#loadingOverlay').removeClass('hidden'); // Mostrar overlay
-            table.ajax.reload(function() {
-                $('#loadingOverlay').addClass('hidden'); // Ocultar overlay después de recargar
-            });
-        });
+        apartado();
 
         // 🔹 Refrescar tabla al cambiar filtro
         $('#sucursal_filter').on('change', function() {
@@ -124,8 +184,13 @@
             origen: 'apartado.index',
         };
 
+        if ($.fn.DataTable.isDataTable('#apartado')) {
+            $('#apartado').DataTable().clear().destroy();
+        }
+
+
         // Inicializar DataTable
-        return $('#apartado').DataTable({
+        table = $('#apartado').DataTable({
             "language": {
                 "url": "{{ asset('/json/i18n/es_es.json') }}"
             },
@@ -135,9 +200,16 @@
             ajax: {
                 url: "{{ route('apartado.index.ajax') }}",
                 type: "POST",
-                'data': function(d) {
-                    d._token = "{{ csrf_token() }}";
-                    d.origen = postData.origen;
+                //'data': function(d) {
+                //    d._token = "{{ csrf_token() }}";
+                //    d.origen = postData.origen;
+                //}
+                data: function (d) {
+                    return $.extend(d, {
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+                        origen: "apartado.index",
+                        ...filtros
+                    });
                 }
             },
             'columns': [
@@ -186,7 +258,7 @@
                             return `
                              <a href="${editLink}"
                                  data-id="${data}"
-                                 data-popover-target="editar${data}" data-popover-placement="left"
+                                 data-popover-target="tooltip-editar-${data}" data-popover-placement="left"
                                  class="open-modal edit-item text-white mb-1 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                                  <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 18h14M5 18v3h14v-3M5 18l1-9h12l1 9M16 6v3m-4-3v3m-2-6h8v3h-8V3Zm-1 9h.01v.01H9V12Zm3 0h.01v.01H12V12Zm3 0h.01v.01H15V12Zm-6 3h.01v.01H9V15Zm3 0h.01v.01H12V15Zm3 0h.01v.01H15V15Z"/>
@@ -227,10 +299,69 @@
                     );
                 });
             }
-
-
+        });
+        //  Re-inicializa Flowbite cada vez que DataTables repinta
+        table.on('draw', function () {
+            if (typeof window.initFlowbite === "function") {
+                window.initFlowbite();
+            }
         });
     }
+
+    // 🔄 Botón de recargar
+    $("#reloadTable").on("click", function() {
+        $("#radioNinguno").prop("checked", true);
+        $("#filtroMes, #filtroRango").addClass("hidden");
+
+        $("#mes").val(mesActual);
+        $("#fechaInicio").val(fechaActual);
+        $("#fechaFin").val(fechaActual);
+
+        filtros = {};
+        table.ajax.reload();
+    });
+
+    // Mostrar u ocultar filtros según selección
+    $("input[name='tipoFiltro']").on("change", function () {
+
+        let tipo = $(this).val();
+
+        if (tipo === "MES") {
+            $("#filtroMes").removeClass("hidden");
+            $("#filtroRango").addClass("hidden");
+        } else if (tipo === "RANGO") {
+            $("#filtroRango").removeClass("hidden");
+            $("#filtroMes").addClass("hidden");
+        }else if (tipo === "NINGUNO") {
+            $("#filtroMes").addClass("hidden");
+            $("#filtroRango").addClass("hidden");
+        }
+    });
+
+    // FILTRAR (envío AJAX al DataTable)
+    $("#btnFiltrar").on("click", function () {
+
+        let tipo = $("input[name='tipoFiltro']:checked").val();
+
+        filtros = {};
+
+        if (tipo === "MES") {
+            filtros.filtro = "MES";
+            filtros.mes = $("#mes").val();
+        }
+
+        if (tipo === "RANGO") {
+            filtros.filtro = "RANGO";
+            filtros.fechaInicio = $("#fechaInicio").val();
+            filtros.fechaFin = $("#fechaFin").val();
+        }
+
+        if (tipo === "NINGUNO") {
+            filtros.filtro = null;
+        }
+
+        table.ajax.reload();
+    });
 </script>
 
 @if (Session::has('id'))

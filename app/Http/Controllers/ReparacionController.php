@@ -22,7 +22,8 @@ class ReparacionController extends Controller
 
     public function index()
     {
-        return view('reparacion.index');
+        $now = new \DateTime();
+        return view('reparacion.index', compact('now'));
     }
 
     public function create()
@@ -307,13 +308,187 @@ class ReparacionController extends Controller
         // TODAS LAS REPARACIONES PARA EL INDEX
         if ($request->origen == 'reparador.index') {
 
+            //$filtro       = $request->input('filtro');       // 'MES' | 'RANGO' | null
+            $filtro = $request->input('filtro')
+            ?? $request->input('mes_hidden')
+            ?? $request->input('rango');
+            $mes          = $request->input('mes');          // '2026-01'
+            $fechaInicio  = $request->input('fechaInicio');  // '2026-01-01'
+            $fechaFin     = $request->input('fechaFin');     // '2026-01-31'
+
             $reparadores = User::where(function ($q) {
                 $q->where('es_reparador', true)
                     ->orWhere('es_externo', true);
             })
-                ->select('id', 'name')
-                ->get();
+            ->select('id', 'name')
+            ->get();
 
+            $reparacionQuery = Reparacion::with(['cliente', 'productos.producto', 'reparador', 'venta'])
+            ->withCount('productos')
+            ->orderBy('fecha_ingreso', 'desc');
+
+            if ($filtro === 'MES' && filled($mes)) {
+                $fecha = Carbon::createFromFormat('Y-m', $mes);
+
+                $reparacionQuery
+                    ->whereYear('fecha_ingreso', $fecha->year)
+                    ->whereMonth('fecha_ingreso', $fecha->month);
+            }
+
+            if ($filtro === 'RANGO' && $fechaInicio && $fechaFin) {
+                $reparacionQuery->whereBetween('fecha_ingreso', [
+                    Carbon::parse($fechaInicio)->startOfDay(),
+                    Carbon::parse($fechaFin)->endOfDay(),
+                ]);
+            }
+
+            if (!$filtro) {
+                $reparacionQuery
+                    ->whereMonth('fecha_ingreso', now()->month)
+                    ->whereYear('fecha_ingreso', now()->year);
+            }
+
+            $reparacion = $reparacionQuery
+            ->get()
+            ->map(function ($item) use ($reparadores) {
+                    $acciones = '';
+
+                    $acciones .= '
+                    <a href="' . route('ticket.reparacion', $item->id) . '" target="_blank"
+                        data-popover-target="ticket-tooltip' . $item->id . '" data-popover-placement="bottom"
+                        class="mb-1 text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
+                            <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6m-6 4h6m-6 4h6M6 3v18l2-2 2 2 2-2 2 2 2-2 2 2V3l-2 2-2-2-2 2-2-2-2 2-2-2Z"/>
+                            </svg>
+                            <span class="sr-only">Ticket</span>
+                    </a>
+                    <div id="ticket-tooltip' . $item->id . '" role="tooltip"
+                        class="absolute z-10 invisible inline-block w-38 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                        <div class="p-2 space-y-2">
+                            <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Ticket</h6>
+                        </div>
+                    </div>';
+
+                    // ✅ Solo mostrar botones adicionales si la reparación NO está activa
+                    if ($item->estatus !== 'eliminado') {
+                        if ($item->activo != 1) {
+                            // ✅ Pagar servicio: solo si tiene reparador externo y costo_servicio > 0
+                            if ($item->reparador && $item->reparador->es_externo) {
+                                $acciones .= '
+                                <a href="#"
+                                    data-id="' . $item->id . '"
+                                    data-popover-target="tooltip-pagar-' . $item->id . '"
+                                    data-popover-placement="left"
+                                    class="pagar-servicio text-white mb-1 bg-purple-600 hover:bg-purple-700 focus:ring-4 focus:outline-none focus:ring-purple-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center dark:bg-purple-500 dark:hover:bg-purple-600 dark:focus:ring-purple-700">
+                                    <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 18h14M5 18v3h14v-3M5 18l1-9h12l1 9M16 6v3m-4-3v3m-2-6h8v3h-8V3Zm-1 9h.01v.01H9V12Zm3 0h.01v.01H12V12Zm3 0h.01v.01H15V12Zm-6 3h.01v.01H9V15Zm3 0h.01v.01H12V15Zm3 0h.01v.01H15V15Z"/>
+                                    </svg>
+                                    <span class="sr-only">Pagar servicio</span>
+                                    </a>
+
+                                    <div id="tooltip-pagar-' . $item->id . '" role="tooltip"
+                                        class="absolute z-10 invisible inline-block w-30 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                                    <div class="p-2">
+                                        <h6 class="font-semibold text-gray-900 dark:text-white">Pagar servicio</h6>
+                                    </div>
+                                    </div>
+                            ';
+                            }
+
+                            // ✅ Productos/Servicios: siempre disponible
+                            $acciones .= '
+                            <a href="' . route('admin.reparacion.solucion', $item->id) . '"
+                                data-popover-target="solucion-tooltip' . $item->id . '" data-popover-placement="bottom"
+                                class="mb-1 productos-servicios text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
+                                <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-6 7 2 2 4-4m-5-9v4h4V3h-4Z"/>
+                                </svg>
+                                <span class="sr-only">Productos/Servicios</span>
+                            </a>
+                            <div id="solucion-tooltip' . $item->id . '" role="tooltip"
+                                class="absolute z-10 invisible inline-block w-38 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                                <div class="p-2 space-y-2">
+                                    <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Productos/Servicios</h6>
+                                </div>
+                            </div>
+                            ';
+
+                            // ✅ Pasar a venta (solo si tiene productos en reparacion_productos)
+                            if ($item->productos_count > 0) {
+                                $acciones .= '
+                                    <a href="' . route('admin.ventas.create', [
+                                    'reparacion_id' => $item->id,
+                                    'cliente_id' => $item->cliente_id,
+                                ]) . '"
+                                    data-popover-target="venta-tooltip' . $item->id . '" data-popover-placement="bottom"
+                                    class="mb-1 pasar-venta text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
+                                        <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10V6a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v4m3-2 .917 11.923A1 1 0 0 1 17.92 21H6.08a1 1 0 0 1-.997-1.077L6 8h12Z"/>
+                                        </svg>
+                                        <span class="sr-only">Pasar a venta</span>
+                                    </a>
+                                    <div id="venta-tooltip' . $item->id . '" role="tooltip"
+                                        class="absolute z-10 invisible inline-block w-38 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                                        <div class="p-2 space-y-2">
+                                            <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Pasar a venta</h6>
+                                        </div>
+                                    </div>
+                                    ';
+                            }
+                        }
+                    }
+
+                    // 🔒 Solo no mostrar si ya está eliminado
+                    if ($item->estatus !== 'eliminado' && $item->estatus !== 'entregado') {
+                        $acciones .= '
+                            <form action="' . route('admin.reparacion.destroy', $item->id) . '" method="POST" class="form-eliminar" style="display:inline;">
+                                ' . csrf_field() . method_field('DELETE') . '
+                                <button type="button"
+                                    data-id="' . $item->id . '"
+                                    class="btn-eliminar mb-1 text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
+                                    <svg class="w-5 h-5 text-gray-100 dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                    <span class="sr-only">Eliminar</span>
+                                </button>
+                            </form>
+                            <div id="delete-tooltip' . $item->id . '" role="tooltip"
+                                class="absolute z-10 invisible inline-block w-38 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                                <div class="p-2 space-y-2">
+                                    <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Eliminar</h6>
+                                </div>
+                            </div>
+                        ';
+                    }
+
+                    return [
+                        'id' => $item->id,
+                        'folio' => $item->folio,
+                        'cliente_nombre' => $item->cliente?->full_name ?? 'Sin cliente',
+                        'tel1' => $item->tel1,
+                        'fecha_ingreso' => Carbon::parse($item->fecha_ingreso)->format('d/m/Y H:i:s'),
+                        'fecha_listo' => Carbon::parse($item->fecha_listo)->format('d/m/Y H:i:s'),
+                        'fecha_entregado' => Carbon::parse($item->fecha_entregado)->format('d/m/Y H:i:s'),
+                        'equipo' => $item->equipo,
+                        'reparador_id' => $item->reparador_id,
+                        'reparador_nombre' => $item->reparador?->name ?? 'Sin asignar',
+                        'costo_servicio' => $item->costo_servicio,
+                        'venta_id' => $item->venta?->folio ?? 'Sin venta',
+                        'estatus_label' => match ($item->estatus) {
+                            'listo' => '<span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Listo</span>',
+                            'entregado'    => '<span class="bg-gray-100 text-gray-800 text-sm font-medium px-2.5 py-0.5 rounded">Entregado</span>',
+                            'eliminado'    => '<span class="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">Eliminado</span>',
+                            default       => '<span class="bg-yellow-100 text-yellow-800 text-sm font-medium px-2.5 py-0.5 rounded">Taller</span>',
+                        },
+                        'acciones' => $acciones,
+                        'reparador_select' => view('reparacion.partials._reparador_select', [
+                            'reparadores' => $reparadores,
+                            'reparacion' => $item
+                        ])->render(),
+                    ];
+            });
+
+            /*
             $reparacion = Reparacion::with(['cliente', 'productos.producto'])
                 ->withCount('productos')
                 ->orderBy('fecha_ingreso', 'desc')
@@ -322,20 +497,20 @@ class ReparacionController extends Controller
                     $acciones = '';
 
                     $acciones .= '
-                <a href="' . route('ticket.reparacion', $item->id) . '" target="_blank"
-                    data-popover-target="ticket-tooltip' . $item->id . '" data-popover-placement="bottom"
-                    class="mb-1 text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
-                        <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6m-6 4h6m-6 4h6M6 3v18l2-2 2 2 2-2 2 2 2-2 2 2V3l-2 2-2-2-2 2-2-2-2 2-2-2Z"/>
-                        </svg>
-                        <span class="sr-only">Ticket</span>
-                </a>
-                <div id="ticket-tooltip' . $item->id . '" role="tooltip"
-                    class="absolute z-10 invisible inline-block w-38 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
-                    <div class="p-2 space-y-2">
-                        <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Ticket</h6>
-                    </div>
-                </div>';
+                    <a href="' . route('ticket.reparacion', $item->id) . '" target="_blank"
+                        data-popover-target="ticket-tooltip' . $item->id . '" data-popover-placement="bottom"
+                        class="mb-1 text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
+                            <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6m-6 4h6m-6 4h6M6 3v18l2-2 2 2 2-2 2 2 2-2 2 2V3l-2 2-2-2-2 2-2-2-2 2-2-2Z"/>
+                            </svg>
+                            <span class="sr-only">Ticket</span>
+                    </a>
+                    <div id="ticket-tooltip' . $item->id . '" role="tooltip"
+                        class="absolute z-10 invisible inline-block w-38 text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400">
+                        <div class="p-2 space-y-2">
+                            <h6 class="font-semibold mb-0 text-gray-900 dark:text-black">Ticket</h6>
+                        </div>
+                    </div>';
 
                     // ✅ Solo mostrar botones adicionales si la reparación NO está activa
                     if ($item->estatus !== 'eliminado') {
@@ -455,6 +630,7 @@ class ReparacionController extends Controller
                         ])->render(),
                     ];
                 });
+            */
 
             return response()->json(['data' => $reparacion]);
         }
