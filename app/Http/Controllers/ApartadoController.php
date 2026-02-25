@@ -20,8 +20,18 @@ class ApartadoController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:apartado.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:apartado.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:apartado.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:apartado.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

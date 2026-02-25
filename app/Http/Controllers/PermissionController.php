@@ -9,10 +9,20 @@ class PermissionController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:permisos.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:permisos.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:permisos.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:permisos.eliminar')
+            ->only(['destroy']);
     }
-    
+
     public function index()
     {
         $permissions = Permission::all();

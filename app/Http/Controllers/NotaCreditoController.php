@@ -12,8 +12,18 @@ class NotaCreditoController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:nota_credito.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:nota_credito.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:nota_credito.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:nota_credito.cancelar')
+            ->only(['destroy']);
     }
 
     public function index()
@@ -84,7 +94,6 @@ class NotaCreditoController extends Controller
             'totalDevoluciones'
         ));
     }
-
 
     public function show1(NotaCredito $notaCredito)
     {
@@ -161,12 +170,12 @@ class NotaCreditoController extends Controller
 
                 // Ver
                 //$acciones .= '<a href="'.route('admin.nota.credito.show', $notaBase->id).'" class="btn btn-blue">Ver</a>';
-                
+
                 // Ticket
                 //$acciones .= '<a href="#" target="_blank" class="btn btn-green">Ticket</a>';
 
                 $acciones .= '
-                <a href="'.route('admin.nota.credito.show', $notaBase->id).'" 
+                <a href="'.route('admin.nota.credito.show', $notaBase->id).'"
                     data-popover-target="ver-tooltip'.$notaBase->id.'" data-popover-placement="bottom"
                     class="mb-1 text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
                         <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -182,7 +191,7 @@ class NotaCreditoController extends Controller
                 </div>';
 
                     $acciones .= '
-                    <a href="' . route('ticket.nota.credito', $notaBase->id) . '" target="_blank" 
+                    <a href="' . route('ticket.nota.credito', $notaBase->id) . '" target="_blank"
                         data-popover-target="ticket-tooltip'.$notaBase->id.'" data-popover-placement="bottom"
                         class="mb-1 text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
                             <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -212,7 +221,7 @@ class NotaCreditoController extends Controller
                     ]);
 
                     $acciones .= '
-                        <a href="'.e($url).'" 
+                        <a href="'.e($url).'"
                             data-popover-target="venta-tooltip'.$notaBase->id.'" data-popover-placement="bottom"
                             class="mb-1 text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center">
                                 <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -228,7 +237,7 @@ class NotaCreditoController extends Controller
                         </div>';
 
                     $acciones .= '
-                        <button type="button" 
+                        <button type="button"
                             data-id="'.$notaBase->id.'" data-monto="'.$totalNotas.'"
                             data-popover-target="devolver-tooltip'.$notaBase->id.'" data-popover-placement="bottom"
                             class="mb-1 text-white bg-purple-600 hover:bg-purple-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center devolver-efectivo">
@@ -273,7 +282,7 @@ class NotaCreditoController extends Controller
         // TODAS LAS NOTAS DE CRÉDITO ACTIVAS PARA PARA VENTAS
         if ($request->origen == 'nota.credito.ventas') {
             /*$creditos = NotaCredito::with(['cliente:id,full_name', 'notable'])
-                ->where('activo', true)    
+                ->where('activo', true)
                 ->get(); // Trae todas las notas, sin filtrar
 
             // Agrupar por el modelo y su id (por ejemplo, Venta-10)

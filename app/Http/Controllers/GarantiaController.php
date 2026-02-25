@@ -16,8 +16,21 @@ class GarantiaController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:garantias.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:garantias.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:garantias.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:garantias.eliminar')
+            ->only(['destroy']);
+
+        $this->middleware('permission:garantias.solucion')
+            ->only(['agregarSolucion']);
     }
 
     public function index(Request $request)

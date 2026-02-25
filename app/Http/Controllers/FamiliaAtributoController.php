@@ -11,8 +11,18 @@ class FamiliaAtributoController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:familia_atributos.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:familia_atributos.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:familia_atributos.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:familia_atributos.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()
@@ -43,7 +53,7 @@ class FamiliaAtributoController extends Controller
             //FamiliaAtributo::create($data);
 
             $fam = ProductoCaracteristica::find($request->familia_id);
-            
+
             $fam->atributos()->syncWithPivotValues($request->atributo_id, [
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -169,9 +179,9 @@ class FamiliaAtributoController extends Controller
 
     public function familia_atributo_index_ajax(Request $request)
     {
-        // TODOS LOS PRODUCTOS PARA EL INDEX 
+        // TODOS LOS PRODUCTOS PARA EL INDEX
         if ($request->origen == 'familia.atributo.index') {
-            
+
             $atributo = FamiliaAtributo::with(['familia', 'atributo'])->get();
 
             return response()->json(['data' => $atributo]);

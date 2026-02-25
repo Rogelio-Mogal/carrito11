@@ -12,8 +12,18 @@ class CajaMovimientoController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:caja_movimeinto.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:caja_movimeinto.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:caja_movimeinto.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:caja_movimeinto.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

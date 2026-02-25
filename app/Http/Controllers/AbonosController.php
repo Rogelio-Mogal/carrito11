@@ -15,7 +15,7 @@ class AbonosController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
+        $this->middleware('auth');
         //$this->middleware(['can:Gestión de roles']);
     }
 
@@ -500,7 +500,7 @@ class AbonosController extends Controller
     }
 
     public function ticket($id){
-        
+
         //  - CREAMOS EL PDF DE LA VENTA ----
         $user = auth()->user();
         $userPrinterSize = 80;

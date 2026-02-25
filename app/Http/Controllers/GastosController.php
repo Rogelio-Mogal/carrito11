@@ -11,8 +11,18 @@ class GastosController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:gastos.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:gastos.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:gastos.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:gastos.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

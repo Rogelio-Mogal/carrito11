@@ -11,8 +11,18 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:usuarios.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:usuarios.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:usuarios.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:usuarios.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

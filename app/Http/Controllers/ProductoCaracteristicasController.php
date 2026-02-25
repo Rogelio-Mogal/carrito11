@@ -13,8 +13,18 @@ class ProductoCaracteristicasController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:producto_caracteristica.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:producto_caracteristica.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:producto_caracteristica.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:producto_caracteristica.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

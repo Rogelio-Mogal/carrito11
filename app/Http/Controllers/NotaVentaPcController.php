@@ -11,8 +11,18 @@ class NotaVentaPcController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:venta_pc_nota.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:venta_pc_nota.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:venta_pc_nota.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:venta_pc_nota.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

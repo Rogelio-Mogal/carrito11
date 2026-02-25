@@ -9,6 +9,11 @@ use Illuminate\Http\Request;
 
 class CotizacionesDetallesController extends Controller
 {
+     public function __construct()
+    {
+        $this->middleware('auth');
+        //$this->middleware(['can:Gestión de roles']);
+    }
 
     public function index()
     {
@@ -91,7 +96,7 @@ class CotizacionesDetallesController extends Controller
     {
         \DB::beginTransaction();
         try {
-           
+
             if( $request->cantidad > 0 && $request->tipo == 'actualiza-cantidad' ){
 
                 $detalle = DocumentoDetalle::where('id','=',$id)
@@ -126,7 +131,7 @@ class CotizacionesDetallesController extends Controller
                 $cotizacion->update([
                     'total'  =>  $totImporte,
                 ]);
-                
+
                 \DB::commit();
                 return json_encode($detalle);
             }else if ( $request->tipo == 'actualiza-precio-unitario' ){
@@ -151,7 +156,7 @@ class CotizacionesDetallesController extends Controller
                 $cotizacion->update([
                     'total'  =>  $totImporte,
                 ]);
-                
+
                 \DB::commit();
                 return json_encode($cotizacionDetalle);
             }else if ( $request->tipo == 'actualiza-precios' ){
@@ -190,7 +195,7 @@ class CotizacionesDetallesController extends Controller
                         'tipo_precio' => $request->tipo_precio,
                         'total'  =>  $totImporte,
                     ]);
-                    
+
                     \DB::commit();
                     //return json_encode($cotizacionDetalle);
                 } else {

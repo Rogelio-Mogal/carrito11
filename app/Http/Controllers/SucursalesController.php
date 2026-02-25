@@ -9,8 +9,18 @@ class SucursalesController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:sucursales.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:sucursales.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:sucursales.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:sucursales.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

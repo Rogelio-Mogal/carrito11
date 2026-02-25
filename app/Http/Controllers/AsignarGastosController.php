@@ -13,8 +13,18 @@ class AsignarGastosController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:asignar_gasto.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:asignar_gasto.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:asignar_gasto.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:asignar_gasto.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

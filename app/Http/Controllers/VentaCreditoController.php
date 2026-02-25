@@ -12,13 +12,23 @@ class VentaCreditoController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:venta_credito.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:venta_credito.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:venta_credito.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:venta_credito.cancelar')
+            ->only(['destroy']);
     }
 
     public function index(Request $request)
     {
-    
+
         if ($request->ajax()) {
         $creditos = VentaCredito::with(['venta.cliente'])
         ->get()
@@ -104,9 +114,9 @@ class VentaCreditoController extends Controller
             return response()->json(['data' => $creditos]);
         }
 
-        
 
-      
+
+
 
 
     }

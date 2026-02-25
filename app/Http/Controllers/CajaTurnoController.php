@@ -15,8 +15,12 @@ class CajaTurnoController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:turnos.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:turnos.crear')
+            ->only(['create', 'store']);
     }
 
     public function index(Request $request)
@@ -139,11 +143,11 @@ class CajaTurnoController extends Controller
                 ->whereBetween('fecha', [$fechaInicio, $fechaFin])
                 ->sum('monto');
 
-            $totalEfectivo = $turnoAbierto->efectivo_inicial 
-                            + $ventasEfectivo 
-                            + $abonosVentas 
-                            + $abonosAnticipos 
-                            + $entradas 
+            $totalEfectivo = $turnoAbierto->efectivo_inicial
+                            + $ventasEfectivo
+                            + $abonosVentas
+                            + $abonosAnticipos
+                            + $entradas
                             - $salidas;
 
             if ($turnoAbierto) {
@@ -317,9 +321,9 @@ class CajaTurnoController extends Controller
                 ->sum('monto');
 
             // 5️⃣ Guardar cierre de turno
-            $turnoAbierto->efectivo_calculado = $turnoAbierto->efectivo_inicial 
-                                                + $efectivoOperaciones 
-                                                + $entradas 
+            $turnoAbierto->efectivo_calculado = $turnoAbierto->efectivo_inicial
+                                                + $efectivoOperaciones
+                                                + $entradas
                                                 - $salidas;
 
             $turnoAbierto->efectivo_real = $request->efectivo_real;

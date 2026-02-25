@@ -12,8 +12,18 @@ class PreciosController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:precios.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:precios.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:precios.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:precios.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

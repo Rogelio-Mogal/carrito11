@@ -9,8 +9,18 @@ class AtributoController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:atributos.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:atributos.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:atributos.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:atributos.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()
@@ -95,7 +105,7 @@ class AtributoController extends Controller
             return view('atributo.edit', compact('atributo','metodo'));
         }else{
             return redirect()->route('admin.atributos.index');
-        } 
+        }
     }
 
     public function update(Request $request, Atributo $atributo)
@@ -185,7 +195,7 @@ class AtributoController extends Controller
                 ], 400);
             }
             */
-            
+
 
             // Si es un servicio o un producto sin stock, procede con la actualización/eliminación
             $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';

@@ -10,8 +10,18 @@ class FormaPagoController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:forma_pago.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:forma_pago.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:forma_pago.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:forma_pago.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

@@ -20,8 +20,18 @@ class ProductosController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:producto_servicio.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:producto_servicio.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:producto_servicio.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:producto_servicio.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

@@ -9,8 +9,18 @@ class ProveedoresController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:proveedores.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:proveedores.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:proveedores.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:proveedores.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

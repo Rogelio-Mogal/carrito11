@@ -29,8 +29,18 @@ class VentasController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:ventas.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:ventas.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:ventas.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:ventas.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

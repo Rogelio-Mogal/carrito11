@@ -12,8 +12,18 @@ class ClientesController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:clientes.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:clientes.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:clientes.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:clientes.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

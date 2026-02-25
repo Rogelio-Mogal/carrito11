@@ -10,10 +10,10 @@ class UserProfileController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
+        $this->middleware('auth');
         //$this->middleware(['can:Gestión de roles']);
     }
-    
+
     public function index()
     {
         //
@@ -73,7 +73,7 @@ class UserProfileController extends Controller
                 $perfil->menu_color = $request->menu_color;
                 $perfil->theme = 'light';
             }
-            
+
             // Solo actualizar la contraseña si se proporciona una nueva
             if ($request->has('password') && $request->password != '') {
                 $perfil->password = bcrypt($request->password);

@@ -7,6 +7,12 @@ use Illuminate\Http\Request;
 
 class RecompenzaProductoController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        //$this->middleware(['can:Gestión de roles']);
+    }
+
     /**
      * Display a listing of the resource.
      */

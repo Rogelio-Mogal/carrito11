@@ -14,8 +14,18 @@ class CotizacionesController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:cotizaciones.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:cotizaciones.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:cotizaciones.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:cotizaciones.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()

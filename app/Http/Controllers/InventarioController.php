@@ -13,8 +13,18 @@ class InventarioController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        //$this->middleware(['can:Gestión de roles']);
+        $this->middleware('auth');
+        $this->middleware('permission:inventarios.ver')
+        ->only(['index', 'show']);
+
+        $this->middleware('permission:inventarios.crear')
+            ->only(['create', 'store']);
+
+        $this->middleware('permission:inventarios.editar')
+            ->only(['edit', 'update']);
+
+        $this->middleware('permission:inventarios.eliminar')
+            ->only(['destroy']);
     }
 
     public function index()
@@ -44,13 +54,13 @@ class InventarioController extends Controller
     public function edit($id)
     {
         $inventario = Inventario::with([
-            'producto', 
-            'producto.marca_c', 
-            'producto.familia_c', 
+            'producto',
+            'producto.marca_c',
+            'producto.familia_c',
             'producto.subFamilia_c'
         ])->where('producto_id', $id)->first();
         $metodo = 'edit';
-        
+
         if (!$inventario) {
             return redirect()->route('admin.inventario.index');
         }
@@ -130,7 +140,7 @@ class InventarioController extends Controller
                     $haber = $inventario->cantidad < $old_inventario ? $old_inventario - $inventario->cantidad : 0;
                     Kardex::create([
                         'producto_id' => $inventario->producto_id,
-                        'movimiento_id' => $inventarioId, 
+                        'movimiento_id' => $inventarioId,
                         'tipo_movimiento' => $tipoMovimiento,
                         'tipo_detalle' => 'INVENTARIO',
                         'fecha' => now(),
@@ -150,7 +160,7 @@ class InventarioController extends Controller
                     $haber = $inventario->producto_apartado < $old_apartado ? $old_apartado - $inventario->producto_apartado : 0;
                     Kardex::create([
                         'producto_id' => $inventario->producto_id,
-                        'movimiento_id' => $inventarioId, 
+                        'movimiento_id' => $inventarioId,
                         'tipo_movimiento' => $tipoMovimiento,
                         'tipo_detalle' => 'APARTADO',
                         'fecha' => now(),
@@ -159,7 +169,7 @@ class InventarioController extends Controller
                         'debe' => $debe,
                         'haber' => $haber,
                         'saldo' => $inventario->cantidad,
-                        'wci' => auth()->user()->id, 
+                        'wci' => auth()->user()->id,
                     ]);
                 }
 
@@ -170,7 +180,7 @@ class InventarioController extends Controller
                     $haber = $inventario->producto_servicio < $old_servicio ? $old_servicio - $inventario->producto_servicio : 0;
                     Kardex::create([
                         'producto_id' => $inventario->producto_id,
-                        'movimiento_id' => $inventarioId, 
+                        'movimiento_id' => $inventarioId,
                         'tipo_movimiento' => $tipoMovimiento,
                         'tipo_detalle' => 'SERVICIO',
                         'fecha' => now(),
@@ -189,7 +199,7 @@ class InventarioController extends Controller
             if ($old_inventario !== $inventario->cantidad) {
                 Kardex::create([
                     'producto_id' => $inventario->producto_id,
-                    'movimiento_id' => $inventarioId, 
+                    'movimiento_id' => $inventarioId,
                     'tipo_movimiento' => 'Cambio de Apartado', //ENTRADA, SALIDA
                     'tipo_detalle' => 'INVENTARIO',
                     'fecha' => now(),
@@ -201,12 +211,12 @@ class InventarioController extends Controller
                     'activo' => true,
                 ]);
             }
-            
+
             // Registrar el cambio en `producto_apartado`
             if ($old_apartado !== $inventario->producto_apartado) {
                 Kardex::create([
                     'producto_id' => $inventario->producto_id,
-                    'movimiento_id' => $inventarioId, 
+                    'movimiento_id' => $inventarioId,
                     'tipo_movimiento' => 'Cambio de Apartado', //ENTRADA, SALIDA
                     'tipo_detalle' => 'INVENTARIO',
                     'fecha' => now(),
@@ -223,7 +233,7 @@ class InventarioController extends Controller
             if ($old_servicio !== $inventario->producto_servicio) {
                 Kardex::create([
                     'producto_id' => $inventario->producto_id,
-                    'movimiento_id' => $inventarioId, 
+                    'movimiento_id' => $inventarioId,
                     'tipo_movimiento' => 'Cambio de Servicio', //ENTRADA, SALIDA
                     'tipo_detalle' => 'INVENTARIO',
                     'fecha' => now(),
@@ -248,9 +258,9 @@ class InventarioController extends Controller
                 ],
                 'buttonsStyling' => false
             ]);
-    
+
             return redirect()->route('admin.inventario.index');
-            
+
         } catch (\Exception $e) {
             DB::rollback();
             session()->flash('swal', [
