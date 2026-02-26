@@ -126,7 +126,6 @@
                                     </a>
                                 </li>
                             @endcan
-
                             <li>
                                 <form id="logout-form" method="POST" action="{{ route('logout') }}" x-data>
                                     @csrf
@@ -283,102 +282,129 @@
                         </a>
                     </li>
                     --}}
-                    <li>
-                        <button type="button"
-                            class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-                            aria-controls="dropdown-finanzas"
-                            data-collapse-toggle="dropdown-finanzas"
-                            data-target="dropdown-finanzas">
-                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
-                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                                viewBox="0 0 24 24">
-                                <path fill-rule="evenodd"
-                                    d="M9 15a6 6 0 1 1 12 0 6 6 0 0 1-12 0Zm3.845-1.855a2.4 2.4 0 0 1 1.2-1.226 1 1 0 0 1 1.992-.026c.426.15.809.408 1.111.749a1 1 0 1 1-1.496 1.327.682.682 0 0 0-.36-.213.997.997 0 0 1-.113-.032.4.4 0 0 0-.394.074.93.93 0 0 0 .455.254 2.914 2.914 0 0 1 1.504.9c.373.433.669 1.092.464 1.823a.996.996 0 0 1-.046.129c-.226.519-.627.94-1.132 1.192a1 1 0 0 1-1.956.093 2.68 2.68 0 0 1-1.227-.798 1 1 0 1 1 1.506-1.315.682.682 0 0 0 .363.216c.038.009.075.02.111.032a.4.4 0 0 0 .395-.074.93.93 0 0 0-.455-.254 2.91 2.91 0 0 1-1.503-.9c-.375-.433-.666-1.089-.466-1.817a.994.994 0 0 1 .047-.134Zm1.884.573.003.008c-.003-.005-.003-.008-.003-.008Zm.55 2.613s-.002-.002-.003-.007a.032.032 0 0 1 .003.007ZM4 14a1 1 0 0 1 1 1v4a1 1 0 1 1-2 0v-4a1 1 0 0 1 1-1Zm3-2a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1Zm6.5-8a1 1 0 0 1 1-1H18a1 1 0 0 1 1 1v3a1 1 0 1 1-2 0v-.796l-2.341 2.049a1 1 0 0 1-1.24.06l-2.894-2.066L6.614 9.29a1 1 0 1 1-1.228-1.578l4.5-3.5a1 1 0 0 1 1.195-.025l2.856 2.04L15.34 5h-.84a1 1 0 0 1-1-1Z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            <span class="flex-1 ml-3 text-left whitespace-nowrap">Finanzas</span>
-                            <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
-                        <ul id="dropdown-finanzas" class="hidden py-2 space-y-2">
-                            <li>
-                                <a href="{{ route('admin.forma.pago.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.forma.pago.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Forma de pago
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.tipo.gasto.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.tipo.gasto.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Tipo de gasto
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.gastos.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.gastos.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Gastos
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.asignar.gasto.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.asignar.gasto.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Asignar gastos
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li>
-                        <button type="button"
-                            class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-                            aria-controls="dropdown-clientes"
-                            data-collapse-toggle="dropdown-clientes"
-                            data-target="dropdown-clientes">
-                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
-                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                viewBox="0 0 24 24">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
-                                    d="M4.5 17H4a1 1 0 0 1-1-1 3 3 0 0 1 3-3h1m0-3.05A2.5 2.5 0 1 1 9 5.5M19.5 17h.5a1 1 0 0 0 1-1 3 3 0 0 0-3-3h-1m0-3.05a2.5 2.5 0 1 0-2-4.45m.5 13.5h-7a1 1 0 0 1-1-1 3 3 0 0 1 3-3h3a3 3 0 0 1 3 3 1 1 0 0 1-1 1Zm-1-9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z" />
-                            </svg>
-                            <span class="flex-1 ml-3 text-left whitespace-nowrap">Clientes</span>
-                            <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
-                        <ul id="dropdown-clientes" class="hidden py-2 space-y-2">
-                            <li>
-                                <a href="{{ route('admin.clientes.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.clientes.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Clientes
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.venta.credito.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.venta.credito.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Venta a crédito
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.nota.credito.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.nota.credito.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Nota de Crédito
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                    @canany([
+                        'forma_pago.ver',
+                        'tipo_gasto.ver',
+                        'gastos.ver',
+                        'asignar_gasto.ver'
+                    ])
+                        <li>
+                            <button type="button"
+                                class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                                aria-controls="dropdown-finanzas"
+                                data-collapse-toggle="dropdown-finanzas"
+                                data-target="dropdown-finanzas">
+                                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path fill-rule="evenodd"
+                                        d="M9 15a6 6 0 1 1 12 0 6 6 0 0 1-12 0Zm3.845-1.855a2.4 2.4 0 0 1 1.2-1.226 1 1 0 0 1 1.992-.026c.426.15.809.408 1.111.749a1 1 0 1 1-1.496 1.327.682.682 0 0 0-.36-.213.997.997 0 0 1-.113-.032.4.4 0 0 0-.394.074.93.93 0 0 0 .455.254 2.914 2.914 0 0 1 1.504.9c.373.433.669 1.092.464 1.823a.996.996 0 0 1-.046.129c-.226.519-.627.94-1.132 1.192a1 1 0 0 1-1.956.093 2.68 2.68 0 0 1-1.227-.798 1 1 0 1 1 1.506-1.315.682.682 0 0 0 .363.216c.038.009.075.02.111.032a.4.4 0 0 0 .395-.074.93.93 0 0 0-.455-.254 2.91 2.91 0 0 1-1.503-.9c-.375-.433-.666-1.089-.466-1.817a.994.994 0 0 1 .047-.134Zm1.884.573.003.008c-.003-.005-.003-.008-.003-.008Zm.55 2.613s-.002-.002-.003-.007a.032.032 0 0 1 .003.007ZM4 14a1 1 0 0 1 1 1v4a1 1 0 1 1-2 0v-4a1 1 0 0 1 1-1Zm3-2a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0v-6a1 1 0 0 1 1-1Zm6.5-8a1 1 0 0 1 1-1H18a1 1 0 0 1 1 1v3a1 1 0 1 1-2 0v-.796l-2.341 2.049a1 1 0 0 1-1.24.06l-2.894-2.066L6.614 9.29a1 1 0 1 1-1.228-1.578l4.5-3.5a1 1 0 0 1 1.195-.025l2.856 2.04L15.34 5h-.84a1 1 0 0 1-1-1Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Finanzas</span>
+                                <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                            <ul id="dropdown-finanzas" class="hidden py-2 space-y-2">
+                                @can('forma_pago.ver')
+                                    <li>
+                                        <a href="{{ route('admin.forma.pago.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.forma.pago.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Forma de pago
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('tipo_gasto.ver')
+                                    <li>
+                                        <a href="{{ route('admin.tipo.gasto.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.tipo.gasto.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Tipo de gasto
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('gastos.ver')
+                                    <li>
+                                        <a href="{{ route('admin.gastos.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.gastos.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Gastos
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('asignar_gasto.ver')
+                                    <li>
+                                        <a href="{{ route('admin.asignar.gasto.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.asignar.gasto.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Asignar gastos
+                                        </a>
+                                    </li>
+                                @endcan
+                            </ul>
+                        </li>
+                    @endcanany
+                    @canany([
+                        'clientes.ver',
+                        'venta_credito.ver',
+                        'nota_credito.ver'
+                    ])
+                        <li>
+                            <button type="button"
+                                class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                                aria-controls="dropdown-clientes"
+                                data-collapse-toggle="dropdown-clientes"
+                                data-target="dropdown-clientes">
+                                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                    viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                                        d="M4.5 17H4a1 1 0 0 1-1-1 3 3 0 0 1 3-3h1m0-3.05A2.5 2.5 0 1 1 9 5.5M19.5 17h.5a1 1 0 0 0 1-1 3 3 0 0 0-3-3h-1m0-3.05a2.5 2.5 0 1 0-2-4.45m.5 13.5h-7a1 1 0 0 1-1-1 3 3 0 0 1 3-3h3a3 3 0 0 1 3 3 1 1 0 0 1-1 1Zm-1-9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z" />
+                                </svg>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Clientes</span>
+                                <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                            <ul id="dropdown-clientes" class="hidden py-2 space-y-2">
+                                @can('clientes.ver')
+                                    <li>
+                                        <a href="{{ route('admin.clientes.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.clientes.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Clientes
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('venta_credito.ver')
+                                    <li>
+                                        <a href="{{ route('admin.venta.credito.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.venta.credito.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Venta a crédito
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('nota_credito.ver')
+                                    <li>
+                                        <a href="{{ route('admin.nota.credito.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.nota.credito.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Nota de Crédito
+                                        </a>
+                                    </li>
+                                @endcan
+                            </ul>
+                        </li>
+                    @endcanany
                     @canany([
                         'reparacion.ver',
                         'garantias.ver',
@@ -444,182 +470,228 @@
                             </ul>
                         </li>
                     @endcanany
-                    <li>
-                        <button type="button"
-                            class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-                            aria-controls="dropdown-productos"
-                            data-collapse-toggle="dropdown-productos"
-                            data-target="dropdown-productos">
-                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
-                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                viewBox="0 0 24 24">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 10V6a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v4m3-2 .917 11.923A1 1 0 0 1 17.92 21H6.08a1 1 0 0 1-.997-1.077L6 8h12Z" />
-                            </svg>
-                            <span class="flex-1 ml-3 text-left whitespace-nowrap">Productos</span>
-                            <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
-                        <ul id="dropdown-productos" class="hidden py-2 space-y-2">
-                            <li>
-                                <a href="{{ route('admin.proveedores.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                        {{ request()->routeIs('admin.proveedores.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Proveedores
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.producto.caracteristica.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                        {{ request()->routeIs('admin.producto.caracteristica.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Caracteristicas
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.atributos.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                        {{ request()->routeIs('admin.atributos.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Atributos
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.familia.atributos.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                        {{ request()->routeIs('admin.familia.atributos.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Familia-Atributos
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.producto.servicio.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                        {{ request()->routeIs('admin.producto.servicio.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Productos/Servicios
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.precios.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                        {{ request()->routeIs('admin.precios.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Precios
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.compras.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.compras.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Compras
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li>
-                        <button type="button"
-                            class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-                            aria-controls="dropdown-documentos"
-                            data-collapse-toggle="dropdown-documentos"
-                            data-target="dropdown-documentos">
-                            <svg aria-hidden="true" class="w-6 h-6 text-gray-800 dark:text-white" fill="currentColor"
-                                viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
-                                <path fill-rule="evenodd"
-                                    d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="flex-1 ml-3 text-left whitespace-nowrap">Documentos</span>
-                            <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
-                        <ul id="dropdown-documentos" class="hidden py-2 space-y-2">
-                            <li>
-                                <a href="{{ route('admin.cotizacion.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.cotizacion.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Cotizaciones
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.ticket.alterno.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.ticket.alterno.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Ticket alterno
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.nota.venta.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.nota.venta.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Nota de venta
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.nota.pc.venta.index') }}"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
-                                    {{ request()->routeIs('admin.nota.pc.venta.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
-                                    Venta de Pc
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li>
-                        <button type="button"
-                            class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-                            aria-controls="dropdown-web" data-collapse-toggle="dropdown-web">
-                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
-                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                viewBox="0 0 24 24">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
-                                    d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                            </svg>
-                            <span class="flex-1 ml-3 text-left whitespace-nowrap">Página</span>
-                            <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
-                        <ul id="dropdown-web" class="hidden py-2 space-y-2">
-                            <li>
-                                <a href="#"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
-                                    Pedidos web
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
-                                    Destacados
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
-                                    Catálogos PDF
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
-                                    Banner y lateral
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
-                                    Quines somos
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                    @canany([
+                        'proveedores.ver',
+                        'producto_caracteristica.ver',
+                        'atributos.ver',
+                        'familia_atributos.ver',
+                        'producto_servicio.ver',
+                        'precios.ver',
+                        'compras.ver'
+                    ])
+                        <li>
+                            <button type="button"
+                                class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                                aria-controls="dropdown-productos"
+                                data-collapse-toggle="dropdown-productos"
+                                data-target="dropdown-productos">
+                                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                    viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M9 10V6a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v4m3-2 .917 11.923A1 1 0 0 1 17.92 21H6.08a1 1 0 0 1-.997-1.077L6 8h12Z" />
+                                </svg>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Productos</span>
+                                <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                            <ul id="dropdown-productos" class="hidden py-2 space-y-2">
+                                @can('proveedores.ver')
+                                    <li>
+                                        <a href="{{ route('admin.proveedores.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                                {{ request()->routeIs('admin.proveedores.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Proveedores
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('producto_caracteristica.ver')
+                                    <li>
+                                        <a href="{{ route('admin.producto.caracteristica.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                                {{ request()->routeIs('admin.producto.caracteristica.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Caracteristicas
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('atributos.ver')
+                                    <li>
+                                        <a href="{{ route('admin.atributos.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                                {{ request()->routeIs('admin.atributos.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Atributos
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('familia_atributos.ver')
+                                    <li>
+                                        <a href="{{ route('admin.familia.atributos.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                                {{ request()->routeIs('admin.familia.atributos.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Familia-Atributos
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('producto_servicio.ver')
+                                    <li>
+                                        <a href="{{ route('admin.producto.servicio.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                                {{ request()->routeIs('admin.producto.servicio.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Productos/Servicios
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('precios.ver')
+                                    <li>
+                                        <a href="{{ route('admin.precios.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                                {{ request()->routeIs('admin.precios.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Precios
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('compras.ver')
+                                    <li>
+                                        <a href="{{ route('admin.compras.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.compras.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Compras
+                                        </a>
+                                    </li>
+                                @endcan
+                            </ul>
+                        </li>
+                    @endcanany
+                    @canany([
+                        'cotizaciones.ver',
+                        'ticket_alterno.ver',
+                        'nota_venta.ver',
+                        'venta_pc_nota.ver'
+                    ])
+                        <li>
+                            <button type="button"
+                                class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                                aria-controls="dropdown-documentos"
+                                data-collapse-toggle="dropdown-documentos"
+                                data-target="dropdown-documentos">
+                                <svg aria-hidden="true" class="w-6 h-6 text-gray-800 dark:text-white" fill="currentColor"
+                                    viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                                    <path fill-rule="evenodd"
+                                        d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Documentos</span>
+                                <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                            <ul id="dropdown-documentos" class="hidden py-2 space-y-2">
+                                @can('cotizaciones.ver')
+                                    <li>
+                                        <a href="{{ route('admin.cotizacion.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.cotizacion.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Cotizaciones
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('ticket_alterno.ver')
+                                    <li>
+                                        <a href="{{ route('admin.ticket.alterno.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.ticket.alterno.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Ticket alterno
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('nota_venta.ver')
+                                    <li>
+                                        <a href="{{ route('admin.nota.venta.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.nota.venta.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Nota de venta
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('venta_pc_nota.ver')
+                                    <li>
+                                        <a href="{{ route('admin.nota.pc.venta.index') }}"
+                                            class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700
+                                            {{ request()->routeIs('admin.nota.pc.venta.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                            Venta de Pc
+                                        </a>
+                                    </li>
+                                @endcan
+                            </ul>
+                        </li>
+                    @endcanany
+                    @canany([
+                        'reparacion.ver',
+                        'garantias.ver',
+                        'anticipo.ver',
+                        'apartado.ver'
+                    ])
+                        <li>
+                            <button type="button"
+                                class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                                aria-controls="dropdown-web" data-collapse-toggle="dropdown-web">
+                                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                    viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                                        d="M4.37 7.657c2.063.528 2.396 2.806 3.202 3.87 1.07 1.413 2.075 1.228 3.192 2.644 1.805 2.289 1.312 5.705 1.312 6.705M20 15h-1a4 4 0 0 0-4 4v1M8.587 3.992c0 .822.112 1.886 1.515 2.58 1.402.693 2.918.351 2.918 2.334 0 .276 0 2.008 1.972 2.008 2.026.031 2.026-1.678 2.026-2.008 0-.65.527-.9 1.177-.9H20M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Página</span>
+                                <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                            <ul id="dropdown-web" class="hidden py-2 space-y-2">
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                                        Pedidos web
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                                        Destacados
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                                        Catálogos PDF
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                                        Banner y lateral
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                                        Quines somos
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    @endcanany
                     @can('caja_movimeinto.ver')
                         <li>
                             <a href="{{ route('admin.caja.movimiento.index') }}"
@@ -651,108 +723,110 @@
                         </li>
                     @endcan
 
-                    {{-- <li>
-                        <a href="#"
-                            class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                            <svg aria-hidden="true"
-                                class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                    d="M8.707 7.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414L11 7.586V3a1 1 0 10-2 0v4.586l-.293-.293z">
-                                </path>
-                                <path
-                                    d="M3 5a2 2 0 012-2h1a1 1 0 010 2H5v7h2l1 2h4l1-2h2V5h-1a1 1 0 110-2h1a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z">
-                                </path>
-                            </svg>
-                            <span class="flex-1 ml-3 whitespace-nowrap">Messages</span>
-                            <span
-                                class="inline-flex justify-center items-center w-5 h-5 text-xs font-semibold rounded-full text-primary-800 bg-primary-100 dark:bg-primary-200 dark:text-primary-800">
-                                6
-                            </span>
-                        </a>
-                    </li>
-                    <li>
-                        <button type="button"
-                            class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-                            aria-controls="dropdown-authentication" data-collapse-toggle="dropdown-authentication">
-                            <svg aria-hidden="true"
-                                class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
-                                fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="flex-1 ml-3 text-left whitespace-nowrap">Authentication</span>
-                            <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
-                        <ul id="dropdown-authentication" class="hidden py-2 space-y-2">
-                            <li>
-                                <a href="#"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Sign
-                                    In</a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Sign
-                                    Up</a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Forgot
-                                    Password</a>
-                            </li>
-                        </ul>
-                    </li> --}}
+                    {{--
+                        <li>
+                            <a href="#"
+                                class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                                <svg aria-hidden="true"
+                                    class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                    fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M8.707 7.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 00-1.414-1.414L11 7.586V3a1 1 0 10-2 0v4.586l-.293-.293z">
+                                    </path>
+                                    <path
+                                        d="M3 5a2 2 0 012-2h1a1 1 0 010 2H5v7h2l1 2h4l1-2h2V5h-1a1 1 0 110-2h1a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z">
+                                    </path>
+                                </svg>
+                                <span class="flex-1 ml-3 whitespace-nowrap">Messages</span>
+                                <span
+                                    class="inline-flex justify-center items-center w-5 h-5 text-xs font-semibold rounded-full text-primary-800 bg-primary-100 dark:bg-primary-200 dark:text-primary-800">
+                                    6
+                                </span>
+                            </a>
+                        </li>
+                        <li>
+                            <button type="button"
+                                class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                                aria-controls="dropdown-authentication" data-collapse-toggle="dropdown-authentication">
+                                <svg aria-hidden="true"
+                                    class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
+                                    fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="flex-1 ml-3 text-left whitespace-nowrap">Authentication</span>
+                                <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                            <ul id="dropdown-authentication" class="hidden py-2 space-y-2">
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Sign
+                                        In</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Sign
+                                        Up</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="flex items-center p-2 pl-11 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">Forgot
+                                        Password</a>
+                                </li>
+                            </ul>
+                        </li>
+                    --}}
                 </ul>
                 {{--
-                <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
-                    <li>
-                        <a href="#"
-                            class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg transition duration-75 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group">
-                            <svg aria-hidden="true"
-                                class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
-                                <path fill-rule="evenodd"
-                                    d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="ml-3">Docs</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#"
-                            class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg transition duration-75 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group">
-                            <svg aria-hidden="true"
-                                class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                    d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z">
-                                </path>
-                            </svg>
-                            <span class="ml-3">Components</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#"
-                            class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg transition duration-75 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group">
-                            <svg aria-hidden="true"
-                                class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                                fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-2 0c0 .993-.241 1.929-.668 2.754l-1.524-1.525a3.997 3.997 0 00.078-2.183l1.562-1.562C15.802 8.249 16 9.1 16 10zm-5.165 3.913l1.58 1.58A5.98 5.98 0 0110 16a5.976 5.976 0 01-2.516-.552l1.562-1.562a4.006 4.006 0 001.789.027zm-4.677-2.796a4.002 4.002 0 01-.041-2.08l-.08.08-1.53-1.533A5.98 5.98 0 004 10c0 .954.223 1.856.619 2.657l1.54-1.54zm1.088-6.45A5.974 5.974 0 0110 4c.954 0 1.856.223 2.657.619l-1.54 1.54a4.002 4.002 0 00-2.346.033L7.246 4.668zM12 10a2 2 0 11-4 0 2 2 0 014 0z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="ml-3">Help</span>
-                        </a>
-                    </li>
-                </ul>
-            --}}
+                    <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
+                        <li>
+                            <a href="#"
+                                class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg transition duration-75 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group">
+                                <svg aria-hidden="true"
+                                    class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                    fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                                    <path fill-rule="evenodd"
+                                        d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="ml-3">Docs</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg transition duration-75 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group">
+                                <svg aria-hidden="true"
+                                    class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                    fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z">
+                                    </path>
+                                </svg>
+                                <span class="ml-3">Components</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg transition duration-75 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group">
+                                <svg aria-hidden="true"
+                                    class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                    fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-2 0c0 .993-.241 1.929-.668 2.754l-1.524-1.525a3.997 3.997 0 00.078-2.183l1.562-1.562C15.802 8.249 16 9.1 16 10zm-5.165 3.913l1.58 1.58A5.98 5.98 0 0110 16a5.976 5.976 0 01-2.516-.552l1.562-1.562a4.006 4.006 0 001.789.027zm-4.677-2.796a4.002 4.002 0 01-.041-2.08l-.08.08-1.53-1.533A5.98 5.98 0 004 10c0 .954.223 1.856.619 2.657l1.54-1.54zm1.088-6.45A5.974 5.974 0 0110 4c.954 0 1.856.223 2.657.619l-1.54 1.54a4.002 4.002 0 00-2.346.033L7.246 4.668zM12 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="ml-3">Help</span>
+                            </a>
+                        </li>
+                    </ul>
+                --}}
             </div>
 
         </aside>
