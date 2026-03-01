@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('sucursales', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre')->unique(); // Ej: Matriz, Sucursal Centro
+            $table->string('nombre'); // Ej: Matriz, Sucursal Centro
             $table->string('direccion')->nullable();
             $table->string('telefono')->nullable();
             $table->boolean('es_matriz')->default(false); // para marcar la principal
             $table->boolean('activo')->default(true);
             $table->timestamps();
+
+            $table->unique(['nombre', 'activo']);
         });
 
         DB::table("sucursales")
@@ -30,7 +32,7 @@ return new class extends Migration
                 'es_matriz'     =>  true,
                 'created_at'    =>  '2022-01-01 09:00:00',
                 'updated_at'    =>  '2022-01-01 09:00:00'
-                ],   
+                ],
                 [
                 'nombre'      =>  'Sucursal 1 Pc Servicios',
                 'direccion' => 'Centro',

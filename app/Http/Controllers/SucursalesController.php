@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SucursalesController extends Controller
 {
@@ -39,18 +40,22 @@ class SucursalesController extends Controller
     {
         $request->validate(
             [
-            'nombre' => 'required|string|max:255|unique:sucursales',
-            'direccion' => 'nullable|string|max:255',
-            'telefono' => 'nullable|string|max:255',
-            'es_matriz' => 'boolean',
+                'nombre' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('sucursales')
+                        ->where(fn ($query) => $query->where('activo', 1))
+                ],
+                'direccion' => 'nullable|string|max:255',
+                'telefono' => 'nullable|string|max:255',
+                'es_matriz' => 'boolean',
             ],
             [
-                // Aquí cambias el texto de los mensajes si quieres algo específico
                 'nombre.required' => 'La sucursal es obligatoria.',
-                'nombre.unique'   => 'Ya existe una sucursal con ese nombre.',
+                'nombre.unique'   => 'Ya existe una sucursal activa con ese nombre.',
             ],
             [
-                // Aquí cambias el nombre del atributo en TODOS los mensajes
                 'nombre' => 'sucursal',
             ]
         );
@@ -110,27 +115,31 @@ class SucursalesController extends Controller
 
     public function update(Request $request, $id)
     {
-    $sucursales = Sucursal::findorfail($id);
+        $sucursales = Sucursal::findorfail($id);
         if ($request->activa == 0){
 
             $request->validate(
-                [
-                'nombre' => "required|string|max:255|unique:sucursales,nombre,{$sucursales->id}",
-                'direccion' => 'nullable|string|max:255',
-                'telefono' => 'nullable|string|max:255',
-                'es_matriz' => 'boolean',
+        [
+                'nombre' => [
+                        'required',
+                        'string',
+                        'max:255',
+                        Rule::unique('sucursales')
+                            ->where(fn ($query) => $query->where('activo', 1))
+                            ->ignore($sucursales->id)
+                    ],
+                    'direccion' => 'nullable|string|max:255',
+                    'telefono' => 'nullable|string|max:255',
+                    'es_matriz' => 'boolean',
                 ],
                 [
-                    // Aquí cambias el texto de los mensajes si quieres algo específico
                     'nombre.required' => 'La sucursal es obligatoria.',
-                    'nombre.unique'   => 'Ya existe una sucursal con ese nombre.',
+                    'nombre.unique'   => 'Ya existe una sucursal activa con ese nombre.',
                 ],
                 [
-                    // Aquí cambias el nombre del atributo en TODOS los mensajes
                     'nombre' => 'sucursal',
                 ]
             );
-
 
             try{
                 $sucursales->nombre = $request->nombre;
@@ -169,10 +178,10 @@ class SucursalesController extends Controller
 
         if ($request->activa == 1){
             // Remueve los últimos 5 caracteres de 'full_name' y 'email'
-            $name = substr($sucursales->nombre, 0, -6);
+            //$name = substr($sucursales->nombre, 0, -6);
 
             // Verifica si 'full_name' es único
-            $isNameUnique = !Sucursal::where('nombre', $name)
+            $isNameUnique = !Sucursal::where('nombre', $sucursales->nombre)
             ->where('id', '!=', $sucursales->id)
             ->exists();
 
@@ -194,7 +203,6 @@ class SucursalesController extends Controller
             try{
                 // Actualiza los campos necesarios
                 $sucursales->update([
-                    'nombre' => $name,
                     'activo' => 1
                 ]);
 
@@ -231,10 +239,8 @@ class SucursalesController extends Controller
         try {
             $sucursales = Sucursal::findorfail($id);
             if($sucursales->id > 0){
-                $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
                 $sucursales->update([
-                    'nombre' => $sucursales->nombre.'-'.substr(str_shuffle($permitted_chars), 0, 5),
                     'activo' => 0
                 ]);
             }else{

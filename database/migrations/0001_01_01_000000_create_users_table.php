@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sucursal_id') 
+            $table->foreignId('sucursal_id')
             ->references('id')
             ->on('sucursales')
             ->onUpdate('no action')
@@ -32,7 +32,7 @@ return new class extends Migration
             $table->integer('cliente_id')->unsigned()->nullable();
             $table->boolean('es_reparador')->default(0);
             $table->boolean('es_externo')->default(0);
-            $table->string('menu_color')->default('bg-indigo-400'); 
+            $table->string('menu_color')->default('bg-indigo-400');
             $table->string('theme')->default('light');
             $table->boolean('activo')->default(1);
             $table->timestamps();
@@ -53,6 +53,7 @@ return new class extends Migration
             $table->integer('last_activity')->index();
         });
 
+        /*
         DB::table("users")
             ->insert([
                 [
@@ -80,6 +81,7 @@ return new class extends Migration
                 'updated_at'    =>  '2022-01-01 09:00:00'
                 ]
         ]);
+        */
     }
 
     /**
