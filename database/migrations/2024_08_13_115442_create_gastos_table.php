@@ -17,9 +17,12 @@ return new class extends Migration
                 ->constrained('tipo_gastos')
                 ->onUpdate('no action')
                 ->onDelete('no action');
-            $table->string('gasto')->unique();
+            $table->string('gasto');
             $table->boolean('activo')->default(1);
             $table->timestamps();
+
+            // único por tipo + nombre + activo
+            $table->unique(columns: ['tipo_gasto_id', 'gasto', 'activo']);
         });
     }
 

@@ -53,7 +53,6 @@ class SucursalesController extends Controller
             ],
             [
                 'nombre.required' => 'La sucursal es obligatoria.',
-                'nombre.unique'   => 'Ya existe una sucursal activa con ese nombre.',
             ],
             [
                 'nombre' => 'sucursal',
@@ -134,7 +133,6 @@ class SucursalesController extends Controller
                 ],
                 [
                     'nombre.required' => 'La sucursal es obligatoria.',
-                    'nombre.unique'   => 'Ya existe una sucursal activa con ese nombre.',
                 ],
                 [
                     'nombre' => 'sucursal',

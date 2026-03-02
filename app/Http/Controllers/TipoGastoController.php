@@ -53,7 +53,6 @@ class TipoGastoController extends Controller
             ],
             [
                 'tipo_gasto.required' => 'El tipo gasto es obligatoria.',
-                'tipo_gasto.unique'   => 'Ya existe un tipo gasto activa con ese nombre.',
             ],
             [
                 'tipo_gasto' => 'tipo gasto',
@@ -125,7 +124,6 @@ class TipoGastoController extends Controller
                 ],
                 [
                     'tipo_gasto.required' => 'El tipo gasto es obligatoria.',
-                    'tipo_gasto.unique'   => 'Ya existe un tipo gasto activa con ese nombre.',
                 ],
                 [
                     'tipo_gasto' => 'tipo gasto',

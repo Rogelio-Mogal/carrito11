@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Gasto;
 use App\Models\TipoGasto;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -47,10 +48,28 @@ class GastosController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'gasto' => 'required|string|max:255|unique:gastos',
-            'tipo_gasto_id' => 'required|integer|min:1',
-        ]);
+        $request->validate(
+            [
+                'gasto' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('gastos')
+                        ->where(fn ($q) =>
+                            $q->where('tipo_gasto_id', $request->tipo_gasto_id)
+                            ->where('activo', 1)
+                        )
+                ],
+                'tipo_gasto_id' => 'required|integer|min:1',
+            ],
+            [
+                'gasto.required' => 'El gasto es obligatoria.',
+            ],
+            [
+                'gasto' => 'gasto',
+            ]
+        );
+
         try{
             $gasto = new Gasto();
             $gasto->gasto = $request->gasto;
@@ -104,10 +123,28 @@ class GastosController extends Controller
         // ACTUALIZAMOS EL REGISTRO
         if ($request->activa == 0){
 
-            $request->validate([
-                'gasto' => "required|string|max:255|unique:gastos,gasto,{$gasto->id}",
-                'tipo_gasto_id' => 'required|integer|min:1',
-            ]);
+            $request->validate(
+        [
+                'gasto' => [
+                        'required',
+                        'string',
+                        'max:255',
+                        Rule::unique('gastos')
+                            ->where(fn ($q) =>
+                                $q->where('tipo_gasto_id', $request->tipo_gasto_id)
+                                ->where('activo', 1)
+                            )
+                            ->ignore($gasto->id)
+                    ],
+                    'tipo_gasto_id' => 'required|integer|min:1',
+                ],
+                [
+                    'gasto.required' => 'El gasto es obligatoria.',
+                ],
+                [
+                    'gasto' => 'gasto',
+                ]
+            );
 
             // Asignar el nuevo valor al modelo
             $gasto->gasto = $request->gasto;
@@ -164,12 +201,8 @@ class GastosController extends Controller
         // ACTIVAMOS EL REGISTRO
         if ($request->activa == 1){
             try {
-                // Remueve los últimos 5 caracteres de 'forma_pago'
-                $gastoo = substr($gasto->gasto, 0, -6);
-
-
                 // Verifica si 'forma_pago'  son únicos
-                $isFormaPagoUnique = !Gasto::where('gasto', $gastoo)
+                $isFormaPagoUnique = !Gasto::where('gasto', $gasto->gasto)
                     ->where('id', '!=', $gasto->id)
                     ->where('activo', 1) // Verificar solo entre los registros activos
                     ->exists();
@@ -192,7 +225,6 @@ class GastosController extends Controller
 
                 // Actualiza los campos necesarios
                 $gasto->update([
-                    'gasto' => $gastoo,
                     'activo' => 1
                 ]);
 
@@ -230,10 +262,7 @@ class GastosController extends Controller
         try {
             $gasto = Gasto::findorfail($id);
 
-            $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
             $gasto->update([
-                'gasto' => $gasto->gasto.'-'.substr(str_shuffle($permitted_chars), 0, 5),
                 'activo' => 0
             ]);
 

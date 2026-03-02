@@ -52,7 +52,6 @@ class FormaPagoController extends Controller
             ],
             [
                 'forma_pago.required' => 'La forma de pago es obligatoria.',
-                'forma_pago.unique'   => 'Ya existe una forma de pago activa con ese nombre.',
             ],
             [
                 'forma_pago' => 'forma de pago',
@@ -125,7 +124,6 @@ class FormaPagoController extends Controller
             ],
             [
                 'forma_pago.required' => 'La forma de pago es obligatoria.',
-                'forma_pago.unique'   => 'Ya existe una forma de pago activa con ese nombre.',
             ],
             [
                 'forma_pago' => 'forma de pago',
