@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\FormaPago;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -39,9 +40,25 @@ class FormaPagoController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'forma_pago' => 'required|string|max:255|unique:forma_pagos',
-        ]);
+        $request->validate(
+            [
+                'forma_pago' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('forma_pagos')
+                        ->where(fn ($query) => $query->where('activo', 1))
+                ],
+            ],
+            [
+                'forma_pago.required' => 'La forma de pago es obligatoria.',
+                'forma_pago.unique'   => 'Ya existe una forma de pago activa con ese nombre.',
+            ],
+            [
+                'forma_pago' => 'forma de pago',
+            ]
+        );
+
         try{
             $formapago = new FormaPago();
             $formapago->forma_pago = $request->forma_pago;
@@ -95,9 +112,25 @@ class FormaPagoController extends Controller
         // ACTUALIZAMOS EL REGISTRO
         if ($request->activa == 0){
 
-            $request->validate([
-                'forma_pago' => "required|string|max:255|unique:forma_pagos,forma_pago,{$formapago->id}",
-            ]);
+        $request->validate(
+    [
+            'forma_pago' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('forma_pago')
+                        ->where(fn ($query) => $query->where('activo', 1))
+                        ->ignore($formapago->id)
+                ],
+            ],
+            [
+                'forma_pago.required' => 'La forma de pago es obligatoria.',
+                'forma_pago.unique'   => 'Ya existe una forma de pago activa con ese nombre.',
+            ],
+            [
+                'forma_pago' => 'forma de pago',
+            ]
+        );
 
             // Asignar el nuevo valor al modelo
             $formapago->forma_pago = $request->forma_pago;
@@ -152,12 +185,8 @@ class FormaPagoController extends Controller
         // ACTIVAMOS EL REGISTRO
         if ($request->activa == 1){
             try {
-                // Remueve los últimos 5 caracteres de 'forma_pago'
-                $forma_pago = substr($formapago->forma_pago, 0, -6);
-
-
                 // Verifica si 'forma_pago'  son únicos
-                $isFormaPagoUnique = !FormaPago::where('forma_pago', $forma_pago)
+                $isFormaPagoUnique = !FormaPago::where('forma_pago', $formapago->forma_pago)
                     ->where('id', '!=', $formapago->id)
                     ->where('activo', 1) // Verificar solo entre los registros activos
                     ->exists();
@@ -180,7 +209,6 @@ class FormaPagoController extends Controller
 
                 // Actualiza los campos necesarios
                 $formapago->update([
-                    'forma_pago' => $forma_pago,
                     'activo' => 1
                 ]);
 
@@ -218,10 +246,7 @@ class FormaPagoController extends Controller
         try {
             $formapago = FormaPago::findorfail($id);
 
-            $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
             $formapago->update([
-                'forma_pago' => $formapago->forma_pago.'-'.substr(str_shuffle($permitted_chars), 0, 5),
                 'activo' => 0
             ]);
 
