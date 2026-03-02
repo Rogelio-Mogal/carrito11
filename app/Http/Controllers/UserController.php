@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sucursal;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -43,12 +44,19 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        $fullName = $request->name . ' ' . $request->last_name;
+
         $request->validate([
             'sucursal_id'   => 'required|exists:sucursales,id',
             'name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'printer_size' => 'required|integer',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users')
+                    ->where(fn ($query) => $query->where('activo', 1))
+            ],
             'es_reparador' => 'required|boolean',
             'es_externo' => 'required|boolean',
             'password' => 'required|string|min:8|confirmed',
@@ -56,10 +64,15 @@ class UserController extends Controller
             'sucursal_id' => 'sucursal', // 👈 nombre más amigable en mensajes de error
         ]);
 
-        // Validación personalizada para full_name
-        $fullName = $request->name . ' ' . $request->last_name;
-        if (User::where('full_name', $fullName)->exists()) {
-            return back()->withErrors(['full_name' => 'El usuario ya se encuentra registrado.'])->withInput();
+        // Validación full_name
+        if (
+            User::where('full_name', $fullName)
+                ->where('activo', 1)
+                ->exists()
+        ) {
+            return back()->withErrors([
+                'full_name' => 'El usuario ya se encuentra registrado.'
+            ])->withInput();
         }
 
         try{
@@ -130,10 +143,18 @@ class UserController extends Controller
     {
         if ($request->activa == 0){
 
+            $fullName = $request->name . ' ' . $request->last_name;
+
             $request->validate([
                 'sucursal_id'   => 'required|exists:sucursales,id',
                 'name' => 'required|string|max:255',
-                'email' => "required|string|email|max:255|unique:users,email,{$user->id}",
+                'email' => [
+                    'required',
+                    'email',
+                    Rule::unique('users')
+                        ->where(fn ($query) => $query->where('activo', 1))
+                        ->ignore($user->id)
+                ],
                 'printer_size' => 'required|integer',
                 'es_reparador' => 'required|boolean',
                 'es_externo' => 'required|boolean',
@@ -142,11 +163,17 @@ class UserController extends Controller
                 'sucursal_id' => 'sucursal', // 👈 nombre más amigable en mensajes de error
             ]);
 
-            // Validación personalizada para full_name
-            $fullName = $request->name . ' ' . $request->last_name;
-            if (User::where('full_name', $fullName)->where('id', '!=', $user->id)->exists()) {
-                return back()->withErrors(['full_name' => 'El usuario ya se encuentra registrado.'])->withInput();
+            if (
+                User::where('full_name', $fullName)
+                    ->where('activo', 1)
+                    ->where('id', '!=', $user->id)
+                    ->exists()
+            ) {
+                return back()->withErrors([
+                    'full_name' => 'El usuario ya se encuentra registrado.'
+                ])->withInput();
             }
+
 
             try{
                 $user->sucursal_id = $request->sucursal_id;
@@ -197,13 +224,9 @@ class UserController extends Controller
         }
 
         if ($request->activa == 1){
-            // Remueve los últimos 5 caracteres de 'full_name' y 'email'
-            $full_name = substr($user->full_name, 0, -6);
-            $email = substr($user->email, 0, -6);
-
             // Verifica si 'full_name' y 'email' son únicos
-            $isFullNameUnique = !User::where('full_name', $full_name)->where('id', '!=', $user->id)->exists();
-            $isEmailUnique = !User::where('email', $email)->where('id', '!=', $user->id)->exists();
+            $isFullNameUnique = !User::where('full_name', $user->full_name)->where('id', '!=', $user->id)->exists();
+            $isEmailUnique = !User::where('email', $user->email)->where('id', '!=', $user->id)->exists();
 
             if (!$isFullNameUnique || !$isEmailUnique) {
                 // Almacena el mensaje de error en la sesión y redirige de vuelta
@@ -223,8 +246,6 @@ class UserController extends Controller
             try{
                 // Actualiza los campos necesarios
                 $user->update([
-                    'full_name' => $full_name,
-                    'email' => $email,
                     'activo' => 1
                 ]);
 
@@ -283,11 +304,8 @@ class UserController extends Controller
                 $cliente = Clientes::findorfail($id);*/
 
                 $user = User::findorfail($id);
-                $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
                 $user->update([
-                    'full_name' => $user->full_name.'-'.substr(str_shuffle($permitted_chars), 0, 5),
-                    'email' => $user->email.'-'.substr(str_shuffle($permitted_chars), 0, 5),
                     'activo' => 0
                 ]);
             //}

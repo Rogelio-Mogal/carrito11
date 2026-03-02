@@ -20,8 +20,8 @@ return new class extends Migration
             ->onDelete('no action');
             $table->string('name');
             $table->string('last_name');
-            $table->string('full_name')->unique();
-            $table->string('email')->unique();
+            $table->string('full_name');
+            $table->string('email');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
@@ -36,6 +36,9 @@ return new class extends Migration
             $table->string('theme')->default('light');
             $table->boolean('activo')->default(1);
             $table->timestamps();
+
+            $table->unique(['full_name', 'activo']);
+            $table->unique(['email', 'activo']);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
