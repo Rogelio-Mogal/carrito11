@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('tipo_gastos', function (Blueprint $table) {
             $table->id();
-            $table->string('tipo_gasto')->unique();
+            $table->string('tipo_gasto');
             $table->boolean('activo')->default(1);
             $table->timestamps();
+
+            $table->unique(['tipo_gasto', 'activo']);
         });
     }
 
