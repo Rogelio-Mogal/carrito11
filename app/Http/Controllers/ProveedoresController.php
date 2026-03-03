@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Proveedor;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 
 class ProveedoresController extends Controller
@@ -38,17 +39,45 @@ class ProveedoresController extends Controller
 
     public function store(Request $request)
     {
+        $provedor = strtoupper(trim($request->proveedor));
+
+        $correo = $request->correo
+            ? strtolower(trim($request->correo))
+            : null;
+
+        $request->merge([
+            'proveedor' => $provedor,
+            'correo' => $correo
+        ]);
         $request->validate([
-            'proveedor' => 'required|string|max:255|unique:proveedores',
-            'telefono' => 'nullable|string|max:255',
-            'correo' => 'nullable|string|email|max:255|unique:proveedores',
+            'proveedor' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('proveedores')
+                    ->where(fn ($q) => $q->where('activo', 1))
+            ],
+            'telefono' => [
+                'nullable',
+                'string',
+                'max:255',
+                // Solo si decides hacerlo único
+                // Rule::unique('proveedores')
+                //     ->where(fn ($q) => $q->where('activo', 1))
+            ],
+            'correo' => [
+                'nullable',
+                'email',
+                Rule::unique('proveedores')
+                    ->where(fn ($q) => $q->where('activo', 1))
+            ],
         ]);
 
         try{
             $proveedor = new Proveedor();
-            $proveedor->proveedor = $request->proveedor;
-            $proveedor->telefono = $request->telefono;
-            $proveedor->correo = $request->correo;
+            $proveedor->proveedor = $provedor;
+            $proveedor->telefono = trim($request->telefono);
+            $proveedor->correo = $correo;
             $proveedor->wci = auth()->user()->id;
             $proveedor->save();
 
@@ -101,18 +130,46 @@ class ProveedoresController extends Controller
     {
         $proveedor = Proveedor::findorfail($id);
         if ($request->activa == 0){
+            $provedor = strtoupper(trim($request->proveedor));
 
+            $correo = $request->correo
+                ? strtolower(trim($request->correo))
+                : null;
+
+            $request->merge([
+                'proveedor' => $provedor,
+                'correo' => $correo
+            ]);
             $request->validate([
-                'proveedor' => "required|string|max:255|unique:proveedores,proveedor,{$proveedor->id}",
-                'telefono' => 'nullable|string|max:255',
-                'correo' => "nullable|string|email|max:255|unique:proveedores,correo,{$proveedor->id}",
+                'proveedor' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('proveedores')
+                        ->where(fn ($q) => $q->where('activo', 1))
+                        ->ignore($proveedor->id)
+                ],
+                'telefono' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                    // Solo si decides hacerlo único
+                    // Rule::unique('proveedores')
+                    //     ->where(fn ($q) => $q->where('activo', 1))
+                ],
+                'correo' => [
+                    'nullable',
+                    'email',
+                    Rule::unique('proveedores')
+                        ->where(fn ($q) => $q->where('activo', 1))
+                        ->ignore($proveedor->id)
+                ],
             ]);
 
-
             try{
-                $proveedor->proveedor = $request->proveedor;
-                $proveedor->telefono = $request->telefono;
-                $proveedor->correo = $request->correo;
+                $proveedor->proveedor = $provedor;
+                $proveedor->telefono = trim($request->telefono);
+                $proveedor->correo = $correo;
                 $proveedor->save();
 
                 session()->flash('swal', [
@@ -144,16 +201,19 @@ class ProveedoresController extends Controller
         }
 
         if ($request->activa == 1){
-            // Remueve los últimos 5 caracteres de 'full_name' y 'email'
-            $name = substr($proveedor->proveedor, 0, -6);
-            $email = substr($proveedor->correo, 0, -6);
+            // Verificar unicidad contra activos
+            $exists = Proveedor::where('id', '!=', $proveedor->id)
+                ->where('activo', 1)
+                ->where(function ($q) use ($proveedor) {
+                    $q->where('proveedor', $proveedor->proveedor);
 
-            // Verifica si 'full_name' y 'email' son únicos
-            $isFullNameUnique = !Proveedor::where('proveedor', $name)->where('id', '!=', $proveedor->id)->exists();
-            $isEmailUnique = !Proveedor::where('correo', $email)->where('id', '!=', $proveedor->id)->exists();
+                    if ($proveedor->email) {
+                        $q->orWhere('correo', $proveedor->correo);
+                    }
+                })
+                ->exists();
 
-            if (!$isFullNameUnique || !$isEmailUnique) {
-                // Almacena el mensaje de error en la sesión y redirige de vuelta
+            if ($exists) {
                 session()->flash('swal', [
                     'icon' => "error",
                     'title' => "Error en la operación",
@@ -170,8 +230,6 @@ class ProveedoresController extends Controller
             try{
                 // Actualiza los campos necesarios
                 $proveedor->update([
-                    'proveedor' => $name,
-                    'correo' => $email,
                     'activo' => 1
                 ]);
 
@@ -208,11 +266,7 @@ class ProveedoresController extends Controller
         try {
             $proveedor = Proveedor::findorfail($id);
             if($proveedor->id > 1){
-                $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
                 $proveedor->update([
-                    'proveedor' => $proveedor->proveedor.'-'.substr(str_shuffle($permitted_chars), 0, 5),
-                    'correo' => $proveedor->correo.'-'.substr(str_shuffle($permitted_chars), 0, 5),
                     'activo' => 0
                 ]);
             }else{

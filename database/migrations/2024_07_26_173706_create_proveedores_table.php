@@ -13,12 +13,15 @@ return new class extends Migration
     {
         Schema::create('proveedores', function (Blueprint $table) {
             $table->id();
-            $table->string('proveedor')->unique();
+            $table->string('proveedor');
             $table->string('telefono');
-            $table->string('correo')->unique();
+            $table->string('correo')->nullable();
             $table->integer('wci');
             $table->boolean('activo')->default(1);
             $table->timestamps();
+
+            $table->unique(['proveedor', 'activo']);
+            $table->unique(['correo', 'activo']);
         });
 
         DB::table("proveedores")
