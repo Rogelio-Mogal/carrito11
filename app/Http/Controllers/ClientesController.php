@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cliente;
 use App\Models\User;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Carbon\Carbon;
@@ -22,7 +23,7 @@ class ClientesController extends Controller
         $this->middleware('permission:clientes.editar')
             ->only(['edit', 'update']);
 
-        $this->middleware('permission:clientes.eliminar')
+        $this->middleware('permission:clientes.cancelar')
             ->only(['destroy']);
     }
 
@@ -49,26 +50,38 @@ class ClientesController extends Controller
 
     public function store(Request $request)
     {
+        $fullName = strtoupper(trim($request->name . ' ' . $request->last_name));
+        $request->merge([
+            'full_name' => $fullName
+        ]);
         $request->validate([
             'name' => 'required|string|min:2|max:255',
             'last_name' => 'required|string|min:2|max:255',
-            'telefono' => 'required|string|max:255|unique:clientes',
+            'full_name' => [
+                'required',
+                Rule::unique('clientes')
+                    ->where(fn ($q) => $q->where('activo', 1))
+            ],
+            'telefono' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('clientes')
+                    ->where(fn ($q) => $q->where('activo', 1))
+            ],
             'direccion' => 'nullable|string|min:2|max:255',
-            'email' => 'nullable|email|max:255|unique:clientes',
+            'email' => [
+                'nullable',
+                'email',
+                Rule::unique('clientes')
+                    ->where(fn ($q) => $q->where('activo', 1))
+            ],
             'tipo_cliente' => 'required|in:CLIENTE PÚBLICO,CLIENTE MEDIO MAYOREO,CLIENTE MAYOREO',
             'comentario' => 'nullable|string|min:2|max:1500',
             'ejecutivo_id' => 'nullable|integer',
-
             'dias_credito'   => 'nullable|integer|min:0',
             'limite_credito' => 'nullable|numeric|min:0',
-
         ]);
-
-        // Validación personalizada para full_name
-        $fullName = $request->name . ' ' . $request->last_name;
-        if (Cliente::where('full_name', $fullName)->exists()) {
-            return back()->withErrors(['full_name' => 'El cliente ya se encuentra registrado.'])->withInput();
-        }
 
         try {
             $cliente = new Cliente();
@@ -142,29 +155,58 @@ class ClientesController extends Controller
         // ACTUALIZAMOS EL REGISTRO
         if ($request->activa == 0) {
 
+            // 🔹 Construir y normalizar full_name
+            $fullName = strtoupper(trim($request->name . ' ' . $request->last_name));
+
+            $request->merge([
+                'full_name' => $fullName
+            ]);
+
             $request->validate([
                 'name' => 'required|string|min:2|max:255',
                 'last_name' => 'required|string|min:2|max:255',
-                'telefono' => "required|string|max:255|unique:clientes,telefono,{$cliente->id}",
+
+                'full_name' => [
+                    'required',
+                    Rule::unique('clientes')
+                        ->where(fn ($q) => $q->where('activo', 1))
+                        ->ignore($cliente->id)
+                ],
+
+                'telefono' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('clientes')
+                        ->where(fn ($q) => $q->where('activo', 1))
+                        ->ignore($cliente->id)
+                ],
+
                 'direccion' => 'nullable|string|min:2|max:255',
-                'email' => "nullable|email|max:255|unique:clientes,email,{$cliente->id}",
+
+                'email' => [
+                    'nullable',
+                    'email',
+                    Rule::unique('clientes')
+                        ->where(fn ($q) => $q->where('activo', 1))
+                        ->ignore($cliente->id)
+                ],
+
                 'tipo_cliente' => 'required|in:CLIENTE PÚBLICO,CLIENTE MEDIO MAYOREO,CLIENTE MAYOREO',
                 'comentario' => 'nullable|string|min:2|max:1500',
                 'ejecutivo_id' => 'nullable|integer',
-
-                'dias_credito'   => 'nullable|integer|min:0',
+                'dias_credito' => 'nullable|integer|min:0',
                 'limite_credito' => 'nullable|numeric|min:0',
             ]);
-
-            // Validación personalizada para full_name
-            $fullName = $request->name . ' ' . $request->last_name;
 
             // Asignar el nuevo valor al modelo
             $cliente->name = $request->name;
             $cliente->last_name = $request->last_name;
             $cliente->telefono = $request->telefono;
             $cliente->direccion = $request->direccion;
-            $cliente->email = $request->email;
+            $cliente->email = $request->email
+            ? strtolower(trim($request->email))
+            : null;
             $cliente->tipo_cliente = $request->tipo_cliente;
             $cliente->comentario = $request->comentario;
             $cliente->ejecutivo_id = $request->ejecutivo_id;
@@ -184,7 +226,9 @@ class ClientesController extends Controller
                     $cliente->full_name = $fullName;
                     $cliente->telefono = $request->telefono;
                     $cliente->direccion = $request->direccion;
-                    $cliente->email = $request->email;
+                    $cliente->email = $request->email
+                    ? strtolower(trim($request->email))
+                    : null;
                     $cliente->tipo_cliente = $request->tipo_cliente;
                     $cliente->comentario = $request->comentario;
                     $cliente->ejecutivo_id = $request->ejecutivo_id;
@@ -237,29 +281,20 @@ class ClientesController extends Controller
         // ACTIVAMOS EL REGISTRO
         if ($request->activa == 1) {
             try {
-                // Remueve los últimos 5 caracteres de 'full_name' , 'email' y 'telefono'
-                $full_name = substr($cliente->full_name, 0, -6);
-                $email = substr($cliente->email, 0, -6);
-                $telefono = substr($cliente->telefono, 0, -6);
-
-                // Verifica si 'full_name' y 'email' son únicos
-                $isFullNameUnique = !Cliente::where('full_name', $full_name)
-                    ->where('id', '!=', $cliente->id)
-                    ->where('activo', 1) // Verificar solo entre los registros activos
-                    ->exists();
-
-                $isEmailUnique = !Cliente::where('email', $email)
-                    ->where('id', '!=', $cliente->id)
+                // Verificar unicidad contra activos
+                $exists = Cliente::where('id', '!=', $cliente->id)
                     ->where('activo', 1)
+                    ->where(function ($q) use ($cliente) {
+                        $q->where('full_name', $cliente->full_name)
+                        ->orWhere('telefono', $cliente->telefono);
+
+                        if ($cliente->email) {
+                            $q->orWhere('email', $cliente->email);
+                        }
+                    })
                     ->exists();
 
-                $isTelefonoUnique = !Cliente::where('telefono', $telefono)
-                    ->where('id', '!=', $cliente->id)
-                    ->where('activo', 1)
-                    ->exists();
-
-                if (!$isFullNameUnique || !$isEmailUnique || !$isTelefonoUnique) {
-                    // Almacena el mensaje de error en la sesión y redirige de vuelta
+                if ($exists) {
                     return response()->json([
                         'swal' => [
                             'icon' => "error",
@@ -274,11 +309,7 @@ class ClientesController extends Controller
                     ], 400);
                 }
 
-                // Actualiza los campos necesarios
                 $cliente->update([
-                    'full_name' => $full_name,
-                    'email' => $email,
-                    'telefono' => $telefono,
                     'activo' => 1
                 ]);
 
@@ -316,12 +347,7 @@ class ClientesController extends Controller
         try {
             $cliente = Cliente::findorfail($id);
             if ($cliente->id > 1) {
-                $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
                 $cliente->update([
-                    'full_name' => $cliente->full_name . '-' . substr(str_shuffle($permitted_chars), 0, 5),
-                    'email' => $cliente->email . '-' . substr(str_shuffle($permitted_chars), 0, 5),
-                    'telefono' => $cliente->telefono . '-' . substr(str_shuffle($permitted_chars), 0, 5),
                     'activo' => 0
                 ]);
             } else {

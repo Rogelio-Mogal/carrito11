@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('last_name');
-            $table->string('full_name')->unique();
-            $table->string('telefono')->unique();
+            $table->string('full_name');
+            $table->string('telefono');
             $table->string('direccion')->nullable();
-            $table->string('email')->unique()->nullable();
+            $table->string('email')->nullable();
             $table->enum('tipo_cliente',[
                 'CLIENTE PÚBLICO',
                 'CLIENTE MEDIO MAYOREO',
@@ -33,6 +33,11 @@ return new class extends Migration
             $table->integer('wci');
             $table->boolean('activo')->default(1);
             $table->timestamps();
+
+            // único por full_name + telefono + email + activo
+            $table->unique(['full_name', 'activo']);
+            $table->unique(['telefono', 'activo']);
+            $table->unique(['email', 'activo']);
         });
 
         DB::table("clientes")
@@ -64,7 +69,7 @@ return new class extends Migration
                     'wci' => 1,
                     'created_at'    =>  '2022-01-01 09:00:00',
                     'updated_at'    =>  '2022-01-01 09:00:00'
-                ],  
+                ],
         ]);
     }
 

@@ -44,12 +44,20 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $fullName = $request->name . ' ' . $request->last_name;
+        $fullName = strtoupper(trim($request->name . ' ' . $request->last_name));
+        $request->merge([
+            'full_name' => $fullName
+        ]);
 
         $request->validate([
             'sucursal_id'   => 'required|exists:sucursales,id',
-            'name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'name' => 'required|string|min:2|max:255',
+            'last_name' => 'required|string|min:2|max:255',
+            'full_name' => [
+                'required',
+                Rule::unique('users')
+                    ->where(fn ($q) => $q->where('activo', 1))
+            ],
             'printer_size' => 'required|integer',
             'email' => [
                 'required',
@@ -63,17 +71,6 @@ class UserController extends Controller
         ], [], [
             'sucursal_id' => 'sucursal', // 👈 nombre más amigable en mensajes de error
         ]);
-
-        // Validación full_name
-        if (
-            User::where('full_name', $fullName)
-                ->where('activo', 1)
-                ->exists()
-        ) {
-            return back()->withErrors([
-                'full_name' => 'El usuario ya se encuentra registrado.'
-            ])->withInput();
-        }
 
         try{
             $user = new User();
@@ -143,11 +140,21 @@ class UserController extends Controller
     {
         if ($request->activa == 0){
 
-            $fullName = $request->name . ' ' . $request->last_name;
+            $fullName = strtoupper(trim($request->name . ' ' . $request->last_name));
+            $request->merge([
+                'full_name' => $fullName
+            ]);
 
             $request->validate([
                 'sucursal_id'   => 'required|exists:sucursales,id',
-                'name' => 'required|string|max:255',
+                'name' => 'required|string|min:2|max:255',
+                'last_name' => 'required|string|min:2|max:255',
+                'full_name' => [
+                    'required',
+                    Rule::unique('users')
+                        ->where(fn ($q) => $q->where('activo', 1))
+                        ->ignore($user->id)
+                ],
                 'email' => [
                     'required',
                     'email',
@@ -163,25 +170,15 @@ class UserController extends Controller
                 'sucursal_id' => 'sucursal', // 👈 nombre más amigable en mensajes de error
             ]);
 
-            if (
-                User::where('full_name', $fullName)
-                    ->where('activo', 1)
-                    ->where('id', '!=', $user->id)
-                    ->exists()
-            ) {
-                return back()->withErrors([
-                    'full_name' => 'El usuario ya se encuentra registrado.'
-                ])->withInput();
-            }
-
-
             try{
                 $user->sucursal_id = $request->sucursal_id;
                 $user->name = $request->name;
                 $user->last_name = $request->last_name;
                 $user->full_name = $fullName;
                 $user->printer_size = $request->printer_size;
-                $user->email = $request->email;
+                $user->email = $request->email
+                ? strtolower(trim($request->email))
+                : null;
                 $user->es_reparador = $request->es_reparador;
                 $user->es_externo = $request->es_externo;
 
