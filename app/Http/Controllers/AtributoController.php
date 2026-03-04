@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Atributo;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AtributoController extends Controller
 {
@@ -39,9 +40,26 @@ class AtributoController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'tipo_campo' => 'required|in:texto,numero,select,multiselect',
-            'opciones' => 'nullable|string',
+            'nombre' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('atributos')
+                    ->where(fn ($q) => $q
+                        ->where('tipo_campo', $request->tipo_campo)
+                        ->where('activo', 1)
+                    )
+            ],
+
+            'tipo_campo' => 'required|in:texto,numero,booleano,select,multiselect',
+
+            'opciones' => [
+                'nullable',
+                'string',
+                Rule::requiredIf(fn () =>
+                    in_array($request->tipo_campo, ['select','multiselect'])
+                ),
+            ],
         ]);
 
         try {
@@ -111,9 +129,27 @@ class AtributoController extends Controller
     public function update(Request $request, Atributo $atributo)
     {
         $data = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'tipo_campo' => 'required|in:texto,numero,select,multiselect',
-            'opciones' => 'nullable|string',
+            'nombre' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('atributos')
+                    ->ignore($atributo->id)
+                    ->where(fn ($q) => $q
+                        ->where('tipo_campo', $request->tipo_campo)
+                        ->where('activo', 1)
+                    )
+            ],
+
+            'tipo_campo' => 'required|in:texto,numero,booleano,select,multiselect',
+
+            'opciones' => [
+                'nullable',
+                'string',
+                Rule::requiredIf(fn () =>
+                    in_array($request->tipo_campo, ['select','multiselect'])
+                ),
+            ],
         ]);
 
         try {
@@ -198,9 +234,7 @@ class AtributoController extends Controller
 
 
             // Si es un servicio o un producto sin stock, procede con la actualización/eliminación
-            $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
             $atributo->update([
-                'nombre' => $atributo->nombre . '-' . substr(str_shuffle($permitted_chars), 0, 5),
                 'activo' => 0
             ]);
 

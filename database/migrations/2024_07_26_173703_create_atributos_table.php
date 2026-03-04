@@ -18,6 +18,8 @@ return new class extends Migration
             $table->json('opciones')->nullable(); // Ej: ["USB 2.0","USB 3.0","USB 3.1"]
             $table->boolean('activo')->default(1);
             $table->timestamps();
+
+            $table->unique(['nombre', 'tipo_campo', 'activo']);
         });
     }
     /**
