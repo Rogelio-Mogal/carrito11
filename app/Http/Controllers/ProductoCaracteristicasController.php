@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Validation\Rule;
 
 class ProductoCaracteristicasController extends Controller
 {
@@ -43,27 +44,61 @@ class ProductoCaracteristicasController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('producto_caracteristicas')
+                    ->where(fn ($q) => $q
+                        ->where('tipo', $request->tipo)
+                        ->where('activo', 1)
+                    )
+            ],
+
             'tipo' => 'required|in:MARCA,FAMILIA,SUB_FAMILIA',
-            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+
+            'imagen' => [
+                'nullable',
+                'image',
+                'mimes:jpeg,png,jpg,gif,svg',
+                'max:2048',
+                'required_if:tipo,MARCA'
+            ],
         ]);
-
-        // Si el tipo es 'marca', el campo 'imagen' es requerido
-        if ($request->input('tipo') === 'MARCA' && !$request->hasFile('imagen')) {
-            return redirect()->back()->withErrors(['imagen' => 'La imagen es obligatoria cuando el tipo es marca.'])->withInput();
-        }
-
-        // Verificar la unicidad de la combinación nombre y tipo
-        if (ProductoCaracteristica::where('nombre', $validatedData['nombre'])->where('tipo', $validatedData['tipo'])->exists()) {
-            return redirect()->back()->withErrors(['nombre' => 'El nombre ya existe para este tipo.'])->withInput();
-        }
 
         try {
             $caracteristica = new ProductoCaracteristica();
             $caracteristica->nombre = $request->nombre;
             $caracteristica->tipo = $request->tipo;
 
-            if($request->file('imagen')){
+            if ($request->hasFile('imagen')) {
+
+                $slug = Str::random(10);
+                $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+                $file_name = $slug.'-'.substr(str_shuffle($permitted_chars), 0, 3).'.'.$request->file('imagen')->getClientOriginalExtension();
+
+                $imageStorage = Storage::putFileAs('caracteristicas', $request->file('imagen'), $file_name);
+                $imageStorageThumb = Storage::putFileAs('caracteristicas/thumbs', $request->file('imagen'), $file_name);
+
+                $manager = new ImageManager(new Driver());
+
+                // IMAGEN NORMAL
+                $path = storage_path('app/'.$imageStorage);
+                $img = $manager->read($path);
+                $img->save($path, quality: 90);
+
+                // IMAGEN THUMB
+                $pathThumb = storage_path('app/'.$imageStorageThumb);
+                $imgThumb = $manager->read($pathThumb);
+                $imgThumb->scale(height: 210);
+                $imgThumb->save($pathThumb, quality: 90);
+
+                $caracteristica->imagen = $imageStorage;
+                $caracteristica->img_thumb = $imageStorageThumb;
+            }
+
+            if($request->file('imagen_')){
                 //$imageStorage = Storage::put('productos', $request->imagen);
                 //$caracteristica->imagen = $imageStorage;
 
@@ -170,22 +205,31 @@ class ProductoCaracteristicasController extends Controller
     public function update(Request $request, $id)
     {
         $caracteristica = ProductoCaracteristica::findorfail($id);
-
         $validatedData = $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('producto_caracteristicas')
+                    ->ignore($caracteristica->id)
+                    ->where(fn ($q) => $q
+                        ->where('tipo', $request->tipo)
+                        ->where('activo', 1)
+                    )
+            ],
+
             'tipo' => 'required|in:MARCA,FAMILIA,SUB_FAMILIA',
-            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+
+            'imagen' => [
+                'nullable',
+                'image',
+                'mimes:jpeg,png,jpg,gif,svg',
+                'max:2048',
+                Rule::requiredIf(fn () =>
+                    $request->tipo === 'MARCA' && !$caracteristica->imagen
+                ),
+            ],
         ]);
-
-        // Si el tipo es 'marca', el campo 'imagen' es requerido
-        if ($request->input('tipo') === 'MARCA' && !$request->hasFile('imagen')) {
-            return redirect()->back()->withErrors(['imagen' => 'La imagen es obligatoria cuando el tipo es marca.'])->withInput();
-        }
-
-        // Verificar la unicidad de la combinación nombre y tipo
-         if (ProductoCaracteristica::where('nombre', $validatedData['nombre'])->where('tipo', $validatedData['tipo'])->where('id', '!=', $caracteristica->id)->exists()) {
-            return redirect()->back()->withErrors(['nombre' => 'El nombre ya existe para este tipo.'])->withInput();
-        }
 
         try {
             $caracteristica->nombre = $request->nombre;
@@ -312,10 +356,7 @@ class ProductoCaracteristicasController extends Controller
 
             if($id > 4){
                 $caracteristica = ProductoCaracteristica::findorfail($id);
-                $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
                 $caracteristica->update([
-                    'nombre' => $caracteristica->nombre.'-'.substr(str_shuffle($permitted_chars), 0, 5),
                     'activo' => 0
                 ]);
             }else{

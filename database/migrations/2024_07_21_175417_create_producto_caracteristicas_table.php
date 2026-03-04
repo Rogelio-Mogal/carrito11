@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Definir la combinación única de nombre y tipo
-            $table->unique(['nombre', 'tipo']);
+            $table->unique(columns: ['nombre', 'tipo', 'activo']);
         });
 
         DB::table("producto_caracteristicas")
