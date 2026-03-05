@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Validation\Rule;
 
 class ProductosController extends Controller
 {
@@ -72,20 +73,37 @@ class ProductosController extends Controller
     {
 
         $rules = [
-            'nombre' => 'required|string|min:2|max:255|unique:productos',
+            'nombre' => [
+                'required',
+                'string',
+                'min:2',
+                'max:255',
+                Rule::unique('productos')->where(fn ($q) => $q->where('activo', 1))
+            ],
+
             'tipo' => 'required|in:PRODUCTO,SERVICIO',
-            'codigo_barra' => 'required|string|max:255|unique:productos',
+
+            'codigo_barra' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('productos')->where(fn ($q) => $q->where('activo', 1))
+            ],
+
             'marca' => 'required|integer|min:1',
             'familia' => 'required|integer|min:1',
             'sub_familia' => 'nullable|integer',
             'cantidad_minima' => 'required|integer|min:1',
             'garantia' => 'nullable|string|max:255',
             'serie' => 'required|boolean',
+
             'cantidad' => 'nullable|integer|min:1',
             'precio_costo' => 'nullable|numeric|min:0',
+
             'imagen_1' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
             'imagen_2' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
             'imagen_3' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
+
             'descripcion' => 'required|string|min:2|max:1500',
         ];
 
@@ -112,14 +130,6 @@ class ProductosController extends Controller
 
             DB::beginTransaction();
 
-            //valida códigos de barra
-            if (Producto::where('codigo_barra', $request->codigo_barra)->exists()) {
-                return back()->withErrors([
-                    'codigo_barra' => 'El código de barra principal ya existe en otro producto.'
-                ])->withInput();
-            }
-
-
             // 🔹 Validar códigos alternos
             $codigosAlternos = array_filter(array_map('trim', $request->codigos_alternos ?? []));
             if (!empty($codigosAlternos)) {
@@ -130,7 +140,6 @@ class ProductosController extends Controller
                     ])->withInput();
                 }
             }
-
 
             //if ($request->menuVisible == 0) {
             $productoServicio = new Producto();
@@ -236,9 +245,6 @@ class ProductosController extends Controller
                 $productoServicio->img_thumb = $imageStorageThumb;
             }
 
-
-
-
             if ($request->file('imagen_2')) {
                 /*$slug = Str::slug($request->nombre);
                         $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -303,7 +309,6 @@ class ProductosController extends Controller
                     }
                 }
             }
-
 
             // INSERTA ATRIBUTOS:
             if ($request->has('atributos')) {
@@ -926,18 +931,38 @@ class ProductosController extends Controller
             || $codigosAlternosCambiaron
         ) {
             $rules = [
-                'nombre' => "required|string|min:2|max:255|unique:productos,nombre,{$productoServicio->id}",
+                'nombre' => [
+                    'required',
+                    'string',
+                    'min:2',
+                    'max:255',
+                    Rule::unique('productos')
+                        ->ignore($productoServicio->id)
+                        ->where(fn ($q) => $q->where('activo', 1))
+                ],
+
                 'tipo' => 'required|in:PRODUCTO,SERVICIO',
-                'codigo_barra' => "required|string|max:255|unique:productos,codigo_barra,{$productoServicio->id}",
+
+                'codigo_barra' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('productos')
+                        ->ignore($productoServicio->id)
+                        ->where(fn ($q) => $q->where('activo', 1))
+                ],
+
                 'marca' => 'required|integer|min:1',
                 'familia' => 'required|integer|min:1',
                 'sub_familia' => 'nullable|integer',
                 'cantidad_minima' => 'required|integer|min:1',
                 'garantia' => 'nullable|string|max:255',
                 'serie' => 'required|boolean',
+
                 'imagen_1' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
                 'imagen_2' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
                 'imagen_3' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
+
                 'descripcion' => 'required|string|min:2|max:1500',
             ];
 
@@ -1254,10 +1279,7 @@ class ProductosController extends Controller
                 }
 
                 // Si es un servicio o un producto sin stock, procede con la actualización/eliminación
-                $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
                 $productoServicio->update([
-                    'nombre' => $productoServicio->nombre . '-' . substr(str_shuffle($permitted_chars), 0, 5),
-                    'codigo_barra' => $productoServicio->codigo_barra . '-' . substr(str_shuffle($permitted_chars), 0, 5),
                     'activo' => 0
                 ]);
 

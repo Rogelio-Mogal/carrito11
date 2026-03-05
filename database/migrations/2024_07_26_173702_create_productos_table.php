@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('productos', function (Blueprint $table) {
             $table->id();
             $table->enum('tipo', ['PRODUCTO','SERVICIO']);
-            $table->string('nombre')->unique();
-            $table->string('codigo_barra')->unique();
+            $table->string('nombre');
+            $table->string('codigo_barra');
 
             $table->unsignedBigInteger('marca');
             $table->unsignedBigInteger('familia');
@@ -38,13 +38,17 @@ return new class extends Migration
             $table->boolean('serie')->default(0);
             $table->integer('wci');
             $table->boolean('activo')->default(1);
-            
+
             // Relaciones con producto_caracteristicas
             $table->foreign('marca')->references('id')->on('producto_caracteristicas');
             $table->foreign('familia')->references('id')->on('producto_caracteristicas');
             $table->foreign('sub_familia')->references('id')->on('producto_caracteristicas');
 
             $table->timestamps();
+
+            // índices únicos
+            $table->unique(['nombre','activo']);
+            $table->unique(['codigo_barra','activo']);
 
         });
 
