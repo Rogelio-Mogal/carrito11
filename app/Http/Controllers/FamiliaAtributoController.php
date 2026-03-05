@@ -6,6 +6,7 @@ use App\Models\Atributo;
 use App\Models\FamiliaAtributo;
 use App\Models\ProductoCaracteristica;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class FamiliaAtributoController extends Controller
 {
@@ -50,14 +51,20 @@ class FamiliaAtributoController extends Controller
 
         try {
 
-            //FamiliaAtributo::create($data);
+            $familia = ProductoCaracteristica::findOrFail($data['familia_id']);
 
-            $fam = ProductoCaracteristica::find($request->familia_id);
+            // 1️⃣ quitar duplicados enviados en el request
+            $atributos = collect($data['atributo_id'])->unique();
 
-            $fam->atributos()->syncWithPivotValues($request->atributo_id, [
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            // 2️⃣ quitar los que ya están asociados a la familia
+            $existentes = $familia->atributos()->pluck('atributo_id');
+
+            $atributosNuevos = $atributos->diff($existentes);
+
+            // 3️⃣ guardar solo los nuevos
+            if ($atributosNuevos->isNotEmpty()) {
+                $familia->atributos()->attach($atributosNuevos);
+            }
 
             session()->flash('swal', [
                 'icon' => "success",
@@ -121,7 +128,7 @@ class FamiliaAtributoController extends Controller
         try {
 
             $familia = ProductoCaracteristica::findOrFail($request->familia_id);
-            $familia->atributos()->sync($request->atributo_id ?? []);
+            $familia->atributos()->syncWithoutDetaching($request->atributo_id);
 
             session()->flash('swal', [
                 'icon' => "success",
