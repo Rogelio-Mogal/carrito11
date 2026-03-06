@@ -823,6 +823,7 @@ class ProductosController extends Controller
         $productos = Producto::where('id', '!=', 1)
             //->whereHas('inventarioUsuario') // solo productos que tengan inventario en la sucursal del usuario
             //->with('inventarioUsuario')
+            ->where('id', $id)
             ->with('inventarioUsuario')     // carga inventario del usuario
             ->get();
 
@@ -925,9 +926,9 @@ class ProductosController extends Controller
             $codigosAlternosCambiaron = true;
         }
 
-
+        $productoServicio->fill($changes);
         if (
-            $productoServicio->isDirty($changes) || $imagen1Changed || $imagen2Changed || $imagen3Changed || $atributosCambiaron
+            $productoServicio->isDirty() || $imagen1Changed || $imagen2Changed || $imagen3Changed || $atributosCambiaron
             || $codigosAlternosCambiaron
         ) {
             $rules = [

@@ -35,8 +35,8 @@
             Fecha de compra
         </label>
         <input type="date" id="fecha_compra" name="fecha_compra" required max="{{ date('Y-m-d') }}"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 
-                    dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                    dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white
                     dark:focus:ring-blue-500 dark:focus:border-blue-500"
             value="{{ old('fecha_compra', $compra->fecha_compra) }}" />
     </div>
@@ -353,7 +353,7 @@
                     }, 100);
                 }
 
-                
+
             }
 
             // selecciona el producto del datatable/ modal
@@ -409,10 +409,10 @@
                     $.ajax({
                         url: '/productos/buscar-para-tabla',
                         method: 'GET',
-                        data: { 
-                            codigo, 
+                        data: {
+                            codigo,
                             tipo_busqueda: tipoBusqueda,
-                            _token: $('meta[name="csrf-token"]').attr('content') 
+                            _token: $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function(res) {
                             if (res.data.length > 0) {
@@ -665,7 +665,7 @@
 
                 var precio = 0;
                 let isSerie = $('#producto_serie').val() || 0; //$('#producto_serie').val();
-                console.log('isSerie: ' + isSerie);
+                //console.log('isSerie: ' + isSerie);
 
                 // VALIDA SI HAY ELEMENTOS A AGREGAR
                 if (producto === "" || isNaN(precio) || isNaN(cant)) {
@@ -705,16 +705,14 @@
                         cache: false,
                         success: async function(data) {
                             // PRODUCTO SIN INVENTARIO
-                            /*
+
                             // Muestra como string JSON legible
-                            console.log(JSON.stringify(data, null, 2));
+                            //console.log(JSON.stringify(data, null, 2));
 
                             // Itera el arreglo y muestra cada objeto
-                            data.forEach((item, i) => {
-                                console.log("Item " + i, item);
-                            });
-                            */
-
+                            //data.forEach((item, i) => {
+                            //    console.log("Item " + i, item);
+                            //});
 
                             //console.log('data.length: '+data.length);
                             if ($("#iva").is(":checked")) {
@@ -733,8 +731,8 @@
 
                             // OBTENGO LOS VALORES DE LA TABLA DE PRECIOS
                             const datos = await obtenerPrecio(Math.ceil(precio), id);
-                            console.log(precio, id)
-                            console.log('datos: ' + JSON.stringify(datos, null, 2));
+                            //console.log(precio, id)
+                            //console.log('datos: ' + JSON.stringify(datos, null, 2));
 
                             var entero = Math.ceil(precio);
                             tipo = datos.tipo;
@@ -774,12 +772,12 @@
 
                             var check = 'checked';
                             //console.log(parseInt(productoData.inventario_usuario.cantidad) );
-                            console.log(parseInt(productoData.inventario_usuario
-                                ?.cantidad ?? 0));
+                            //console.log(parseInt(productoData.inventario_usuario
+                            //    ?.cantidad ?? 0));
                             //if (!productoData.inventario_usuario || parseInt(productoData.inventario_usuario.cantidad) <= 0){ //data.length === 0) {
                             if (!productoData.inventario_usuario || parseInt(productoData
                                     .inventario_usuario?.cantidad ?? 0) <= 0) {
-                                console.log('AQUI!!!');
+                                //console.log('AQUI!!!');
                                 console.log('SIN INVENTARIO:');
                                 var requerido = '';
                                 if (isSerie == 1) {
@@ -905,14 +903,14 @@
                                     $(this).parent('td').parent('tr').remove();
                                     suma();
                                 });
-                                console.log('html:' + html);
+                                //console.log('html:' + html);
                             } else {
-                                console.log('html2:' + html);
+                                //console.log('html2:' + html);
                                 // PRODUCTOS CON INVENTARIO
                                 let idsActuales = $('#item_table_1 .idp').map(function() {
                                     return parseInt($(this).val());
                                 }).get();
-                                console.log('idsActuales: ' + idsActuales);
+                                //console.log('idsActuales: ' + idsActuales);
 
                                 // Si ya existe -> alerta y no agrega
                                 //if (repetidos) {
