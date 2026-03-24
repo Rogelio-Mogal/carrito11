@@ -587,12 +587,12 @@ class VentasController extends Controller
                         ->value('folio');
 
                     $ultimoNumero = 0;
-                    if ($ultimoFolio && preg_match('/ABO-(\d+)-' . $anioActual . '/', $ultimoFolio, $match)) {
+                    if ($ultimoFolio && preg_match('/ABONO-(\d+)-' . $anioActual . '/', $ultimoFolio, $match)) {
                         $ultimoNumero = intval($match[1]);
                     }
 
                     $nuevoNumero = $ultimoNumero + 1;
-                    $folio = sprintf("ABO-%05d-%d", $nuevoNumero, $anioActual);
+                    $folio = sprintf("ABONO-%05d-%d", $nuevoNumero, $anioActual);
 
                     // Registrar ABONO maestro
                     $abono = Abono::create([
@@ -655,11 +655,11 @@ class VentasController extends Controller
                         ->value('folio');
 
                     $ultimoNumero = 0;
-                    if ($ultimoFolio && preg_match('/ABO-(\d+)-' . $anioActual . '/', $ultimoFolio, $match)) {
+                    if ($ultimoFolio && preg_match('/ABONO-(\d+)-' . $anioActual . '/', $ultimoFolio, $match)) {
                         $ultimoNumero = intval($match[1]);
                     }
                     $nuevoNumero = $ultimoNumero + 1;
-                    $folioAbono = sprintf("ABO-%05d-%d", $nuevoNumero, $anioActual);
+                    $folioAbono = sprintf("ABONO-%05d-%d", $nuevoNumero, $anioActual);
 
                     // Crear abono
                     $abono = Abono::create([
@@ -973,6 +973,22 @@ class VentasController extends Controller
             $mensajeFlash = null;
 
             DB::transaction(function () use ($venta, $request, &$mensajeFlash) {
+                // GENERAR FOLIO
+                $anioActual = now()->year;
+
+                $ultimoFolio = Abono::whereYear('created_at', $anioActual)
+                    ->lockForUpdate() // 🔒 bloquea filas de abono de este año mientras corre la transacción
+                    ->orderByDesc('id')
+                    ->value('folio');
+
+                $ultimoNumero = 0;
+                if ($ultimoFolio && preg_match('/ABONO-(\d+)-' . $anioActual . '/', $ultimoFolio, $match)) {
+                    $ultimoNumero = intval($match[1]);
+                }
+
+                $nuevoNumero = $ultimoNumero + 1;
+                $folioAbono = sprintf("ABONO-%05d-%d", $nuevoNumero, $anioActual);
+
                 $tipoCancelacion = $request->tipo_cancelacion;
                 $motivo          = $request->motivo_cancelacion;
                 $hoy             = now()->toDateString();
@@ -1140,6 +1156,9 @@ class VentasController extends Controller
 
                         $totalDevolucion = 0;
 
+                        //Guardar cuánto se ha pagado antes de cancelar
+                        $montoPagadoAntes = $venta->abonos()->sum('monto');
+
                         foreach ($venta->detalles()->where('activo', 1)->get() as $detalle) {
                             $cantidadDevolver = $detalle->cantidad;
                             $this->devolverInventarioProducto($detalle, $cantidadDevolver, $venta);
@@ -1157,38 +1176,55 @@ class VentasController extends Controller
                             'activo'        => 0,
                         ]);
 
-                        // 🔹 Registrar abono total (reversión)
-                        $montoTotalDevolucion = $venta->detalles()
-                            ->withTrashed()
-                            ->sum(DB::raw('precio * cantidad'));
+                        $this->actualizarCreditoVenta($venta);
 
+                        // 🔹 Registrar abono total (reversión)
+                        //$montoTotalDevolucion = $venta->detalles()
+                            //->withTrashed()
+                        //    ->sum(DB::raw('precio * cantidad'));
+
+                        /*
                         $venta->abonos()->create([
                             'monto'        => $totalDevolucion,
                             'fecha'        => now(),
+                            'folio'        => $folioAbono,
                             'tipo'         => 'DEVOLUCION',
                             'descripcion'  => 'Abono por cancelación total de venta a crédito',
-                            'usuario_id'   => auth()->id(),
+                            'wci'          => auth()->id(),
                         ]);
+                        */
 
                         // 🔹 Calcular si hay excedente y crear nota
-                        $montoPagado = $venta->abonos()->sum('monto');
-                        $excedente   = $montoPagado - $venta->total;
+                        //$montoPagado = $venta->abonos()->sum('monto');
+                        //$excedente   = $montoPagado - $venta->total;
 
-                        if ($excedente > 0) {
-                            $nota = $this->generarNotaCredito($venta, 'Excedente por cancelación total', $excedente);
+                        //if ($excedente > 0) {
+                        //    $nota = $this->generarNotaCredito($venta, 'Excedente por cancelación total', $excedente);
+                        //    session()->flash('id', $nota->id);
+                        //}
+
+                        // 🔹 Generar nota de crédito SOLO por lo que el cliente ya había pagado
+                        if ($montoPagadoAntes > 0) {
+
+                            $nota = $this->generarNotaCredito(
+                                $venta,
+                                'Excedente por cancelación total',
+                                $montoPagadoAntes
+                            );
+
                             session()->flash('id', $nota->id);
                         }
                     }
                 }
 
                 // 3) Ventas de fechas anteriores
-                $this->cancelarYDevolverInventario($venta);
+                //$this->cancelarYDevolverInventario($venta);
 
                 $nota = null;
-                if ($venta->tipo_venta === 'CONTADO') {
+                if ($venta->tipo_venta === 'CONTADO' && $venta->fecha->isBefore(now()->startOfDay())) {
                     $nota = $this->generarNotaCredito($venta, 'Venta de contado anterior');
-                    session()->flash('id', $nota->id);
-                } elseif ($venta->tipo_venta === 'CRÉDITO') {
+                    session()->flash('id', value: $nota->id);
+                } elseif ($venta->tipo_venta === 'CRÉDITO' && $venta->fecha->isBefore(now()->startOfDay())) {
                     /*if ($venta->abonos()->exists()) {
                         throw new \Exception('La venta no se puede cancelar porque ya tiene abonos.');
                     }
@@ -1197,8 +1233,12 @@ class VentasController extends Controller
                     */
                     // 🔹 Cancelación total de venta a crédito
                     $totalDevolucion = 0;
-
                     foreach ($venta->detalles()->where('activo', 1)->get() as $detalle) {
+
+                        if ($detalle->cantidad <= 0) {
+                            continue;
+                        }
+
                         $cantidadDevolver = $detalle->cantidad;
                         $this->devolverInventarioProducto($detalle, $cantidadDevolver, $venta);
 
@@ -1218,6 +1258,8 @@ class VentasController extends Controller
                         'activo'        => 0,
                     ]);
 
+                    $this->actualizarCreditoVenta($venta);
+
                     // 🔹 Si había abonos, generar nota de crédito equivalente
                     if ($montoAbonado > 0) {
                         $nota = $this->generarNotaCredito(
@@ -1229,13 +1271,16 @@ class VentasController extends Controller
                     }
 
                     // 🔹 Registrar movimiento de devolución (solo informativo, sin afectar suma de abonos)
+                    /*
                     $venta->abonos()->create([
                         'monto'        => 0, // solo para registro, no suma a pagos
                         'fecha'        => now(),
+                        'folio'        => $folioAbono,
                         'tipo'         => 'DEVOLUCION',
                         'descripcion'  => 'Cancelación total de venta a crédito',
-                        'usuario_id'   => auth()->id(),
+                        'wci'          => auth()->id(),
                     ]);
+                    */
                 }
 
                 $venta->update(['activo' => 0]);
@@ -1274,6 +1319,23 @@ class VentasController extends Controller
             $mensajeFlash = null;
 
             DB::transaction(function () use ($detalle, $request, &$mensajeFlash) {
+
+                // GENERAR FOLIO
+                $anioActual = now()->year;
+
+                $ultimoFolio = Abono::whereYear('created_at', $anioActual)
+                    ->lockForUpdate() // 🔒 bloquea filas de abono de este año mientras corre la transacción
+                    ->orderByDesc('id')
+                    ->value('folio');
+
+                $ultimoNumero = 0;
+                if ($ultimoFolio && preg_match('/ABONO-(\d+)-' . $anioActual . '/', $ultimoFolio, $match)) {
+                    $ultimoNumero = intval($match[1]);
+                }
+
+                $nuevoNumero = $ultimoNumero + 1;
+                $folioAbono = sprintf("ABONO-%05d-%d", $nuevoNumero, $anioActual);
+
                 // 🔹 Obtener la venta asociada
                 $venta = $detalle->venta;
 
@@ -1438,40 +1500,56 @@ class VentasController extends Controller
                         $montoDevolucion = $detalle->precio * $cantidadDevolver;
 
                         // 🔹 Ajustar cantidad del detalle o marcarlo como inactivo
-                        $nuevaCantidad = $detalle->cantidad - $cantidadDevolver;
-                        $detalle->update([
-                            'cantidad' => max($nuevaCantidad, 0),
-                            'activo'   => $nuevaCantidad > 0 ? 1 : 0,
-                        ]);
+                        //$nuevaCantidad = $detalle->cantidad - $cantidadDevolver;
+                        //$detalle->update([
+                        //    'cantidad' => max($nuevaCantidad, 0),
+                        //    'activo'   => $nuevaCantidad > 0 ? 1 : 0,
+                        //]);
+
+                        // 🔹 Registrar abono equivalente a la devolución
+                        /*$abonoPorCancelacion = $venta->abonos()->create([
+                            'monto'         => $montoDevolucion,
+                            'folio'         => $folioAbono,
+                            'fecha'         => now(),
+                            'referencia'    => 'ABONO POR DEVOLUCION',
+                            //'descripcion'  => 'Abono por devolución de producto (' . $detalle->producto->nombre . ')',
+                            'cliente_id'    => $venta->cliente_id,
+                            'wci'           => auth()->id(),
+                        ]);*/
+
+                        //Ajusta el detalle de la venta
+                        $this->ajustarDetalle($detalle, $cantidadDevolver);
+
+                        // Calcular monto pagado actualizado
+                        $montoPagado = $venta->abonos()->sum('monto');
 
                         // 🔹 Recalcular totales de la venta
                         $nuevoTotal = $venta->detalles()
                             ->where('activo', 1)
                             ->sum(DB::raw('cantidad * precio'));
+                        //dd($nuevoTotal);
+
+                        // Calcular nuevo saldo
+                        $saldoPendiente = $nuevoTotal - $montoPagado;
 
                         $venta->update([
                             'total'         => $nuevoTotal,
-                            'monto_credito' => $nuevoTotal - $venta->abonos()->sum('monto'),
+                            'monto_credito' => max($saldoPendiente, 0),
                         ]);
 
-                        // 🔹 Registrar abono equivalente a la devolución
-                        $venta->abonos()->create([
-                            'monto'        => $montoDevolucion,
-                            'fecha'        => now(),
-                            'tipo'         => 'DEVOLUCION',
-                            'descripcion'  => 'Abono por devolución de producto (' . $detalle->producto->nombre . ')',
-                            'usuario_id'   => auth()->id(),
-                        ]);
+                        $this->actualizarCreditoVenta($venta);
 
                         // 🔹 Si hay excedente (ya pagó más del nuevo total), generar nota de crédito
-                        $montoPagado = $venta->abonos()->sum('monto');
                         $excedente   = $montoPagado - $nuevoTotal;
 
-                        if ($excedente > 0) {
+                        $montoNotasGeneradas = $venta->notaCreditos()->sum('monto');
+                        $excedenteReal = $excedente - $montoNotasGeneradas;
+
+                        if ($excedenteReal > 0) {
                             $nota = $this->generarNotaCredito(
                                 $venta,
                                 'Excedente por devolución [' . $detalle->producto->nombre . ']',
-                                $excedente
+                                $excedenteReal
                             );
                             session()->flash('id', $nota->id);
                         }
@@ -1486,29 +1564,32 @@ class VentasController extends Controller
                                 'activo'        => 0,
                             ]);
 
+                            $this->actualizarCreditoVenta($venta);
+
                             $montoAbonado = $venta->abonos()->sum('monto');
-                            if ($montoAbonado > 0) {
+
+                            $montoNotasGeneradas = $venta->notaCreditos()->sum('monto');
+                            $montoRestante = $montoAbonado - $montoNotasGeneradas;
+                            if ($montoRestante  > 0) {
                                 $nota = $this->generarNotaCredito(
                                     $venta,
                                     'Excedente por cancelación total tras devolución',
-                                    $montoAbonado
+                                    $montoRestante
                                 );
                                 session()->flash('id', $nota->id);
                             }
                         }
-
-
                     }
                 }
 
                 // 🔹 3) Ventas de fechas anteriores
-                $this->devolverInventarioProducto($detalle, $cantidadDevolver, $venta, $notaExistente?->id);
+                //$this->devolverInventarioProducto($detalle, $cantidadDevolver, $venta, $notaExistente?->id);
 
                 $nota = null;
-                if ($venta->tipo_venta === 'CONTADO') {
+                if ($venta->tipo_venta === 'CONTADO' && $venta->fecha->isBefore(now()->startOfDay())) {
                     $nota = $this->generarNotaCredito($venta, $motivo, $detalle->precio * $cantidadDevolver);
                     session()->flash('id', $nota->id);
-                } elseif ($venta->tipo_venta === 'CRÉDITO') {
+                } elseif ($venta->tipo_venta === 'CRÉDITO' && $venta->fecha->isBefore(now()->startOfDay())) {
                     //if ($venta->abonos()->exists()) {
                     //    throw new \Exception('No se puede cancelar el producto porque la venta ya tiene abonos.');
                     //}
@@ -1518,12 +1599,52 @@ class VentasController extends Controller
                     $montoDevolucion = $detalle->precio * $cantidadDevolver;
 
                     // 🔹 Ajustar cantidad del detalle o marcarlo como inactivo
-                    $nuevaCantidad = $detalle->cantidad - $cantidadDevolver;
-                    $detalle->update([
-                        'cantidad' => max($nuevaCantidad, 0),
-                        'activo'   => $nuevaCantidad > 0 ? 1 : 0,
-                    ]);
+                    //$nuevaCantidad = $detalle->cantidad - $cantidadDevolver;
+                    //$detalle->update([
+                    //    'cantidad' => max($nuevaCantidad, 0),
+                    //    'activo'   => $nuevaCantidad > 0 ? 1 : 0,
+                    //]);
 
+
+
+
+
+                      // 🔹 Registrar abono equivalente a la devolución
+                        /*$abonoPorCancelacion = $venta->abonos()->create([
+                            'monto'        => $montoDevolucion,
+                            'fecha'        => now(),
+                            'folio'        => $folioAbono,
+                            'referencia'    => 'ABONO POR DEVOLUCION',
+                            //'descripcion'  => 'Abono por devolución de producto (' . $detalle->producto->nombre . ')',
+                            'cliente_id'    => $venta->cliente_id,
+                            'wci'          => auth()->id(),
+                        ]);*/
+
+                        //Ajusta el detalle de la venta
+                        $this->ajustarDetalle($detalle, $cantidadDevolver);
+
+                        // Calcular monto pagado actualizado
+                        $montoPagado = $venta->abonos()->sum('monto');
+
+                        // 🔹 Recalcular totales de la venta
+                        $nuevoTotal = $venta->detalles()
+                            ->where('activo', 1)
+                            ->sum(DB::raw('cantidad * precio'));
+
+                        // Calcular nuevo saldo
+                        $saldoPendiente = $nuevoTotal - $montoPagado;
+
+                        $venta->update([
+                            'total'         => $nuevoTotal,
+                            'monto_credito' => max($saldoPendiente, 0),
+                        ]);
+
+                        $this->actualizarCreditoVenta($venta);
+
+
+
+
+                    /*
                     // 🔹 Recalcular totales de la venta
                     $nuevoTotal = $venta->detalles()
                         ->where('activo', 1)
@@ -1534,14 +1655,25 @@ class VentasController extends Controller
                         'monto_credito' => $nuevoTotal - $venta->abonos()->sum('monto'),
                     ]);
 
+                    //Ajusta el detalle de la venta
+                    $this->ajustarDetalle($detalle, $cantidadDevolver);
+
                     // 🔹 Registrar abono equivalente a la devolución
-                    $abono = $venta->abonos()->create([
+                    $abonoPorCancelacion = $venta->abonos()->create([
                         'monto'        => $montoDevolucion,
                         'fecha'        => now(),
+                        'folio'        => $folioAbono,
                         'tipo'         => 'DEVOLUCION',
                         'descripcion'  => 'Abono por devolución de producto (' . $detalle->producto->nombre . ')',
-                        'usuario_id'   => auth()->id(),
+                        'wci'          => auth()->id(),
                     ]);
+
+                    // insertamos los valos faltantes de abonos
+                    $abonoPorCancelacion->update([
+                        'saldo_global_antes'   => $nuevoTotal,
+                        'saldo_global_despues' => max($saldoPendiente, 0),
+                    ]);
+                    */
 
                     // 🔹 Si hay excedente (ya pagó más del nuevo total), generar nota de crédito
                     $montoPagado = $venta->abonos()->sum('monto');
@@ -1553,7 +1685,7 @@ class VentasController extends Controller
                     }
                 }
 
-                $this->ajustarDetalle($detalle, $cantidadDevolver);
+                //$this->ajustarDetalle($detalle, $cantidadDevolver);
                 // Revisar si todos los detalles de la venta están inactivos
                 $this->cancelarVentaSiSinDetallesActivos($venta);
 
@@ -1709,6 +1841,7 @@ class VentasController extends Controller
 
     protected function ajustarDetalle(VentaDetalle $detalle, int $cantidadDevolver)
     {
+        //dd($detalle->cantidad , $cantidadDevolver);
         $detalle->update([
             'cantidad' => $detalle->cantidad - $cantidadDevolver,
             'activo'   => $detalle->cantidad - $cantidadDevolver <= 0 ? 0 : 1,
@@ -1720,6 +1853,32 @@ class VentasController extends Controller
         if ($venta->detalles()->where('activo', 1)->count() === 0) {
             $venta->update(['activo' => 0]);
         }
+    }
+
+    protected function actualizarCreditoVenta(Venta $venta)
+    {
+        $credito = $venta->credito;
+
+        if (!$credito) {
+            return;
+        }
+
+        $totalVenta   = $venta->total;
+        $montoAbonado = $venta->abonos()->sum('monto');
+
+        // saldo real
+        $saldoActual = max($totalVenta - $montoAbonado, 0);
+
+        $credito->update([
+            'monto_credito' => $saldoActual,
+            'saldo_actual'  => $saldoActual,
+
+            // 1 = liquidado
+            'liquidado' => $saldoActual == 0 ? 1 : 0,
+
+            // solo se desactiva si la venta se cancela
+            'activo' => $venta->activo ? 1 : 0,
+        ]);
     }
 
     public function ticket($id)

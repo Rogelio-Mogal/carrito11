@@ -1,11 +1,11 @@
-  {{-- 
+  {{--
    <!--popper -->
     <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 --}}
-    
+
     <!-- Flowbite -->
     <script src="{{ mix('node_modules/flowbite/dist/flowbite.min.js') }}"></script>
 
@@ -16,7 +16,7 @@
     <!--select2 -->
     <script src="{{ asset('select2/select2.min.js') }}"></script>
 
-    
+
 
 
 
@@ -28,7 +28,8 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                html: '{!! implode("<br>", $errors->all()) !!}',
+                //html: '{!! implode("<br>", $errors->all()) !!}',
+                html: {!! json_encode(implode("<br>", $errors->all())) !!},
                 confirmButtonText: 'Aceptar',
                 customClass: {
                     confirmButton: 'bg-red-600 text-white hover:bg-red-700 rounded-lg px-4 py-2'
@@ -44,7 +45,8 @@
             Swal.fire({
                 icon: 'success',
                 title: 'Éxito',
-                text: '{{ session("success") }}',
+                //text: '{{ session("success") }}',
+                text: {!! json_encode(session("success")) !!},
                 confirmButtonText: 'Aceptar',
                 customClass: {
                     confirmButton: 'bg-green-600 text-white hover:bg-green-700 rounded-lg px-4 py-2'
@@ -57,7 +59,7 @@
 
 
     <script>
-        // APERTURA EL SUBMENU 
+        // APERTURA EL SUBMENU
         document.addEventListener('DOMContentLoaded', () => {
             const currentRoute = "{{ request()->route()->getName() }}"; // Obtiene el nombre de la ruta actual
             const routesToCheck = {
