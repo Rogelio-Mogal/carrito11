@@ -1033,7 +1033,14 @@ class VentasController extends Controller
                         ]);
                     }
 
-                    $venta->update(['activo' => 0]);
+                    //$venta->update(['activo' => 0]);
+                    $this->cancelarVentaSiSinDetallesActivos($venta);
+
+                    // AJUSTE EN TOTALES DE VENTA Y TIPO_PAGOS
+                    if ($venta->tipo_venta === 'CONTADO') {
+                        $montoDevolver = $this->recalcularVentaYTiposPago($venta);
+                        $this->ajustarTiposPago($venta, $montoDevolver);
+                    }
 
                     $mensajeFlash = [
                         'icon' => 'info',
@@ -1094,7 +1101,14 @@ class VentasController extends Controller
                                 ];
                             }
 
-                            $venta->update(['activo' => 0]);
+                            //$venta->update(['activo' => 0]);
+                            $this->cancelarVentaSiSinDetallesActivos($venta);
+
+                            // AJUSTE EN TOTALES DE VENTA Y TIPO_PAGOS
+                            $montoDevolver = $this->recalcularVentaYTiposPago($venta);
+                            $this->ajustarTiposPago($venta, $montoDevolver);
+
+
                             return;
                         }
 
@@ -1136,7 +1150,8 @@ class VentasController extends Controller
                             session()->flash('id', $nota->id);
                         }
 
-                        $venta->update(['activo' => 0]);
+                        //$venta->update(['activo' => 0]);
+                        $this->cancelarVentaSiSinDetallesActivos($venta);
 
                         $mensajeFlash = [
                             'icon' => 'success',
@@ -1192,13 +1207,15 @@ class VentasController extends Controller
                         }
 
                         // 🔹 Recalcular total (debe ser 0)
-                        $venta->update([
-                            'total'         => 0,
-                            'monto_credito' => 0,
-                            'activo'        => 0,
-                        ]);
+                        //$venta->update([
+                        //    'total'         => 0,
+                        //    'monto_credito' => 0,
+                        //    'activo'        => 0,
+                        //]);
 
-                        $this->actualizarCreditoVenta($venta);
+                        //$this->actualizarCreditoVenta($venta);
+
+                        $this->cancelarVentaSiSinDetallesActivos($venta);
 
                         // 🔹 Registrar abono total (reversión)
                         //$montoTotalDevolucion = $venta->detalles()
@@ -1274,13 +1291,14 @@ class VentasController extends Controller
                     $montoAbonado = $venta->abonos()->sum('monto');
 
                     // 🔹 Cancelar venta
-                    $venta->update([
-                        'total'         => 0,
-                        'monto_credito' => 0,
-                        'activo'        => 0,
-                    ]);
+                    //$venta->update([
+                    //    'total'         => 0,
+                    //    'monto_credito' => 0,
+                    //    'activo'        => 0,
+                    //]);
 
-                    $this->actualizarCreditoVenta($venta);
+                    //$this->actualizarCreditoVenta($venta);
+                    $this->cancelarVentaSiSinDetallesActivos($venta);
 
                     // 🔹 Si había abonos, generar nota de crédito equivalente
                     if ($montoAbonado > 0) {
@@ -1305,7 +1323,8 @@ class VentasController extends Controller
                     */
                 }
 
-                $venta->update(['activo' => 0]);
+                //$venta->update(['activo' => 0]);
+                $this->cancelarVentaSiSinDetallesActivos($venta);
 
                 $mensajeFlash = [
                     'icon' => 'success',
@@ -1444,6 +1463,12 @@ class VentasController extends Controller
                     // Revisar si todos los detalles de la venta están inactivos
                     $this->cancelarVentaSiSinDetallesActivos($venta);
 
+                    // AJUSTE EN TOTALES DE VENTA Y TIPO_PAGOS
+                    if ($venta->tipo_venta === 'CONTADO') {
+                        $montoDevolver = $this->recalcularVentaYTiposPago($venta);
+                        $this->ajustarTiposPago($venta, $montoDevolver);
+                    }
+
                     $mensajeFlash = [
                         'icon'  => 'info',
                         'title' => 'Cancelación por error',
@@ -1470,6 +1495,10 @@ class VentasController extends Controller
 
                             // Revisar si todos los detalles de la venta están inactivos
                             $this->cancelarVentaSiSinDetallesActivos($venta);
+
+                            // AJUSTE EN TOTALES DE VENTA Y TIPO_PAGOS
+                            $montoDevolver = $this->recalcularVentaYTiposPago($venta);
+                            $this->ajustarTiposPago($venta, $montoDevolver);
 
                             $mensajeFlash = [
                                 'icon'  => 'info',
@@ -1977,11 +2006,11 @@ class VentasController extends Controller
                 'monto_credito' => 0,
             ]);
 
-            if ($venta->ventaCredito) {
-                $venta->ventaCredito()->update([
-                    'activo' => 0
-                ]);
-            }
+            //if ($venta->ventaCredito) {
+            //    $venta->ventaCredito()->update([
+            //        'activo' => 0
+            //    ]);
+            //}
 
             $this->actualizarCreditoVenta($venta);
 
@@ -1989,6 +2018,51 @@ class VentasController extends Controller
         }
 
         return false;
+    }
+
+    protected function recalcularVentaYTiposPago(Venta $venta)
+    {
+        // 🔹 Nuevo total real
+        $nuevoTotal = $venta->detalles()
+            ->where('activo', 1)
+            ->sum(DB::raw('cantidad * precio'));
+
+        // 🔹 Total pagado actual
+        $totalPagado = $venta->pagos()->sum('monto');
+
+        // 🔹 Diferencia (lo que se debe devolver)
+        $diferencia = $totalPagado - $nuevoTotal;
+
+        // 🔹 Actualizar venta
+        $venta->update([
+            'total' => $nuevoTotal,
+            'monto_credito' => 0 // contado no maneja saldo
+        ]);
+
+        return $diferencia;
+    }
+
+    protected function ajustarTiposPago(Venta $venta, $montoADevolver)
+    {
+        if ($montoADevolver <= 0) return;
+
+        // 🔹 Ejemplo: priorizar efectivo
+        $pagos = $venta->pagos()->orderBy('metodo', 'desc')->get();
+
+        foreach ($pagos as $pago) {
+
+            if ($montoADevolver <= 0) break;
+
+            if ($pago->monto <= $montoADevolver) {
+                $montoADevolver -= $pago->monto;
+                $pago->update(['monto' => 0]);
+            } else {
+                $pago->update([
+                    'monto' => $pago->monto - $montoADevolver
+                ]);
+                $montoADevolver = 0;
+            }
+        }
     }
 
     protected function actualizarCreditoVenta(Venta $venta)
