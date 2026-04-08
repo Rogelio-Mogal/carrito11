@@ -460,7 +460,7 @@
             const selects = document.querySelectorAll('.formas-pago-group select[name^="formas_pago"]');
             const seleccionadas = Array.from(selects).map(sel => sel.value).filter(val => val !== '');
 
-            console.log("seleccionadas.length: " + seleccionadas.length)
+            //console.log("seleccionadas.length: " + seleccionadas.length)
             if (seleccionadas.length >= 5) {
                 alert("Ya se han agregado todas las formas de pago disponibles.");
                 return;
@@ -682,7 +682,7 @@
                     `);
                 });
 
-                console.log($inputsContainer.html());
+                //console.log($inputsContainer.html());
 
                 recalcularFaltanteCambio();
             }
@@ -905,7 +905,6 @@
                 $(this).closest('tr').remove();
                 recalcularTotalTabla('item_table_0');
                 recalcularFaltanteCambio();
-                console.log('asds');
             });
 
             // selecciona el producto del datatable/ modal
@@ -1759,6 +1758,7 @@
                 }
 
                 mostrarMontoCredito();
+                recalcularTodo();
             });
 
             // Muestra en input para el monto a crédito
@@ -2698,6 +2698,51 @@
             });
 
             actualizarOpcionesFormasPago(); // para actualizar si hay formas prellenadas
+
+            function recalcularTodo() {
+                recalcularTotalTabla('item_table_0');
+                recalcularFaltanteCambio();
+            }
+
+            $(document).on('input', '.monto-formateado', function () {
+                let value = $(this).val();
+
+                value = value.replace(/[^\d.]/g, '');
+
+                let parts = value.split('.');
+                if (parts.length > 2) {
+                    value = parts[0] + '.' + parts[1];
+                    parts = value.split('.');
+                }
+
+                let entero = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+                let final = parts.length === 2 ? entero + '.' + parts[1] : entero;
+
+                $(this).val(final);
+
+                let hiddenID = $(this).data('hidden');
+                let limpio = value.replace(/,/g, '');
+
+                $(hiddenID).val(limpio);
+
+                // 🔥 AQUÍ ESTÁ LA MAGIA
+                $(hiddenID).trigger('input'); // ← fuerza evento
+                recalcularTodo();             // ← recalcula todo
+            });
+
+            $(document).on('input change', '.forma-pago', function() {
+                recalcularTodo();
+            });
+
+            $(document).on('input', '#monto_credito', function() {
+                recalcularTodo();
+            });
+
+            $(document).on('input change', '.cantVenta', function() {
+                recalcularTodo();
+            });
+
         });
     </script>
     @if (Session::has('id'))
