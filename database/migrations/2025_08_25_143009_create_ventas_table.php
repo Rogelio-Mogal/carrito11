@@ -14,13 +14,17 @@ return new class extends Migration
         Schema::create('ventas', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('user_id') 
+            $table->foreignId('caja_turno_id')
+            ->nullable()
+            ->constrained('caja_turnos');
+
+            $table->foreignId('user_id')
             ->references('id')
             ->on('users')
             ->onUpdate('no action')
             ->onDelete('no action');
 
-            $table->foreignId('cliente_id') 
+            $table->foreignId('cliente_id')
             ->references('id')
             ->on('clientes')
             ->onUpdate('no action')
@@ -34,7 +38,7 @@ return new class extends Migration
             $table->decimal('cambio',7,2)->nullable();
             $table->enum('tipo_venta', ['CONTADO','CRÉDITO']);
             $table->boolean('activo')->default(1);
-            
+
             $table->timestamps();
         });
     }

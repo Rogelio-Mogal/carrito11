@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('caja_movimientos', function (Blueprint $table) {
             $table->id();
 
+            $table->foreignId('caja_turno_id')
+            ->nullable()
+            ->constrained('caja_turnos');
+
             $table->decimal('monto', 12, 2);
             $table->enum('tipo', ['entrada', 'salida']);
             $table->string('motivo')->nullable();
@@ -21,7 +25,7 @@ return new class extends Migration
 
             // Relación polimórfica al origen del movimiento
             $table->nullableMorphs('origen'); // crea origen_id y origen_type, pero permite NULL
-            $table->foreignId('usuario_id')->constrained('users');
+            $table->foreignId('user_id')->constrained('users');
 
             // Nuevo campo para controlar cancelaciones
             $table->boolean('activo')->default(true); // 1 = activo, 0 = cancelado

@@ -84,7 +84,7 @@ class CajaTurnoController extends Controller
     public function create_opcw(Request $request)
     {
         $turnoAbierto = CajaTurno::where('estado', 'abierto')
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', auth()->id())
             ->first();
 
         if (!$turnoAbierto) {
@@ -133,13 +133,13 @@ class CajaTurnoController extends Controller
 
             $entradas = CajaMovimiento::where('tipo', 'entrada')
                 ->where('activo', 1)
-                ->where('usuario_id', auth()->id())
+                ->where('user_id', auth()->id())
                 ->whereBetween('fecha', [$fechaInicio, $fechaFin])
                 ->sum('monto');
 
             $salidas = CajaMovimiento::where('tipo', 'salida')
                 ->where('activo', 1)
-                ->where('usuario_id', auth()->id())
+                ->where('user_id', auth()->id())
                 ->whereBetween('fecha', [$fechaInicio, $fechaFin])
                 ->sum('monto');
 
@@ -180,7 +180,7 @@ class CajaTurnoController extends Controller
     public function create()
     {
         $turnoAbierto = CajaTurno::where('estado', 'abierto')
-        ->where('usuario_id', auth()->id())
+        ->where('user_id', auth()->id())
         ->first();
 
         // Determinar fecha de inicio para calcular efectivo
@@ -231,13 +231,13 @@ class CajaTurnoController extends Controller
         // 4️⃣ Movimientos manuales de caja
         $entradas = CajaMovimiento::where('tipo', 'entrada')
             ->where('activo', 1)
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', auth()->id())
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->sum('monto');
 
         $salidas = CajaMovimiento::where('tipo', 'salida')
             ->where('activo', 1)
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', auth()->id())
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->sum('monto');
 
@@ -259,7 +259,7 @@ class CajaTurnoController extends Controller
     {
         // Verificar si hay turno abierto para este usuario
         $turnoAbierto = CajaTurno::where('estado', 'abierto')
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', auth()->id())
             ->first();
 
         if ($turnoAbierto) {
@@ -310,13 +310,13 @@ class CajaTurnoController extends Controller
             // 4️⃣ Movimientos manuales de caja
             $entradas = CajaMovimiento::where('tipo', 'entrada')
                 ->where('activo', 1)
-                ->where('usuario_id', auth()->id())
+                ->where('user_id', auth()->id())
                 ->whereBetween('fecha', [$fechaInicio, $fechaFin])
                 ->sum('monto');
 
             $salidas = CajaMovimiento::where('tipo', 'salida')
                 ->where('activo', 1)
-                ->where('usuario_id', auth()->id())
+                ->where('user_id', auth()->id())
                 ->whereBetween('fecha', [$fechaInicio, $fechaFin])
                 ->sum('monto');
 
@@ -354,7 +354,7 @@ class CajaTurnoController extends Controller
             $turno = CajaTurno::whereDate('fecha_apertura', now()->toDateString())->count() + 1;
 
             CajaTurno::create([
-                'usuario_id' => auth()->id(),
+                'user_id' => auth()->id(),
                 'turno' => $turno,
                 'efectivo_inicial' => $request->efectivo_inicial,
                 'efectivo_calculado' => $request->efectivo_inicial,

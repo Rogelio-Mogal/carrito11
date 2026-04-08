@@ -15,7 +15,11 @@ return new class extends Migration
             $table->id();
             // Relación polimórfica
             $table->morphs('pagable'); // pagable_id + pagable_type
-            
+
+            $table->foreignId('caja_turno_id')
+            ->nullable()
+            ->constrained('caja_turnos');
+
             $table->enum('metodo', ['Efectivo', 'TDC', 'TDD', 'Transferencia', 'Nota crédito' ,'Otro']);
             $table->decimal('monto', 12, 3);
             $table->string('referencia')->nullable(); // opcional

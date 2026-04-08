@@ -10,8 +10,9 @@ use Illuminate\Support\Facades\DB;
 class Venta extends Model
 {
     use HasFactory;
-    protected $table = 'ventas';    
+    protected $table = 'ventas';
     protected $fillable = [
+        'caja_turno_id',
         'user_id',
         'cliente_id',
         'folio',
@@ -96,6 +97,11 @@ class Venta extends Model
     public function anticipos()
     {
         return $this->hasMany(AnticipoApartado::class);
+    }
+
+    public function ventaCredito()
+    {
+        return $this->hasOne(VentaCredito::class);
     }
 
 }

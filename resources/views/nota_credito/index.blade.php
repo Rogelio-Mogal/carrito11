@@ -116,7 +116,8 @@
 
             // MUESTRA EL ALERT PARA CONFIRMAR LA DEVOLUCIÓN DE EFECTIVO
             $(document).on('click', '.devolver-efectivo', function() {
-                var notaId = $(this).data('id');
+                //var notaId = $(this).data('id');
+                var notaIds = $(this).data('ids').toString().split(',');
                 var monto = $(this).data('monto');
 
                 // Obtener la fila de DataTable correspondiente
@@ -139,10 +140,12 @@
                     if (result.isConfirmed) {
                         // Enviar petición AJAX
                         $.ajax({
-                            url: "{{ route('admin.caja.movimiento.update', ':id') }}".replace(':id', notaId),
-                            method: 'PUT',
+                            //url: "{{ route('admin.caja.movimiento.update', ':id') }}".replace(':id', notaId),
+                            url: "{{ route('admin.caja.movimiento.devolver') }}",
+                            method: 'POST',
                             data: {
                                 _token: $('meta[name="csrf-token"]').attr('content'),
+                                nota_ids: notaIds,
                                 monto: monto,
                                 tipo: 'salida',
                                 motivo: `Devolución de nota de crédito ${folio}`,

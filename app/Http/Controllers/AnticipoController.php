@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Abono;
 use App\Models\AnticipoApartado;
 use App\Models\AnticipoApartadoDetalle;
+use App\Models\CajaTurno;
 use App\Models\Cliente;
 use App\Models\DetalleAbono;
 use App\Models\TipoPago;
@@ -86,6 +87,26 @@ class AnticipoController extends Controller
             $nuevoNumero = $ultimoNumero + 1;
             $folio = sprintf("ANTICIPO-%05d-%d", $nuevoNumero, $anioActual);
 
+            // Verifico y obtengo el turno actual
+            $cajaTurno = CajaTurno::turnoAbierto(auth()->id());
+
+            if (!$cajaTurno) {
+                session()->flash('swal', [
+                    'icon' => "error",
+                    'title' => "Operación fallida",
+                    'text' => "No tienes un turno de caja abierto",
+                    'customClass' => [
+                        'confirmButton' => 'text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'  // Aquí puedes añadir las clases CSS que quieras
+                    ],
+                    'buttonsStyling' => false
+                ]);
+
+                return redirect()->back()
+                    ->withInput($request->all()) // Aquí solo pasas los valores del formulario
+                    ->with('status', 'No tienes un turno de caja abierto.')
+                    ->withErrors(['error' => 'No tienes un turno de caja abierto.']); // Aquí pasas el mensaje de error
+            }
+
             // ==============================
             // 1. Crear anticipo_apartado
             // ==============================
@@ -122,13 +143,14 @@ class AnticipoController extends Controller
             foreach ($request->formas_pago as $forma) {
                 if (!empty($forma['monto']) && $forma['monto'] > 0) {
                     TipoPago::create([
-                        'pagable_id'   => $anticipoApartado->id,
-                        'pagable_type' => AnticipoApartado::class,
-                        'metodo'       => $forma['metodo'],
-                        'monto'        => $forma['monto'],
-                        'referencia'   => $forma['referencia'] ?? null,
-                        'wci'          => auth()->id(),
-                        'activo'       => true,
+                        'pagable_id'    => $anticipoApartado->id,
+                        'pagable_type'  => AnticipoApartado::class,
+                        'caja_turno_id' => $cajaTurno->id,
+                        'metodo'        => $forma['metodo'],
+                        'monto'         => $forma['monto'],
+                        'referencia'    => $forma['referencia'] ?? null,
+                        'wci'           => auth()->id(),
+                        'activo'        => true,
                     ]);
                     $totalAbono += $forma['monto'];
                 }

@@ -50,7 +50,7 @@ class VentasController extends Controller
 
     public function create(Request $request)
     {
-        /*$turnoAbierto = CajaTurno::where('estado', 'abierto')->where('usuario_id', auth()->id())->first();
+        /*$turnoAbierto = CajaTurno::where('estado', 'abierto')->where('user_id', auth()->id())->first();
         if (!$turnoAbierto) {
             return redirect()->route('admin.caja.turno.create')->with('warning', 'Debes abrir caja antes de registrar ventas.');
         }
@@ -97,13 +97,13 @@ class VentasController extends Controller
         // 4️⃣ Movimientos manuales de caja
         $entradas = CajaMovimiento::where('tipo', 'entrada')
             ->where('activo', 1)
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', auth()->id())
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->sum('monto');
 
         $salidas = CajaMovimiento::where('tipo', 'salida')
             ->where('activo', 1)
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', auth()->id())
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->sum('monto');
 
@@ -111,7 +111,7 @@ class VentasController extends Controller
         $totalEfectivo = $turnoAbierto->efectivo_inicial  + $efectivoOperaciones + $entradas - $salidas;
         */
         $turnoAbierto = CajaTurno::where('estado', 'abierto')
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', auth()->id())
             ->first();
 
         if (!$turnoAbierto) {
@@ -157,13 +157,13 @@ class VentasController extends Controller
 
             $entradas = CajaMovimiento::where('tipo', 'entrada')
                 ->where('activo', 1)
-                ->where('usuario_id', auth()->id())
+                ->where('user_id', auth()->id())
                 ->whereBetween('fecha', [$fechaInicio, $fechaFin])
                 ->sum('monto');
 
             $salidas = CajaMovimiento::where('tipo', 'salida')
                 ->where('activo', 1)
-                ->where('usuario_id', auth()->id())
+                ->where('user_id', auth()->id())
                 ->whereBetween('fecha', [$fechaInicio, $fechaFin])
                 ->sum('monto');
 
@@ -194,13 +194,13 @@ class VentasController extends Controller
 
         $entradas = CajaMovimiento::where('tipo', 'entrada')
             ->where('activo', 1)
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', auth()->id())
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->sum('monto');
 
         $salidas = CajaMovimiento::where('tipo', 'salida')
             ->where('activo', 1)
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', auth()->id())
             ->whereBetween('fecha', [$fechaInicio, $fechaFin])
             ->sum('monto');
 
@@ -293,6 +293,25 @@ class VentasController extends Controller
 
         try {
             DB::beginTransaction();
+            // Verifico y obtengo el turno actual
+            $cajaTurno = CajaTurno::turnoAbierto(auth()->id());
+
+            if (!$cajaTurno) {
+                session()->flash('swal', [
+                    'icon' => "error",
+                    'title' => "Operación fallida",
+                    'text' => "No tienes un turno de caja abierto",
+                    'customClass' => [
+                        'confirmButton' => 'text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'  // Aquí puedes añadir las clases CSS que quieras
+                    ],
+                    'buttonsStyling' => false
+                ]);
+
+                return redirect()->back()
+                    ->withInput($request->all()) // Aquí solo pasas los valores del formulario
+                    ->with('status', 'No tienes un turno de caja abierto.')
+                    ->withErrors(['error' => 'No tienes un turno de caja abierto.']); // Aquí pasas el mensaje de error
+            }
 
             // 1. VALIDAR STOCK ANTES DE CREAR LA VENTA
             foreach ($request->detalles as $detalle) {
@@ -345,6 +364,7 @@ class VentasController extends Controller
 
             // 3. CREAR VENTA
             $venta = new Venta();
+            $venta->caja_turno_id = $cajaTurno->id;
             $venta->user_id = auth()->user()->id;
             $venta->cliente_id = $request->cliente_id;
             $venta->folio = $folio;
@@ -365,13 +385,14 @@ class VentasController extends Controller
                         $monto_final -= $venta->cambio;
                     }
                     TipoPago::create([
-                        'pagable_id'   => $venta->id,
-                        'pagable_type' => Venta::class,
-                        'metodo'       => $fp['metodo'],
-                        'monto'        => $monto_final,
-                        'referencia'   => $fp['referencia'] ?? null,
-                        'wci'          => auth()->id(),
-                        'activo'       => true,
+                        'pagable_id'    => $venta->id,
+                        'pagable_type'  => Venta::class,
+                        'caja_turno_id' => $cajaTurno->id,
+                        'metodo'        => $fp['metodo'],
+                        'monto'         => $monto_final,
+                        'referencia'    => $fp['referencia'] ?? null,
+                        'wci'           => auth()->id(),
+                        'activo'        => true,
                     ]);
                     $montoRecibidoNetoTotal += $monto_final;
                 }
@@ -449,6 +470,7 @@ class VentasController extends Controller
                         TipoPago::create([
                             'pagable_id'   => $venta->id,
                             'pagable_type' => Venta::class,
+                            'caja_turno_id' => $cajaTurno->id,
                             'metodo'       => 'Nota crédito',
                             'monto'        => $monto,
                             'referencia'   => "Nota: {$nota->id}",
@@ -1356,6 +1378,32 @@ class VentasController extends Controller
                 $notaExistente = $venta->notaCreditoAsociada();
                 $metodosPago   = $venta->pagos->pluck('metodo');
 
+                // 🔹 Simular nuevo total ANTES de aplicar cambios
+                $nuevoTotalSimulado = $venta->detalles()
+                    ->where('activo', 1)
+                    ->where('id', '!=', $detalle->id)
+                    ->sum(DB::raw('cantidad * precio'));
+
+                $montoPagado = $venta->abonos()->sum('monto');
+
+                // 🔴 VALIDACIÓN
+                if ($tipoCancelacion === 'error' && $montoPagado > $nuevoTotalSimulado) {
+
+                    $mensajeFlash = [
+                        'icon'  => 'warning',
+                        'title' => 'Operación no permitida',
+                        'text'  => 'Esta cancelación genera un saldo a favor del cliente. Al ser cancelación por error, no se puede procesar. Se recomienda cancelar toda la venta.',
+                        'showConfirmButton' => true,
+                        'confirmButtonText' => 'Entendido',
+                        'customClass' => [
+                            'confirmButton' => 'bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg text-sm px-5 py-2.5',
+                        ],
+                        'buttonsStyling' => false,
+                    ];
+
+                    return;
+                }
+
                 // 🔹 1) Cancelación por ERROR
                 if ($tipoCancelacion === 'error') {
                     $this->devolverInventarioProducto($detalle, $cantidadDevolver, $venta, $notaExistente?->id);
@@ -1368,7 +1416,30 @@ class VentasController extends Controller
                         ]);
                     }
 
+                    // 🔹 Ajustar detalle
                     $this->ajustarDetalle($detalle, $cantidadDevolver);
+
+                    //AJUSTE DE TOTALES
+                    // Total pagado
+                    //$montoPagado = $venta->abonos()->sum('monto');
+
+                    // Nuevo total
+                    $nuevoTotal = $venta->detalles()
+                        ->where('activo', 1)
+                        ->sum(DB::raw('cantidad * precio'));
+
+                    // Nuevo saldo
+                    $saldoPendiente = $nuevoTotal - $montoPagado;
+
+                    $venta->update([
+                        'total'         => $nuevoTotal,
+                        'monto_credito' => max($saldoPendiente, 0),
+                    ]);
+
+                    // 🔹 Actualizar estado del crédito
+                    $this->actualizarCreditoVenta($venta);
+
+                    // 🚫 IMPORTANTE: NO generar nota de crédito en error
 
                     // Revisar si todos los detalles de la venta están inactivos
                     $this->cancelarVentaSiSinDetallesActivos($venta);
@@ -1555,17 +1626,17 @@ class VentasController extends Controller
                         }
 
                         // 🔹 Si ya no quedan productos activos, cancelar la venta completamente
-                        $detallesActivos = $venta->detalles()->where('activo', 1)->count();
+                        //$detallesActivos = $venta->detalles()->where('activo', 1)->count();
 
-                        if ($detallesActivos === 0) {
-                            $venta->update([
-                                'total'         => 0,
-                                'monto_credito' => 0,
-                                'activo'        => 0,
-                            ]);
+                        //if ($detallesActivos === 0) {
+                        //    $venta->update([
+                        //        'total'         => 0,
+                        //        'monto_credito' => 0,
+                        //        'activo'        => 0,
+                        //    ]);
 
-                            $this->actualizarCreditoVenta($venta);
-
+                        //    $this->actualizarCreditoVenta($venta);
+                        if ($this->cancelarVentaSiSinDetallesActivos($venta)) {
                             $montoAbonado = $venta->abonos()->sum('monto');
 
                             $montoNotasGeneradas = $venta->notaCreditos()->sum('monto');
@@ -1605,10 +1676,6 @@ class VentasController extends Controller
                     //    'activo'   => $nuevaCantidad > 0 ? 1 : 0,
                     //]);
 
-
-
-
-
                       // 🔹 Registrar abono equivalente a la devolución
                         /*$abonoPorCancelacion = $venta->abonos()->create([
                             'monto'        => $montoDevolucion,
@@ -1640,9 +1707,6 @@ class VentasController extends Controller
                         ]);
 
                         $this->actualizarCreditoVenta($venta);
-
-
-
 
                     /*
                     // 🔹 Recalcular totales de la venta
@@ -1676,6 +1740,51 @@ class VentasController extends Controller
                     */
 
                     // 🔹 Si hay excedente (ya pagó más del nuevo total), generar nota de crédito
+                        $excedente   = $montoPagado - $nuevoTotal;
+
+                        $montoNotasGeneradas = $venta->notaCreditos()->sum('monto');
+                        $excedenteReal = $excedente - $montoNotasGeneradas;
+
+                        if ($excedenteReal > 0) {
+                            $nota = $this->generarNotaCredito(
+                                $venta,
+                                'Excedente por devolución [' . $detalle->producto->nombre . ']',
+                                $excedenteReal
+                            );
+                            session()->flash('id', $nota->id);
+                        }
+
+                        // 🔹 Si ya no quedan productos activos, cancelar la venta completamente
+                        //$detallesActivos = $venta->detalles()->where('activo', 1)->count();
+
+                        //if ($detallesActivos === 0) {
+                        //    $venta->update([
+                        //        'total'         => 0,
+                        //        'monto_credito' => 0,
+                        //        'activo'        => 0,
+                        //    ]);
+
+                        //    $this->actualizarCreditoVenta($venta);
+                        if ($this->cancelarVentaSiSinDetallesActivos($venta)) {
+                            $montoAbonado = $venta->abonos()->sum('monto');
+
+                            $montoNotasGeneradas = $venta->notaCreditos()->sum('monto');
+                            $montoRestante = $montoAbonado - $montoNotasGeneradas;
+                            if ($montoRestante  > 0) {
+                                $nota = $this->generarNotaCredito(
+                                    $venta,
+                                    'Excedente por cancelación total tras devolución',
+                                    $montoRestante
+                                );
+                                session()->flash('id', $nota->id);
+                            }
+                        }
+
+
+                    ////////////////////////////////////////////////////77
+
+                    /*
+                    // Si hay excedente (ya pagó más del nuevo total), generar nota de crédito
                     $montoPagado = $venta->abonos()->sum('monto');
                     $excedente   = $montoPagado - $nuevoTotal;
 
@@ -1683,6 +1792,7 @@ class VentasController extends Controller
                         $nota = $this->generarNotaCredito($venta, 'Excedente por devolución [' . $detalle->producto->nombre . ']', $excedente);
                         session()->flash('id', $nota->id);
                     }
+                    */
                 }
 
                 //$this->ajustarDetalle($detalle, $cantidadDevolver);
@@ -1848,11 +1958,37 @@ class VentasController extends Controller
         ]);
     }
 
-    protected function cancelarVentaSiSinDetallesActivos(Venta $venta)
+    protected function cancelarVentaSiSinDetallesActivos_NO(Venta $venta)
     {
         if ($venta->detalles()->where('activo', 1)->count() === 0) {
             $venta->update(['activo' => 0]);
         }
+    }
+
+    protected function cancelarVentaSiSinDetallesActivos(Venta $venta): bool
+    {
+        $detallesActivos = $venta->detalles()->where('activo', 1)->count();
+
+        if ($detallesActivos === 0) {
+
+            $venta->update([
+                'activo'        => 0,
+                'total'         => 0,
+                'monto_credito' => 0,
+            ]);
+
+            if ($venta->ventaCredito) {
+                $venta->ventaCredito()->update([
+                    'activo' => 0
+                ]);
+            }
+
+            $this->actualizarCreditoVenta($venta);
+
+            return true;
+        }
+
+        return false;
     }
 
     protected function actualizarCreditoVenta(Venta $venta)

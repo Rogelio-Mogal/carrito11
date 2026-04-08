@@ -232,6 +232,9 @@ Route::post('forma/pago/index/ajax', [FormaPagoController::class, 'forma_pago_in
 Route::post('cotizaciones/index/ajax', [CotizacionesController::class, 'cotizaciones_index_ajax'])
 	->name('cotizacion.index.ajax');
 
+Route::post('/caja/movimiento/devolver', [CajaMovimientoController::class, 'devolver'])
+    ->name('admin.caja.movimiento.devolver');
+
 Route::resource('/clientes', ClientesController::class)->names('admin.clientes')
 ->except('show');
 

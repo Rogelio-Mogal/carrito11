@@ -238,7 +238,7 @@ class NotaCreditoController extends Controller
 
                     $acciones .= '
                         <button type="button"
-                            data-id="'.$notaBase->id.'" data-monto="'.$totalNotas.'"
+                            data-ids="'.e($grupoNotas->pluck('id')->join(',')) .'" data-monto="'.$totalNotas.'"
                             data-popover-target="devolver-tooltip'.$notaBase->id.'" data-popover-placement="bottom"
                             class="mb-1 text-white bg-purple-600 hover:bg-purple-700 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center devolver-efectivo">
                                 <svg class="w-5 h-5 text-gray-100 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">

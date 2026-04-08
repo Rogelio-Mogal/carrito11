@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('caja_turnos', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('usuario_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 
             $table->integer('turno'); // número de turno dentro del día
             $table->decimal('efectivo_inicial', 10, 2);

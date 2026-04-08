@@ -9,9 +9,9 @@ class CajaTurno extends Model
 {
     use HasFactory;
 
-    protected $table = 'caja_turnos';    
+    protected $table = 'caja_turnos';
     protected $fillable = [
-        'usuario_id',
+        'user_id',
         'turno',
         'efectivo_inicial',
         'efectivo_calculado',
@@ -31,6 +31,13 @@ class CajaTurno extends Model
 
     public function usuario()
     {
-        return $this->belongsTo(User::class, 'usuario_id');
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public static function turnoAbierto($userId)
+    {
+        return self::where('user_id', $userId)
+            ->whereNull('fecha_cierre')
+            ->first();
     }
 }
