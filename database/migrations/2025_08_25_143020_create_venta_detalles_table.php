@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('venta_detalles', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('venta_id') 
+            $table->foreignId('venta_id')
             ->references('id')
             ->on('ventas')
             ->onUpdate('no action')
@@ -33,6 +33,10 @@ return new class extends Migration
             $table->integer('cantidad');
             $table->decimal('precio',12,2);
             $table->decimal('total',12,2);
+
+            $table->decimal('precio_costo',12,2)->default(0);
+            $table->decimal('utilidad',12,2)->default(0);
+
             $table->boolean('activo')->default(1);
 
             $table->timestamps();

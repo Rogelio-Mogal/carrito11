@@ -22,6 +22,11 @@ class Venta extends Model
         'monto_recibido',
         'cambio',
         'tipo_venta',
+
+        'subtotal',
+        'costo_total',
+        'utilidad_total',
+
         'activo',
     ];
 

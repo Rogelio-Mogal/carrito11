@@ -24,6 +24,7 @@ return new class extends Migration
 
             $table->integer('cantidad_minima');
 
+            $table->decimal('precio_costo',10,2)->nullable();
             $table->decimal('precio_publico',$precision = 10, $scale = 2)->nullable();
             $table->decimal('precio_medio_mayoreo',$precision = 10, $scale = 2)->nullable();
             $table->decimal('precio_mayoreo',$precision = 10, $scale = 2)->nullable();

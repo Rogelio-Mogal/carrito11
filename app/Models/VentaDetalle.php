@@ -9,7 +9,7 @@ class VentaDetalle extends Model
 {
     use HasFactory;
 
-    protected $table = 'venta_detalles';    
+    protected $table = 'venta_detalles';
     protected $fillable = [
         'venta_id',
         'tipo_item',
@@ -18,6 +18,10 @@ class VentaDetalle extends Model
         'cantidad',
         'precio',
         'total',
+
+        'precio_costo',
+        'utilidad',
+
         'activo',
     ];
 

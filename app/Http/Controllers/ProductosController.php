@@ -98,7 +98,7 @@ class ProductosController extends Controller
             'serie' => 'required|boolean',
 
             'cantidad' => 'nullable|integer|min:1',
-            'precio_costo' => 'nullable|numeric|min:0',
+            //'precio_costo' => 'nullable|numeric|min:0',
 
             'imagen_1' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
             'imagen_2' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
@@ -109,6 +109,7 @@ class ProductosController extends Controller
 
         // Si es SERVICIO, los precios son requeridos
         if ($request->tipo === 'SERVICIO') {
+            $rules['servicio.precio_costo'] = 'required|numeric|min:1';
             $rules['servicio.precio_publico'] = 'required|numeric|min:1';
             $rules['servicio.precio_medio_mayoreo'] = 'required|numeric|min:1';
             $rules['servicio.precio_mayoreo'] = 'required|numeric|min:1';
@@ -157,6 +158,7 @@ class ProductosController extends Controller
 
             // 🔹 Asignar precios dependiendo del tipo
             if ($request->tipo === 'SERVICIO') {
+                $productoServicio->precio_costo = $request->input('servicio.precio_costo');
                 $productoServicio->precio_publico = $request->input('servicio.precio_publico');
                 $productoServicio->precio_medio_mayoreo = $request->input('servicio.precio_medio_mayoreo');
                 $productoServicio->precio_mayoreo = $request->input('servicio.precio_mayoreo');
@@ -887,10 +889,16 @@ class ProductosController extends Controller
             'cantidad_minima' => $request->cantidad_minima,
             'garantia' => $request->garantia,
             'serie' => $request->serie,
+
+            'precio_costo' => $request->input('servicio.precio_costo'),
+            'precio_publico' => $request->input('servicio.precio_publico'),
+            'precio_medio_mayoreo' => $request->input('servicio.precio_medio_mayoreo'),
+            'precio_mayoreo' => $request->input('servicio.precio_mayoreo'),
+
             'imagen_1' => $request->imagen_1,
-            'imagen_2' => $request->imagen_1,
-            'imagen_3' => $request->imagen_1,
-            'descripcion' => $request->imagen_1,
+            'imagen_2' => $request->imagen_2,
+            'imagen_3' => $request->imagen_3,
+            'descripcion' => $request->descripcion,
         ];
 
         // Verificar si los campos de imagen cambiaron
@@ -960,12 +968,22 @@ class ProductosController extends Controller
                 'garantia' => 'nullable|string|max:255',
                 'serie' => 'required|boolean',
 
+                //'precio_costo' => 'nullable|numeric|min:0',
+
                 'imagen_1' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
                 'imagen_2' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
                 'imagen_3' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
 
                 'descripcion' => 'required|string|min:2|max:1500',
             ];
+
+            // Si es SERVICIO
+            if ($request->tipo === 'SERVICIO') {
+                $rules['servicio.precio_costo'] = 'required|numeric|min:1';
+                $rules['servicio.precio_publico'] = 'required|numeric|min:1';
+                $rules['servicio.precio_medio_mayoreo'] = 'required|numeric|min:1';
+                $rules['servicio.precio_mayoreo'] = 'required|numeric|min:1';
+            }
 
             $validatedData = $request->validate($rules);
 
@@ -1008,6 +1026,14 @@ class ProductosController extends Controller
                 $productoServicio->descripcion = $request->descripcion;
                 $productoServicio->garantia = $request->garantia;
                 $productoServicio->serie = $request->serie;
+
+                //  Asignar precios dependiendo del tipo
+                if ($request->tipo === 'SERVICIO') {
+                    $productoServicio->precio_costo = $request->input('servicio.precio_costo');
+                    $productoServicio->precio_publico = $request->input('servicio.precio_publico');
+                    $productoServicio->precio_medio_mayoreo = $request->input('servicio.precio_medio_mayoreo');
+                    $productoServicio->precio_mayoreo = $request->input('servicio.precio_mayoreo');
+                }
 
                 if ($request->file('imagen_1')) {
                     /*

@@ -37,6 +37,11 @@ return new class extends Migration
             $table->decimal('monto_recibido',7,2)->nullable();
             $table->decimal('cambio',7,2)->nullable();
             $table->enum('tipo_venta', ['CONTADO','CRÉDITO']);
+
+            $table->decimal('subtotal',12,2)->default(0);
+            $table->decimal('costo_total',12,2)->default(0);
+            $table->decimal('utilidad_total',12,2)->default(0);
+
             $table->boolean('activo')->default(1);
 
             $table->timestamps();

@@ -11,7 +11,7 @@ class Producto extends Model
 {
     use HasFactory;
 
-    protected $table = 'productos';    
+    protected $table = 'productos';
     protected $fillable = [
         'tipo',
         'nombre',
@@ -20,6 +20,9 @@ class Producto extends Model
         'familia',
         'sub_familia',
         'cantidad_minima',
+
+        'precio_costo',
+
         'precio_publico',
         'precio_medio_mayoreo',
         'precio_mayoreo',

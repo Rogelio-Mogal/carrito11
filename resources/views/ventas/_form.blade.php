@@ -334,6 +334,34 @@
 
 @section('js')
     <script>
+        // MUESTRA-DESHABILITA BOTON DE CREDITO ANTICIPO-APRTADOS EN VENTAS A CRÉDITO
+        const $tipoVenta = $('select[name="tipo_venta"]');
+        const btnNotaCredito = $('#btn-nota-credito');
+        const btnAnticipo = $('#btn-anticipo-apartado');
+
+        function validarTipoVenta() {
+            const valor = $tipoVenta.val();
+            if (valor === 'CRÉDITO') {
+                btnNotaCredito.prop('disabled', true);
+                btnAnticipo.prop('disabled', true);
+
+                btnNotaCredito.addClass('opacity-50 cursor-not-allowed');
+                btnAnticipo.addClass('opacity-50 cursor-not-allowed');
+            } else {
+                btnNotaCredito.prop('disabled', false);
+                btnAnticipo.prop('disabled', false);
+
+                btnNotaCredito.removeClass('opacity-50 cursor-not-allowed');
+                btnAnticipo.removeClass('opacity-50 cursor-not-allowed');
+            }
+        }
+
+        // Evento correcto para Select2
+        $tipoVenta.on('change', validarTipoVenta);
+
+        // Inicial
+        validarTipoVenta();
+
         //OBTENGO LA NOTA DE CRÉDITO
         document.addEventListener('DOMContentLoaded', function() {
             // Valores pasados desde el controlador

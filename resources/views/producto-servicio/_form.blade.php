@@ -43,7 +43,7 @@
                 @foreach($productoServicio->codigosAlternos as $alterno)
                     <div class="flex items-center gap-2 w-[32%] min-w-[120px]">
                         <input type="text" name="codigos_alternos[]" value="{{ $alterno->codigo_barra }}"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg w-full p-2.5 
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg w-full p-2.5
                                 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                             placeholder="Código alterno">
                         <button type="button" class="removeAlterno text-red-500 font-bold px-2">✕</button>
@@ -52,7 +52,7 @@
             @else
                 <div class="flex items-center gap-2 w-[32%] min-w-[120px]">
                     <input type="text" name="codigos_alternos[]" value=""
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg w-full p-2.5 
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg w-full p-2.5
                             dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         placeholder="Código alterno">
                     <button type="button" class="removeAlterno text-red-500 font-bold px-2">✕</button>
@@ -73,19 +73,25 @@
 
 
     <div id="campos-precios" class="grid lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-2 sm:col-span-12 md:col-span-12 lg:col-span-12 {{ old('tipo', $productoServicio->tipo ?? '') === 'SERVICIO' ? '' : 'hidden' }}">
-        <div  class="sm:col-span-12 lg:col-span-4 md:col-span-4">
+        <div  class="sm:col-span-12 lg:col-span-3 md:col-span-3">
+            <label for="precio_costo" class="block text-sm font-medium text-gray-900 dark:text-white">Precio costo</label>
+            <input type="number" step="0.01" name="servicio[precio_costo]" id="precio_costo_servicio"
+                value="{{ old('precio_costo', $productoServicio->precio_costo) }}"
+                class="bg-gray-50 border border-gray-300 text-sm rounded-lg w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        </div>
+        <div  class="sm:col-span-12 lg:col-span-3 md:col-span-3">
             <label for="precio_publico" class="block text-sm font-medium text-gray-900 dark:text-white">Precio Público</label>
             <input type="number" step="0.01" name="servicio[precio_publico]" id="precio_publico_servicio"
                 value="{{ old('precio_publico', $productoServicio->precio_publico) }}"
                 class="bg-gray-50 border border-gray-300 text-sm rounded-lg w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
         </div>
-        <div  class="sm:col-span-12 lg:col-span-4 md:col-span-4">
+        <div  class="sm:col-span-12 lg:col-span-3 md:col-span-3">
             <label for="precio_medio_mayoreo" class="block text-sm font-medium text-gray-900 dark:text-white">Precio Medio Mayoreo</label>
             <input type="number" step="0.01" name="servicio[precio_medio_mayoreo]" id="precio_medio_mayoreo_servicio"
                 value="{{ old('precio_medio_mayoreo', $productoServicio->precio_medio_mayoreo) }}"
                 class="bg-gray-50 border border-gray-300 text-sm rounded-lg w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
         </div>
-        <div  class="sm:col-span-12 lg:col-span-4 md:col-span-4">
+        <div  class="sm:col-span-12 lg:col-span-3 md:col-span-3">
             <label for="precio_mayoreo" class="block text-sm font-medium text-gray-900 dark:text-white">Precio Mayoreo</label>
             <input type="number" step="0.01" name="servicio[precio_mayoreo]" id="precio_mayoreo_servicio"
                 value="{{ old('precio_mayoreo', $productoServicio->precio_mayoreo) }}"
@@ -107,7 +113,7 @@
                     </option>
                 @endforeach
             </select>
-            <p id="marcaError" class="mt-2 text-xs text-red-600 dark:text-red-400 hidden"><span class="font-medium">Seleccione una marca.</span></p> 
+            <p id="marcaError" class="mt-2 text-xs text-red-600 dark:text-red-400 hidden"><span class="font-medium">Seleccione una marca.</span></p>
         </div>
     </div>
     <div class="sm:col-span-12 lg:col-span-2 md:col-span-12">
@@ -115,7 +121,7 @@
             Familia
         </label>
         <div class="input-group">
-            <select id="familia" name="familia" style="height: 400px !important;" 
+            <select id="familia" name="familia" style="height: 400px !important;"
                 class="select2 block w-full mt-1 p-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 <option value="" disabled @if ($metodo == 'create') selected @endif>-- FAMILIA --</option>
                 @foreach ($familiaValues as $value)
@@ -125,7 +131,7 @@
                     </option>
                 @endforeach
             </select>
-            <p id="familiaError" class="mt-2 text-xs text-red-600 dark:text-red-400 hidden"><span class="font-medium">Seleccione una familia.</span></p> 
+            <p id="familiaError" class="mt-2 text-xs text-red-600 dark:text-red-400 hidden"><span class="font-medium">Seleccione una familia.</span></p>
         </div>
     </div>
     <div class="sm:col-span-12 lg:col-span-2 md:col-span-12">
@@ -180,7 +186,7 @@
         </div>
     </div>
 
-  
+
     <div id="atributos-container" class="grid lg:grid-cols-12 md:grid-cols-12 sm:grid-cols-12 gap-2 sm:col-span-12 md:col-span-12 lg:col-span-12">
     </div>
 
@@ -192,7 +198,7 @@
             </button>
             <input type="hidden" id="menuVisible" name="menuVisible" value="0">
         </div>
-        
+
         <div class="sm:col-span-12 lg:col-span-2 md:col-span-12 menu" style="display:none">
             <label for="cantidad" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                 Cantidad
@@ -311,7 +317,7 @@
     <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
         <label for="descripcion" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descripción del producto</label>
         <textarea id="descripcion" name="descripcion" rows="2" required
-            class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+            class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Descripción del producto">{{ old('descripcion', $productoServicio->descripcion) }}</textarea>
     </div>
     <div class="sm:col-span-12 lg:col-span-12 md:col-span-12">
@@ -476,8 +482,8 @@
                 const div = document.createElement('div');
                 div.classList.add('flex', 'items-center', 'gap-2', 'w-1/3', 'min-w-[120px]');
                 div.innerHTML = `
-                    <input type="text" name="codigos_alternos[]" 
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg w-full p-2.5 
+                    <input type="text" name="codigos_alternos[]"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg w-full p-2.5
                             dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         placeholder="Código alterno">
                     <button type="button" class="removeAlterno text-red-500 font-bold px-2">✕</button>
@@ -493,13 +499,13 @@
                 }
             });
         });
-        
+
 
         $(document).ready(function() {
             // Ejecutar al inicio
             toggleInventarioPorTipo();
             toggleCamposPrecios();
-            
+
 
             //OBTENGO DINAMICAMENTE LOS ATRIBUTOS DE LA FAMILIA
             const familiaId = $('#sub_familia').val();
@@ -915,7 +921,7 @@
                     fileError.addClass('hidden');
                 }*/
 
-                
+
                 // validacion de select MARCA
                 if ($('#marca').val() === null || $('#marca').val() === "") {
                     marcaError.removeClass('hidden');
