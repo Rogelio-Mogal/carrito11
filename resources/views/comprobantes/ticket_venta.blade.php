@@ -353,7 +353,7 @@ if ($userPrinterSize == '58') {
                 <td class="cantidad"></td>
                 <td class="producto"><strong>TOTAL PAGADO</strong></td>
                 <td class="precio">
-                    ${{ number_format($totalPagadoAjustado, 2, '.', ',') }}
+                    ${{ number_format($totalPagadoAjustado + $venta->cambio, 2, '.', ',') }}
                 </td>
             </tr>
 

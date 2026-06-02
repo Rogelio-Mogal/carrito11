@@ -313,19 +313,48 @@ class VentasController extends Controller
                     ->withErrors(['error' => 'No tienes un turno de caja abierto.']); // Aquí pasas el mensaje de error
             }
 
+            // Precargar productos e inventarios
+
+            // Obtener todos los IDs de productos de la venta
+            $productosIds = collect($request->detalles)
+                ->pluck('producto_id')
+                ->filter()
+                ->unique()
+                ->values();
+
+            // Inventarios de la sucursal
+            $inventarios = Inventario::whereIn('producto_id', $productosIds)
+                ->where('sucursal_id', auth()->user()->sucursal_id)
+                ->get()
+                ->keyBy('producto_id');
+
+            // Productos
+            $productos = Producto::whereIn('id', $productosIds)
+                ->get()
+                ->keyBy('id');
+
             // 1. VALIDAR STOCK ANTES DE CREAR LA VENTA
             foreach ($request->detalles as $detalle) {
                 $productoId = $detalle['producto_id'] ?? null;
                 $cantidadSolicitada = intval($detalle['cantidad']);
 
                 if ($detalle['tipo_item'] === 'PRODUCTO' && $productoId) {
-                    $producto = Producto::with('inventarioUsuario')->find($productoId);
+                    //$producto = Producto::with('inventarioUsuario')->find($productoId);
+                    $producto = $productos[$productoId] ?? null;
+                    $inventario = $inventarios[$productoId] ?? null;
 
                     if (!$producto) {
                         throw new \Exception("El producto con ID {$productoId} no existe.");
                     }
 
-                    $stock = $producto->inventarioUsuario->cantidad ?? 0;
+                    if (!$inventario) {
+                        throw new \Exception(
+                            "No existe inventario para el producto {$producto->nombre}."
+                        );
+                    }
+
+                    //$stock = $producto->inventarioUsuario->cantidad ?? 0;
+                    $stock = $inventario?->cantidad ?? 0;
 
                     if ($cantidadSolicitada > $stock) {
                         session()->flash('swal', [
@@ -337,7 +366,9 @@ class VentasController extends Controller
                             ],
                             'buttonsStyling' => false
                         ]);
-                        return redirect()->back()->withInput($request->all());
+                        return redirect()
+                            ->back()
+                            ->withInput($request->all());
                     }
                 }
             }
@@ -515,17 +546,70 @@ class VentasController extends Controller
             $venta->monto_recibido = $montoRecibidoNetoTotal;
             $venta->save();
 
+            $subtotalVenta = 0;
+            $costoTotalVenta = 0;
+            $utilidadTotalVenta = 0;
             // 5. DETALLES DE LA VENTA Y ACTUALIZAR INVENTARIO
             foreach ($request->detalles as $detalle) {
+                $cantidad = floatval($detalle['cantidad']);
+                $precioVenta = floatval($detalle['precio']);
+                $totalLinea = floatval($detalle['total']);
+
+                $precioCosto = 0;
+
+                /*
+                |--------------------------------------------------------------------------
+                | PRODUCTOS
+                |--------------------------------------------------------------------------
+                */
+                if ($detalle['tipo_item'] === 'PRODUCTO') {
+
+                    $inventario = $inventarios[$detalle['producto_id']] ?? null;
+
+                    $precioCosto = $inventario?->precio_costo ?? 0;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | SERVICIOS / PONCHADOS
+                |--------------------------------------------------------------------------
+                */
+                else {
+
+                    $producto = $productos[$detalle['producto_id']] ?? null;
+
+                    $precioCosto = $producto?->precio_costo ?? 0;
+                }
+
+                $costoLinea = $precioCosto * $cantidad;
+
+                $utilidadLinea = $totalLinea - $costoLinea;
+
+                /*
+                |--------------------------------------------------------------------------
+                | ACUMULADORES DE LA VENTA
+                |--------------------------------------------------------------------------
+                */
+                $subtotalVenta += $totalLinea;
+                $costoTotalVenta += $costoLinea;
+                $utilidadTotalVenta += $utilidadLinea;
+
+                /*
+                |--------------------------------------------------------------------------
+                | DETALLE
+                |--------------------------------------------------------------------------
+                */
+
                 VentaDetalle::create([
                     'venta_id'            => $venta->id,
                     'tipo_item'           => $detalle['tipo_item'] ?? null,
                     'producto_id'         => $detalle['producto_id'] ?? null,
-                    'servicio_ponchado_id' => $detalle['servicio_ponchado_id'] ?? null,
                     'producto_comun'      => $detalle['producto_comun'] ?? null,
-                    'cantidad'            => $detalle['cantidad'],
-                    'precio'              => $detalle['precio'],
-                    'total'               => $detalle['total'],
+                    'cantidad'            => $cantidad,
+                    'precio'              => $precioVenta,
+                    'total'               => $totalLinea,
+                    'precio_costo'         => $precioCosto,
+                    'utilidad'             => $utilidadLinea,
                     'activo'              => 1,
                 ]);
 
@@ -549,9 +633,10 @@ class VentasController extends Controller
 
                 //  Actualizar inventario y kardex
                 if ($detalle['tipo_item'] == 'PRODUCTO') {
-                    $inventario = Inventario::where('producto_id', $detalle['producto_id'])
-                        ->where('sucursal_id', auth()->user()->sucursal_id)
-                        ->first();
+                    //$inventario = Inventario::where('producto_id', $detalle['producto_id'])
+                    //    ->where('sucursal_id', auth()->user()->sucursal_id)
+                    //    ->first();
+                    $inventario = $inventarios[$detalle['producto_id']] ?? null;
 
                     if ($inventario) {
                         $inventario->cantidad -= $detalle['cantidad'];
@@ -583,6 +668,18 @@ class VentasController extends Controller
                     }
                 }
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Totales de utilidad
+            |--------------------------------------------------------------------------
+            */
+            $venta->subtotal = $subtotalVenta;
+            $venta->costo_total = $costoTotalVenta;
+            $venta->utilidad_total = $utilidadTotalVenta;
+
+            $venta->save();
+
 
             // 6. SI ES CRÉDITO
             if ($request->tipo_venta == 'CRÉDITO') {
@@ -1438,6 +1535,9 @@ class VentasController extends Controller
                     // 🔹 Ajustar detalle
                     $this->ajustarDetalle($detalle, $cantidadDevolver);
 
+                    // Ajusta totales de venta
+                    $this->recalcularTotalesVenta($venta);
+
                     //AJUSTE DE TOTALES
                     // Total pagado
                     //$montoPagado = $venta->abonos()->sum('monto');
@@ -1493,6 +1593,9 @@ class VentasController extends Controller
                             $this->devolverInventarioProducto($detalle, $cantidadDevolver, $venta, $notaExistente?->id);
                             $this->ajustarDetalle($detalle, $cantidadDevolver);
 
+                            // Ajusta totales de venta
+                            $this->recalcularTotalesVenta($venta);
+
                             // Revisar si todos los detalles de la venta están inactivos
                             $this->cancelarVentaSiSinDetallesActivos($venta);
 
@@ -1530,6 +1633,10 @@ class VentasController extends Controller
 
                         if ($metodosPago->count() === 2 && $metodosPago->contains('Efectivo') && $notaExistente) {
                             $this->ajustarDetalle($detalle, $cantidadDevolver);
+
+                            // Ajusta totales de venta
+                            $this->recalcularTotalesVenta($venta);
+
                             // Revisar si todos los detalles de la venta están inactivos
                             $this->cancelarVentaSiSinDetallesActivos($venta);
 
@@ -1551,6 +1658,10 @@ class VentasController extends Controller
                         $nota = $this->generarNotaCredito($venta, $motivo, $montoDetalle);
                         session()->flash('id', $nota->id);
                         $this->ajustarDetalle($detalle, $cantidadDevolver);
+
+                        // Ajusta totales de venta
+                        $this->recalcularTotalesVenta($venta);
+
                         // Revisar si todos los detalles de la venta están inactivos
                         $this->cancelarVentaSiSinDetallesActivos($venta);
 
@@ -1619,6 +1730,9 @@ class VentasController extends Controller
 
                         //Ajusta el detalle de la venta
                         $this->ajustarDetalle($detalle, $cantidadDevolver);
+
+                        // Ajusta totales de venta
+                        $this->recalcularTotalesVenta($venta);
 
                         // Calcular monto pagado actualizado
                         $montoPagado = $venta->abonos()->sum('monto');
@@ -1718,6 +1832,9 @@ class VentasController extends Controller
 
                         //Ajusta el detalle de la venta
                         $this->ajustarDetalle($detalle, $cantidadDevolver);
+
+                        // Ajusta totales de venta
+                        $this->recalcularTotalesVenta($venta);
 
                         // Calcular monto pagado actualizado
                         $montoPagado = $venta->abonos()->sum('monto');
@@ -1980,10 +2097,50 @@ class VentasController extends Controller
 
     protected function ajustarDetalle(VentaDetalle $detalle, int $cantidadDevolver)
     {
-        //dd($detalle->cantidad , $cantidadDevolver);
+        $nuevaCantidad = max(0, $detalle->cantidad - $cantidadDevolver);
+
+        $nuevoTotal = $nuevaCantidad * $detalle->precio;
+
+        $nuevaUtilidad =
+            ($detalle->precio - $detalle->precio_costo)
+            * $nuevaCantidad;
+
         $detalle->update([
-            'cantidad' => $detalle->cantidad - $cantidadDevolver,
-            'activo'   => $detalle->cantidad - $cantidadDevolver <= 0 ? 0 : 1,
+            'cantidad' => $nuevaCantidad,
+            'total'    => $nuevoTotal,
+            'utilidad' => $nuevaUtilidad,
+            'activo'   => $nuevaCantidad > 0,
+        ]);
+
+        //dd($detalle->cantidad , $cantidadDevolver);
+        //$detalle->update([
+        //    'cantidad' => $detalle->cantidad - $cantidadDevolver,
+        //    'activo'   => $detalle->cantidad - $cantidadDevolver <= 0 ? 0 : 1,
+        //]);
+    }
+
+    private function recalcularTotalesVenta(Venta $venta): void
+    {
+        $venta->load('detalles');
+
+        $subtotal = $venta->detalles()
+            ->where('activo', 1)
+            ->sum('total');
+
+        $costoTotal = $venta->detalles()
+            ->where('activo', 1)
+            ->selectRaw('SUM(precio_costo * cantidad) as total')
+            ->value('total') ?? 0;
+
+        $utilidadTotal = $venta->detalles()
+            ->where('activo', 1)
+            ->sum('utilidad');
+
+        $venta->update([
+            'total'           => $subtotal,
+            'subtotal'        => $subtotal,
+            'costo_total'     => $costoTotal,
+            'utilidad_total'  => $utilidadTotal,
         ]);
     }
 
