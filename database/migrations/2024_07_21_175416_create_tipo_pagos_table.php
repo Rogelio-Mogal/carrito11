@@ -23,6 +23,13 @@ return new class extends Migration
             $table->enum('metodo', ['Efectivo', 'TDC', 'TDD', 'Transferencia', 'Nota crédito' ,'Otro']);
             $table->decimal('monto', 12, 3);
             $table->string('referencia')->nullable(); // opcional
+
+            $table->dateTime('fecha_movimiento');
+            $table->enum('tipo_movimiento',[
+                'Ingreso',
+                'Egreso'
+            ]);
+
             $table->integer('wci');
             $table->boolean('activo')->default(1);
             $table->timestamps();

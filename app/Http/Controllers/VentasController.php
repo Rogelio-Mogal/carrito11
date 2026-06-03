@@ -1053,7 +1053,7 @@ class VentasController extends Controller
 
     public function show(Venta $venta)
     {
-        $venta->load([
+       /* $venta->load([
             'detalles' => function ($query) {
                 $query->where('activo', 1)->with('producto.inventarios');
             },
@@ -1062,6 +1062,23 @@ class VentasController extends Controller
         ]);
 
         // Pasar a la vista
+        return view('ventas.show', compact('venta'));*/
+
+        $venta->load([
+            'detalles' => function ($query) {
+                $query->where('activo', 1)
+                    ->with('producto.inventarios');
+            },
+            'pagos',
+            'user'
+        ]);
+
+        if ($venta->detalles->isEmpty()) {
+            return redirect()
+                ->route('admin.ventas.index')
+                ->with('warning', 'La venta ya no contiene productos activos.');
+        }
+
         return view('ventas.show', compact('venta'));
     }
 
@@ -1135,8 +1152,13 @@ class VentasController extends Controller
 
                     // AJUSTE EN TOTALES DE VENTA Y TIPO_PAGOS
                     if ($venta->tipo_venta === 'CONTADO') {
+                        //$montoDevolver = $this->recalcularVentaYTiposPago($venta);
+                        //$this->ajustarTiposPago($venta, $montoDevolver);
                         $montoDevolver = $this->recalcularVentaYTiposPago($venta);
-                        $this->ajustarTiposPago($venta, $montoDevolver);
+
+                        if ($this->puedeAjustarEfectivo($venta)) {
+                            $this->ajustarTiposPago($venta, $montoDevolver);
+                        }
                     }
 
                     $mensajeFlash = [
@@ -1203,7 +1225,11 @@ class VentasController extends Controller
 
                             // AJUSTE EN TOTALES DE VENTA Y TIPO_PAGOS
                             $montoDevolver = $this->recalcularVentaYTiposPago($venta);
-                            $this->ajustarTiposPago($venta, $montoDevolver);
+                            //$this->ajustarTiposPago($venta, $montoDevolver);
+
+                            if ($this->puedeAjustarEfectivo($venta)) {
+                                $this->ajustarTiposPago($venta, $montoDevolver);
+                            }
 
 
                             return;
@@ -2220,6 +2246,36 @@ class VentasController extends Controller
                 $montoADevolver = 0;
             }
         }
+    }
+
+    protected function puedeAjustarEfectivo(Venta $venta): bool
+    {
+        if ($venta->tipo_venta !== 'CONTADO') {
+            return false;
+        }
+
+        $metodos = $venta->pagos()
+            ->where('monto', '>', 0)
+            ->pluck('metodo');
+
+        // Solo efectivo
+        if (
+            $metodos->count() === 1 &&
+            $metodos->contains('Efectivo')
+        ) {
+            return true;
+        }
+
+        // Efectivo + NotaCredito
+        if (
+            $metodos->count() === 2 &&
+            $metodos->contains('Efectivo') &&
+            $metodos->contains('NotaCredito')
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     protected function actualizarCreditoVenta(Venta $venta)
